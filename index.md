@@ -1,8 +1,11 @@
 ## Welcome to the iDSP Project
 
 This page contains reactive *web-based* material for developing *intuition* in *Digital Signal Processing*.
-The material exposed here is organized into a lit of figures which are usually proposed statically in textbooks, leaving mental work on the student side.
-For each figure, we propose pointers to videos, tools, and code which provide progressive insights into the conepts aimed to be exposed in the original figure.  
+The material exposed here is organized into a lit of figures which are usually proposed statically in textbooks, leaving considerable mental work on the student side (which professors hope to alleviate by describing their own mental pictures in terms of complex equations, supported by -often ambiguous- words, if not by gestures).
+
+For each figure, we make our best to propose pointers to videos, reactive tools, and code which provide progressive insights into the conepts aimed to be exposed in the original figure.  
+Videos show how the reactive tool can be used to activate the figure (they are ideally snapshots of the reactive tools, without spoken comments)
+Code is availble for students with technical background to check how concepts are implemented and possibly build on it.
 
 ### Markdown
 
