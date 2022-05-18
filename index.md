@@ -17,5 +17,5 @@ If you want to contribute, or make suggestions or comments, [drop us a line](mai
 
 | Figure     | Material  |
 | ---------- | --------- | 
-| Content Cell  | [Dirac as a limit](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/dirac.py) | Content Cell  | Git(https://github.com/thierrydutoit/sine-wave)  |
-| Content Cell  | Content Cell  | Content Cell  | Content Cell  |
+|            | [Sine_wave](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/sinewave.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
+|            | [Dirac_as_a_limit](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/dirac.py) / [Git](https://github.com/thierrydutoit/dirac)  |
