@@ -1,11 +1,13 @@
-## Welcome to the iDSP Project
+## Welcome to the intuitive Digital Signal Processing (iDSP) Project
 
-This page contains reactive *web-based* material for developing *intuition* in *Digital Signal Processing*.
-The material exposed here is organized into a lit of figures which are usually proposed statically in textbooks, leaving considerable mental work on the student side (which professors hope to alleviate by describing their own mental pictures in terms of complex equations, supported by -often ambiguous- words, if not by gestures).
+This page contains *reactive* material for developing *intuition* in *Digital Signal Processing*.
 
-For each figure, we make our best to propose pointers to videos, reactive tools, and code which provide progressive insights into the conepts aimed to be exposed in the original figure.  
-Videos show how the reactive tool can be used to activate the figure (they are ideally snapshots of the reactive tools, without spoken comments)
-Code is availble for students with technical background to check how concepts are implemented and possibly build on it.
+The material exposed here is organized into a list of figures which are usually proposed statically in textbooks, leaving considerable mental work on the student side to go from figure to concept (work which professors hope to alleviate by describing their own mental pictures in terms of complex equations, supported by -often ambiguous- words, if not by gestures :)).
+
+For each figure, we make our best to propose pointers to: 
+1. **Reactive tools**, which are the heart if the project. They are webapps which require no specific installation to run. Tools augment the figure with reactive components which involve students in the understanding of the concept.
+2. **Videos**, which show how tools can be used to activate the figure. Tthey are ideally snapshots of the tools, without spoken comments so as to let professors comment by themselves.
+3. **Code**, available for students with technical background to check how concepts are implemented and possibly build on this implementation.
 
 ### Markdown
 
