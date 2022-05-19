@@ -24,4 +24,8 @@ If you want to contribute, or make suggestions or comments, [drop us a line](mai
 ---
 
 ##### Credits
-###### The iDSP project was initiated by Profs. [Marcelo Wanderley (IDMIL, McGill)](http://www-new.idmil.org/people/marcelo-m-wanderley/) and [Thierry Dutoit (ISIA Lab, UMONS)](https://sites.google.com/view/thierrydutoit) during a 2-month sabbatical stay in Montreal (April-May 2022). Some of the material proposed here comes from the [IDMIL DSP Workbench](https://idmil.github.io/DAWb/) pages.
+<sub> 
+ The iDSP project was initiated by Profs. [Marcelo Wanderley (IDMIL, McGill)](http://www-new.idmil.org/people/marcelo-m-wanderley/) and [Thierry Dutoit (ISIA Lab, UMONS)](https://sites.google.com/view/thierrydutoit) during a 2-month sabbatical stay in Montreal (April-May 2022). 
+ 
+ Some of the material proposed here comes from the [IDMIL DSP Workbench](https://idmil.github.io/DAWb/) pages. 
+</sub>
