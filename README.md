@@ -14,10 +14,14 @@ This material is taken from third parties when available (with their own license
 
 If you want to contribute, or make suggestions or comments, [drop us a line](mailto://thierry.dutoit@umons.ac.be)
 
----
-
 | Figure     | iDSP content  |
 | ---------- | ------------- | 
 | ![sinus](./sinus_300.jpg)  | [Sine wave](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
 | ![dirac](./dirac_300.jpg)  | [Dirac seen as a limit](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/dirac.py) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
 | ![quantization](./quantization_300.jpg) | [Quantization and dithering](https://idmil.github.io/DAWb/quantization) / [Git](https://github.com/idmil/dawb)  |
+
+
+---
+
+##### Credits
+###### The iDSP was initiated by Profs. [Marcelo Wanderley (IDMIL, McGill)](http://www-new.idmil.org/people/marcelo-m-wanderley/) and [Thierry Dutoit (ISIA Lab, UMONS)](https://sites.google.com/view/thierrydutoit) during a 2-month sabbatical stay in Montreal (April-May 2022). Some of the material proposed here comes from the [IDMIL DSP Workbench](https://idmil.github.io/DAWb/) pages.
