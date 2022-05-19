@@ -7,7 +7,7 @@ The material exposed here is organized into a list of figures which are usually 
 
 For each figure, we make our best to propose pointers to: 
 1. **Reactive tools**, which are the heart if the project. They are webapps which require no specific installation to run. Tools augment the figure with reactive components which involve students in the understanding of the concept. Tools are open source.
-2. **Videos**, which show how tools can be used to activate the figure. Tthey are ideally snapshots of the tools, without spoken comments so as to let professors comment by themselves. Videos are creative commons;
+2. **Videos**, which show how tools can be used to activate the figure. Tthey are ideally snapshots of the tools, without spoken comments so as to let professors comment by themselves. Videos are creative commons.
 3. **Code**, available for students with technical background to check how concepts are implemented and possibly build on this implementation. At best, code comes from the tools themselves.
 
 This material is taken from third parties when available (with their own licenses), or built on purpose. 
