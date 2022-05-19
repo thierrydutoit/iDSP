@@ -12,7 +12,7 @@ For each figure, we make our best to propose pointers to:
 
 This material is taken from third parties when available (with their own licenses), or built on purpose. 
 
-If you want to contribute, or make suggestions or comments, [drop us a line](mailto://thierry.dutoit@umons.ac.be)
+If you want to contribute, or make suggestions or comments, [drop us a line](mailto://thierry.dutoit@umons.ac.be).
 
 | Figure     | iDSP content  |
 | ---------- | ------------- | 
