@@ -13,11 +13,3 @@ For each figure, we make our best to propose pointers to:
 This material is taken from third parties when available (with their own licenses), or built on purpose. 
 
 If you want to contribute, or make suggestions or comments, [drop us a line](mailto://thierry.dutoit@umons.ac.be)
-
----
-
-| Figure     | iDSP content  |
-| ---------- | ------------- | 
-| ![sinus](./sinus_300.jpg)  | [Sine wave](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
-| ![dirac](./dirac_300.jpg)  | [Dirac seen as a limit](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/dirac.py) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
-| ![quantization](./quantization_300.jpg) | [Quantization and dithering](https://idmil.github.io/DAWb/quantization) / [Git](https://github.com/idmil/dawb)  |
