@@ -1,7 +1,6 @@
 
 ## Welcome to the intuitive Digital Signal Processing (iDSP) Project
-
-gh branch of the iDSP
+iDSP repo mains branch
 
 This page gathers *reactive* material for developing *intuition* in *Digital Signal Processing*.
 
@@ -20,5 +19,5 @@ If you want to contribute, or make suggestions or comments, [drop us a line](mai
 
 | Figure     | Material  |
 | ---------- | --------- | 
-| <img src="./sinus.jpg" width="200" height="100"> | [Sine_wave](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
-| <img src="./dirac.jpg" width="200" height="110"> | [Dirac_as_a_limit](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/dirac.py) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
+| ![sinus](./sinus_300.jpg)  | [Sine_wave](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
+| ![dirac](./dirac_300.jpg) | [Dirac_as_a_limit](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/dirac.py) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
