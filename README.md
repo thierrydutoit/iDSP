@@ -1,6 +1,6 @@
 
 ## Welcome to the intuitive Digital Signal Processing (iDSP) Project
-iDSP repo
+iDSP repo mains branch
 
 This page gathers *reactive* material for developing *intuition* in *Digital Signal Processing*.
 
