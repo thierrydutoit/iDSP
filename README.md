@@ -1,6 +1,8 @@
 
 ## Welcome to the intuitive Digital Signal Processing (iDSP) Project
 
+gh branch of the iDSP
+
 This page gathers *reactive* material for developing *intuition* in *Digital Signal Processing*.
 
 The material exposed here is organized into a list of figures which are usually proposed statically in textbooks, leaving considerable mental work on the student side to go from figure to concept (work which professors hope to alleviate by describing their own mental pictures in terms of complex equations, supported by -often ambiguous- words, if not by gestures :)).
