@@ -26,8 +26,5 @@ If you want to contribute, or make suggestions or comments, [drop us a line](mai
 ##### Credits
 <sup> 
 The iDSP project was initiated by Profs. [Marcelo Wanderley (IDMIL, McGill)](http://www-new.idmil.org/people/marcelo-m-wanderley/) and [Thierry Dutoit (ISIA Lab, UMONS)](https://sites.google.com/view/thierrydutoit) during a 2-month sabbatical stay in Montreal (April-May 2022). 
-Some of the material proposed here comes from: 
-- the [IDMIL DSP Workbench](https://idmil.github.io/DAWb/) pages
-- [Neil Thapen's game](http://venuspatrol.nfshost.com/) page
-- Jack Schaedler's brilliant [Seeing Circles, Sines, and Signals](https://jackschaedler.github.io/circles-sines-signals/index.html) page
+Some of the material proposed here comes from the [IDMIL DSP Workbench](https://idmil.github.io/DAWb/) page, [Neil Thapen's game](http://venuspatrol.nfshost.com/) page, Jack Schaedler's brilliant [Seeing Circles, Sines, and Signals](https://jackschaedler.github.io/circles-sines-signals/index.html) pages.
 </sup>
