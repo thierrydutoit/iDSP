@@ -21,8 +21,6 @@ If you want to contribute, or make suggestions or comments, [drop us a line](mai
 | ![quantization](./quantization_300.jpg) | [Quantization and dithering](https://idmil.github.io/DAWb/quantization) / [Git](https://github.com/idmil/dawb)  |
 
 
----
-
 ##### Credits
 <sub> 
  The iDSP project was initiated by Profs. [Marcelo Wanderley (IDMIL, McGill)](http://www-new.idmil.org/people/marcelo-m-wanderley/) and [Thierry Dutoit (ISIA Lab, UMONS)](https://sites.google.com/view/thierrydutoit) during a 2-month sabbatical stay in Montreal (April-May 2022). 
