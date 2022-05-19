@@ -18,5 +18,5 @@ If you want to contribute, or make suggestions or comments, [drop us a line](mai
 
 | Figure     | Material  |
 | ---------- | --------- | 
-|            | [Sine_wave](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
-|            | [Dirac_as_a_limit](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/dirac.py) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
+| <img src="./sinus.jpg" width="200" height="100" /> | [Sine_wave](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
+| <img src="./dirac.jpg" width="200" height="130" /> | [Dirac_as_a_limit](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/dirac.py) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
