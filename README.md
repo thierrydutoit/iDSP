@@ -14,6 +14,13 @@ This material is taken from third parties when available (with their own license
 
 If you want to contribute, or make suggestions or comments, [drop us a line](mailto://thierry.dutoit@umons.ac.be).
 
+st.markdown('''
+    <a href="[https://docs.streamlit.io](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py)">
+        <img src="./sinus_300.jpg" />
+    </a>''',
+    unsafe_allow_html=True
+)
+
 | Figure     | iDSP content  |
 | ---------- | ------------- | 
 | ![sinus](./sinus_300.jpg)  | [Sine wave](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
