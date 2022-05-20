@@ -18,6 +18,7 @@ If you want to contribute, or make suggestions or comments, [drop us a line](mai
 | ---------- | ------------- | 
 | ![sinus](./sinus_300.jpg)  | [Sine wave](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
 | ![dirac](./dirac_300.jpg)  | [Dirac seen as a limit](https://share.streamlit.io/thierrydutoit/dirac-as-a-limit/main/dirac.py) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
+| ![SNR](./snr_audio_300.jpg)  | [Signal-to-Noise ratio (audio)](https://share.streamlit.io/thierrydutoit/snr-audio/main/snr_audio.py) / [Git](https://github.com/thierrydutoit/snr-audio)  |
 | ![quantization](./quantization_300.jpg) | [Quantization and dithering](https://idmil.github.io/DAWb/quantization) / [Video](https://www.youtube.com/watch?v=E5aPP7KB5F4) / [Git](https://github.com/idmil/dawb)   |
 | ![sampling](./sampling_300.jpg) | [Sampling](https://idmil.github.io/DAWb/sampling/) / [Video](https://www.youtube.com/watch?v=f5SKkB8GETk) / [Git](https://github.com/idmil/dawb)   |
 | ![articulatory acoustics](./pink_trombone_300.jpg) | [Articulatory acoustics](https://dood.al/pinktrombone/) / [Video](https://www.youtube.com/watch?v=7LGnozlwU1o	) / [Git](https://github.com/IMAGINARY/pink-trombone/blob/master/index.html)   |
