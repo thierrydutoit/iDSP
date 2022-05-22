@@ -22,7 +22,7 @@ If you want to contribute, or make suggestions or comments, [drop us a line](mai
 | <a href="https://share.streamlit.io/thierrydutoit/snr-audio/main/snr_audio.py"><img src="./snr_audio_300.jpg" /></a>  | [Signal-to-Noise ratio (audio)](https://share.streamlit.io/thierrydutoit/snr-audio/main/snr_audio.py) / [Git](https://github.com/thierrydutoit/snr-audio)  |
 | <a href="https://idmil.github.io/DAWb/quantization"><img src="./quantization_300.jpg" /></a> | [Quantization and dithering](https://idmil.github.io/DAWb/quantization) / [Video](https://www.youtube.com/watch?v=E5aPP7KB5F4) / [Git](https://github.com/idmil/dawb)   |
 | <a href="https://idmil.github.io/DAWb/sampling/"><img src="./sampling_300.jpg" /> | [Sampling](https://idmil.github.io/DAWb/sampling/) / [Video](https://www.youtube.com/watch?v=f5SKkB8GETk) / [Git](https://github.com/idmil/dawb)   |
-| <a href="https://dood.al/pinktrombone/"><img src="./pink_trombone_300.jpg" /> | [Articulatory acoustics](https://dood.al/pinktrombone/) / [Video](https://www.youtube.com/watch?v=7LGnozlwU1o	) / [Git](https://github.com/IMAGINARY/pink-trombone/blob/master/index.html)   |
+| <a href="https://dood.al/pinktrombone/"><img src="./pink_trombone_300.jpg" /> | [Phonetic acoustics](https://dood.al/pinktrombone/) / [Video](https://www.youtube.com/watch?v=7LGnozlwU1o	) / [Git](https://github.com/IMAGINARY/pink-trombone/blob/master/index.html)   |
 
 
 ##### Credits
