@@ -1,6 +1,7 @@
 
 ## Welcome to the intuitive Digital Signal Processing (iDSP) collaborative project
-Teaching is a Communication Theory problem (and also of course a matter of presence, perfoemance, humour, feeling etc.)
+Teaching is a Communication Theory problem (and also of course a matter of presence, performance, humour, feeling etc.)
+
 How to best transfer information to students through the limited capacity of the speech and visual channels ? A possible answer is: by using interactive, reactive images, which bring some sort of “biofeedback loop” and quickly make abstract concepts more accessible.
 
 This page gathers *reactive* material for developing *intuition* in *Digital Signal Processing*.
@@ -28,7 +29,53 @@ If you want to contribute, or make suggestions or comments, [drop us a line](mai
 
 
 ## The big picture
-Below is a list of concepts we hope to see someday in this project. Those in bold are available above at the time of writing these lines. Others are waiting for some good soul to be developed and shared. This list is open. Do not hesitate to [send a mail](mailto://thierry.dutoit@umons.ac.be) to provide your input.
+Below is a list of concepts we hope to see someday in this project. Some are available above at the time of writing these lines. Others are waiting for some good soul to be developed and shared. This list is open. Do not hesitate to [send a mail](mailto://thierry.dutoit@umons.ac.be) to provide your input.
+
+•	Periodic waveforms (ex : sinus, square, sawtooth, sinc, impulse) : a, f, phi 
+•	Power of a signal, RMS, an dBs. Link to audio norms for concerts
+•	Loudness. Measure perception from the listener, and [apply frequency compensation on a chirp for equal loudness perception](https://www.audiolabs-erlangen.de/resources/MIR/FMP/C1/C1S3_Dynamics.html)
+•	Simulate the audition after exposure to loud sounds without protection
+•	Simulate how very loud sounds are perceived when the ear distorts them (but do it on moderate loudness sounds)
+•	Sum of signals, including with opposite phase
+•	SNR on audio signals 
+•	SNR on images 
+•	Product of signals, vibrato, AM modulation
+•	Scalar product of signals
+  o	with dirac impulses
+  o	with phasors 
+•	Fourier as scalar product with phasors
+•	1-D convolution + practical application 
+•	Convolution d’images et extension vers CNN
+•	Sampling (to be split into several experiments : sampling, aliasing, anti-aliasing filter)
+•	Uniform quantization (incl. dithering) 
+•	Shannon and signal reconstruction in the time and freq domains
+•	Real D/A conversion : zero-hold and smoothing filter
+•	More complex quantization schemes (A, mu, one bit …)
+•	Upsampling 
+•	Dowsampling 
+•	Oversampling and application
+•	Compressive sampling 
+•	Articulatory acoustics
+•	Linear prediction modeling and synthesis 
+•	Panning, binaural phase shifting, HRTFs for audio spatialization 
+•	Sub-band decomposition and reconstruction
+•	Sub-band coding, mp3
+•	Possibly extend to [neural nets](https://towardsai.net/p/machine-learning/introduction-to-neural-networks-and-their-key-elements-part-c-activation-functions-layers-ea8c915a9d9), HMMs,…
+
+Existing material available from third parties can somehow be used for inspiration or for pointing to some demos
+
+•	Prof. Max Mignotte, DIRO, UMontréal has a [great repository of Java applets](http://www.iro.umontreal.ca/~mignotte/ift3205.html) (homemade or pointing to third party material)
+•	Prof. Daniel Russel has produced an [impressive collection of Mathematica demos on acoustics](https://www.acs.psu.edu/drussell/demos.html) (see this [video](mailto:https://idmil.gitlab.io/CIRMMT_visualizations/?/Instruments,%20Devices%20and%20Systems%20(RA1)/Musical%20Acoustics%20&%20Instruments/Daniel%20Russell) for a talk by the author)
+•	Math and physics Javascript-based demos are available [here](https://www.falstad.com/mathphysics.html)
+•	Signal processing Java demos can be found [here](https://pages.jh.edu/signals/) 
+•	[Reflections](https://coed.asee.org/2021/03/31/teaching-signal-processing-applications-using-an-android-echolocation-app), is an Android App for teaching autocorrelation via audio-based short range distance measurement (includes demo videos)
+•	Prof A. Spanias and colleagues have developed the [jDSP suite](https://coed.asee.org/2021/03/31/teaching-signal-processing-applications-using-an-android-echolocation-app), later ported to iphone/iPAD ([ijDSP](http://jdsp.asu.edu/ijdsp), and to [Android](https://play.google.com/store/apps/details?id=com.prototype.ajdsp1&hl=fr_CA&gl=US)
+•	[Spectroid](https://play.google.com/store/apps/details?id=com.prototype.ajdsp1&hl=fr_CA&gl=US-): a real-time spectrum analyzer on Android
+•	[PhyPhox](https://play.google.com/store/apps/details?id=com.prototype.ajdsp1&hl=fr_CA&gl=US) by TWTH Aachen, an excellent mobile lab (android & iOS). With [great videos on frequency and spectrum](https://phyphox.org/2021/05/) (audio, magnetic, acceleration). GPL source code available. 
+•	[Neural Networks from Scratch](https://nnfs.io/neural_network_animations) in Python 
+•	The excellent [online interactive book on DSP](https://jackschaedler.github.io/circles-sines-signals/dft_introduction.html) by Jack Schaedler with brilliant interactive animations (Javascript + Observable notebook using D3 as a data graphics lib).
+•	[Jupyter Notebooks on music processing](https://www.audiolabs-erlangen.de/resources/MIR/FMP/C0/C0.html) by the authors of a very good book on the topic.
+•	[Explained visually](https://setosa.io/ev), with an intuitive demo of [Markov chains](https://setosa.io/ev/markov-chains/)
 
   
 ##### Credits
