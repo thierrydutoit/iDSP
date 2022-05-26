@@ -66,9 +66,9 @@ Existing material available from third parties can somehow be used for inspirati
 - Math and physics Javascript-based demos are available [here](https://www.falstad.com/mathphysics.html)
 - Signal processing Java demos can be found [here](https://pages.jh.edu/signals/) 
 - [Reflections](https://coed.asee.org/2021/03/31/teaching-signal-processing-applications-using-an-android-echolocation-app), is an Android App for teaching autocorrelation via audio-based short range distance measurement (includes demo videos)
-- Prof A. Spanias and colleagues have developed the [jDSP suite](https://coed.asee.org/2021/03/31/teaching-signal-processing-applications-using-an-android-echolocation-app), later ported to iphone/iPAD ([ijDSP](http://jdsp.asu.edu/ijdsp), and to [Android](https://play.google.com/store/apps/details?id=com.prototype.ajdsp1&hl=fr_CA&gl=US)
-- [Spectroid](https://play.google.com/store/apps/details?id=com.prototype.ajdsp1&hl=fr_CA&gl=US-): a real-time spectrum analyzer on Android
-- [PhyPhox](https://play.google.com/store/apps/details?id=com.prototype.ajdsp1&hl=fr_CA&gl=US) by TWTH Aachen, an excellent mobile lab (android & iOS). With [great videos on frequency and spectrum](https://phyphox.org/2021/05/) (audio, magnetic, acceleration). GPL source code available. 
+- Prof A. Spanias and colleagues have developed the [jDSP suite](https://coed.asee.org/2021/03/31/teaching-signal-processing-applications-using-an-android-echolocation-app), later ported to iphone/iPAD ([ijDSP](http://jdsp.asu.edu/ijdsp), and to Android ([AJDSP](https://play.google.com/store/apps/details?id=com.prototype.ajdsp1&hl=fr_CA&gl=US))
+- [Spectroid](https://play.google.com/store/apps/details?id=com.pcmehanik.splspectrumanalyzer): a real-time spectrum analyzer on Android
+- [PhyPhox](https://phyphox.org/) by TWTH Aachen, an excellent mobile lab (android & iOS). With [great videos on frequency and spectrum](https://phyphox.org/2021/05/) (audio, magnetic, acceleration). GPL source code available. 
 - [Neural Networks from Scratch](https://nnfs.io/neural_network_animations) in Python 
 - The excellent [online interactive book on DSP](https://jackschaedler.github.io/circles-sines-signals/dft_introduction.html) by Jack Schaedler with brilliant interactive animations (Javascript + Observable notebook using D3 as a data graphics lib).
 - [Jupyter Notebooks on music processing](https://www.audiolabs-erlangen.de/resources/MIR/FMP/C0/C0.html) by the authors of a very good book on the topic.
