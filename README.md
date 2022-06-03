@@ -2,12 +2,12 @@
 ## Welcome to the intuitive Digital Signal Processing (iDSP) collaborative project
 This page gathers *reactive* material for developing *intuition* in *Digital Signal Processing*.
 
-Teaching indeed is a Communication Theory problem (and also of course a matter of presence, performance, humour, feeling etc.). How to best transfer information to students through the limited capacity of the speech and visual channels ? A possible answer is: by using interactive, reactive images, which bring some sort of “biofeedback loop” and quickly make abstract concepts more accessible.
+Teaching indeed is a Communication Theory problem (and also of course a matter of presence, performance, humour, feeling etc.). How to best transfer information to students through the limited capacity of the speech and visual channels? A possible answer is: by using interactive, reactive images, which bring some sort of “biofeedback loop” and quickly make abstract concepts more accessible.
 
 The material exposed here is organized into a list of figures which are usually proposed statically in textbooks, leaving considerable mental work on the student side to go from figure to concept. For each figure, we make our best to propose pointers to: 
 1. **Reactive tools**, which are the heart if the project. They are webapps which require no specific installation to run. Tools augment the figure with reactive components which involve students in the understanding of the concept. Tools are open source.
 2. **Videos**, which show how tools can be used to activate the figure. They are ideally snapshots of the tools, without spoken comments so as to let professors comment by themselves. Videos are Creative Commons.
-3. **Code**, available for students with technical background to check how concepts are implemented and possibly build on this implementation. At best, code comes from the tools themselves (in which compatutional code should be isolated from graphical code)
+3. **Code**, available for students with technical background to check how concepts are implemented and possibly build on this implementation. At best, code comes from the tools themselves (in which computational code should be isolated from graphical code)
 
 This material is taken from third parties when available (with their own licenses), or built on purpose.
 
