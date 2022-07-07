@@ -12,6 +12,7 @@ The material exposed here is organized into a list of figures which are usually 
 This material is taken from third parties when available (with their own licenses), or built on purpose.
 
 If you want to contribute, or make suggestions or comments, [drop us a line](mailto://thierry.dutoit@umons.ac.be).
+If you want to create an iDSP app using the python StreamLi library, see this [How-To guide](iDSP - HowTo).
 
 ---
 
