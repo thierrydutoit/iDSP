@@ -20,7 +20,7 @@ If you want to create an iDSP app using the python StreamLit library, see this [
 
 | Figure     | iDSP content  |
 | ---------- | ------------- | 
-| <a href="https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py"><img src="./sinus_300.jpg" /></a> | [Sine wave](https://share.streamlit.io/thierrydutoit/sine-wave/main/sinus.py) / [Git](https://github.com/thierrydutoit/sine-wave)  |
+| <a href="https://sine-wave.streamlit.app/"><img src="./sinus_300.jpg" /></a> | [Sine wave](https://sine-wave.streamlit.app/) / [Git](https://github.com/thierrydutoit/sine-wave)  |
 | <a href="https://dampedsinus.streamlit.app/"><img src="./damped_sinus_300.jpg" /></a> | [Damped sine wave](https://dampedsinus.streamlit.app/) / [Git](https://github.com/thierrydutoit/damped_sinus)  |
 | <a href="https://dirac-as-a-limit.streamlit.app/"><img src="./dirac_300.jpg" /></a>  | [Measuring time content](https://dirac-as-a-limit.streamlit.app/) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
 | <a href="https://share.streamlit.io/thierrydutoit/scalar_product_periodic/main/scalar_product_periodic.py"><img src="./scalar-product-periodic-300.jpg" /></a>  | [Measuring frequency content](https://share.streamlit.io/thierrydutoit/scalar_product_periodic/main/scalar_product_periodic.py) / [Git](https://github.com/thierrydutoit/scalar_product_periodic)  |
