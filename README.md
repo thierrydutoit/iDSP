@@ -77,8 +77,8 @@ Existing material available from third parties can somehow be used for inspirati
 - The excellent [online interactive book on DSP](https://jackschaedler.github.io/circles-sines-signals/dft_introduction.html) by Jack Schaedler with brilliant interactive animations (Javascript + Observable notebook using D3 as a data graphics lib).
 - [Jupyter Notebooks on music processing](https://www.audiolabs-erlangen.de/resources/MIR/FMP/C0/C0.html) by the authors of a very good book on the topic.
 - [Explained visually](https://setosa.io/ev), with an intuitive demo of [Markov chains](https://setosa.io/ev/markov-chains/)
-- [https://vincmazet.github.io/spetsi/] Signal-relatd animations (in French) by Vincent Mazet (U. Strasbourg).
-- [https://phyanim.sciences.univ-nantes.fr/index.php] Scientific animations (in French) by Geneviève Tulloue (U. Nantes)
+- [Signal-related animations](https://vincmazet.github.io/spetsi/)  (in French) by Vincent Mazet (U. Strasbourg).
+- [Scientific animations ](https://phyanim.sciences.univ-nantes.fr/index.php) (in French) by Geneviève Tulloue (U. Nantes)
   
 ##### Credits
 <sup> 
