@@ -20,9 +20,9 @@ If you want to create an iDSP app using the python StreamLit library, see this [
 
 | Figure     | iDSP content  |
 | ---------- | ------------- | 
-| <a href="https://sine-wave.streamlit.app/"><img src="./sinus_300.jpg" /></a> | [Sine wave](https://sine-wave.streamlit.app/) / [Git](https://github.com/thierrydutoit/sine-wave)  |
+| <a href="https://sine-wave.onrender.com/"><img src="./sinus_300.jpg" /></a> | [Sine wave](https://sine-wave.onrender.com/) / [Git](https://github.com/thierrydutoit/sine-wave)  |
 | <a href="https://dampedsinus.streamlit.app/"><img src="./damped_sinus_300.jpg" /></a> | [Damped sine wave](https://dampedsinus.streamlit.app/) / [Git](https://github.com/thierrydutoit/damped_sinus)  |
-| <a href="https://dirac-as-a-limit.streamlit.app/"><img src="./dirac_300.jpg" /></a>  | [Measuring time content](https://dirac-as-a-limit.streamlit.app/) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
+| <a href="https://dirac-as-a-limit.onrender.com/"><img src="./dirac_300.jpg" /></a>  | [Measuring time content](https://dirac-as-a-limit.onrender.com/) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
 | <a href="https://frequency-content-periodic.streamlit.app/"><img src="./scalar-product-periodic-300.jpg" /></a>  | [Measuring frequency content](https://frequency-content-periodic.streamlit.app/) / [Git](https://github.com/thierrydutoit/scalar_product_periodic)  |
 | <a href="https://snr-audio.streamlit.app/"><img src="./snr_audio_300.jpg" /></a>  | [Signal-to-Noise ratio (audio)](https://snr-audio.streamlit.app/) / [Git](https://github.com/thierrydutoit/snr-audio)  |
 | <a href="https://idmil.github.io/DAWb/quantization"><img src="./quantization_300.jpg" /></a> | [Quantization and dithering](https://idmil.gitlab.io/course-materials/mumt203/interactive-demos/quantization/) / [Video](https://www.youtube.com/watch?v=E5aPP7KB5F4) / [Git](https://github.com/idmil/dawb) / [Paper](https://dl.acm.org/doi/abs/10.1145/3478384.3478397) |
