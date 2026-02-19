@@ -20,16 +20,16 @@ If you want to create an iDSP app using the python StreamLit library, see this [
 
 | Figure     | iDSP content  |
 | ---------- | ------------- | 
-| <a href="https://sine-wave.onrender.com/"><img src="./sinus_300.jpg" /></a> | [Sine wave](https://sine-wave.onrender.com/) / [Git](https://github.com/thierrydutoit/sine-wave)  |
-| <a href="https://dampedsinus.onrender.com/"><img src="./damped_sinus_300.jpg" /></a> | [Damped sine wave](https://dampedsinus.onrender.com/) / [Git](https://github.com/thierrydutoit/damped_sinus)  |
-| <a href="https://dirac-as-a-limit.onrender.com/"><img src="./dirac_300.jpg" /></a>  | [Measuring time content](https://dirac-as-a-limit.onrender.com/) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
-| <a href="https://scalar-product-periodic.onrender.com/"><img src="./scalar-product-periodic-300.jpg" /></a>  | [Measuring frequency content](https://scalar-product-periodic.onrender.com/) / [Git](https://github.com/thierrydutoit/scalar_product_periodic)  |
-| <a href="https://snr-audio.onrender.com/"><img src="./snr_audio_300.jpg" /></a>  | [Signal-to-Noise ratio (audio)](https://snr-audio.onrender.com/) / [Git](https://github.com/thierrydutoit/snr-audio)  |
+| <a href="https://sine-wave.onrender.com/"><img src="./sinus_300.jpg" /></a> | [Sine wave](https://sine-wave.streamlit.app/) / [Git](https://github.com/thierrydutoit/sine-wave)  |
+| <a href="https://dampedsinus.onrender.com/"><img src="./damped_sinus_300.jpg" /></a> | [Damped sine wave](https://dampedsinus.streamlit.app/) / [Git](https://github.com/thierrydutoit/damped_sinus)  |
+| <a href="https://dirac-as-a-limit.onrender.com/"><img src="./dirac_300.jpg" /></a>  | [Measuring time content](https://dirac-as-a-limit.streamlit.app/) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
+| <a href="https://scalar-product-periodic.onrender.com/"><img src="./scalar-product-periodic-300.jpg" /></a>  | [Measuring frequency content](https://scalar-product-periodic.streamlit.app/) / [Git](https://github.com/thierrydutoit/scalar_product_periodic)  |
+| <a href="https://snr-audio.onrender.com/"><img src="./snr_audio_300.jpg" /></a>  | [Signal-to-Noise ratio (audio)](https://snr-audio.streamlit.app/) / [Git](https://github.com/thierrydutoit/snr-audio)  |
 | <a href="https://idmil.github.io/DAWb/quantization"><img src="./quantization_300.jpg" /></a> | [Quantization and dithering](https://idmil.gitlab.io/course-materials/mumt203/interactive-demos/quantization/) / [Video](https://www.youtube.com/watch?v=E5aPP7KB5F4) / [Git](https://github.com/idmil/dawb) / [Paper](https://dl.acm.org/doi/abs/10.1145/3478384.3478397) |
 | <a href="https://idmil.github.io/DAWb/sampling/"><img src="./sampling_300.jpg" /> | [Sampling](https://idmil.gitlab.io/course-materials/mumt203/interactive-demos/sampling/) / [Video](https://www.youtube.com/watch?v=f5SKkB8GETk) / [Git](https://github.com/idmil/dawb) / [Paper](https://dl.acm.org/doi/abs/10.1145/3478384.3478397)  |
-| <a href="https://downsampling.onrender.com/"><img src="./downsampling_300.jpg" /></a>  | [Downsampling](https://downsampling.onrender.com/) / [Git](https://github.com/thierrydutoit/downsampling)  |
-| <a href="https://generalized-shannon-theorem.onrender.com/"><img src="./generalized_shannon_theorem_300.jpg" /></a>  | [Generalized Shannon Theorem](https://generalized-shannon-theorem.onrender.com/) / [Git](https://github.com/thierrydutoit/generalized-shannon-theorem)  |
-| <a href="https://bit-error-rate-on-text.onrender.com/"><img src="./ber_to_text_300.jpg" /></a>  | [Binary Transmission Error Simulator](https://bit-error-rate-on-text.onrender.com/) / [Git](https://github.com/thierrydutoit/bit_error_rate_on_text)  |
+| <a href="https://downsampling.onrender.com/"><img src="./downsampling_300.jpg" /></a>  | [Downsampling](https://downsampling.streamlit.app/) / [Git](https://github.com/thierrydutoit/downsampling)  |
+| <a href="https://generalized-shannon-theorem.onrender.com/"><img src="./generalized_shannon_theorem_300.jpg" /></a>  | [Generalized Shannon Theorem](https://generalized-shannon-theorem.streamlit.app/) / [Git](https://github.com/thierrydutoit/generalized-shannon-theorem)  |
+| <a href="https://bit-error-rate-on-text.onrender.com/"><img src="./ber_to_text_300.jpg" /></a>  | [Binary Transmission Error Simulator](https://bit-error-rate-on-text.streamlit.app/) / [Git](https://github.com/thierrydutoit/bit_error_rate_on_text)  |
 | <a href="https://dood.al/pinktrombone/"><img src="./pink_trombone_300.jpg" /> | [Phonetic acoustics](https://dood.al/pinktrombone/) / [Video](https://www.youtube.com/watch?v=7LGnozlwU1o	) / [Git](https://github.com/IMAGINARY/pink-trombone/blob/master/index.html)   |
 
 
