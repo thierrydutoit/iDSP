@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Downsampling</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --text: rgb(49, 51, 63);
+      --muted: rgb(90, 93, 108);
+      --accent: rgb(255, 75, 75);
+      --track: rgba(49, 51, 63, 0.18);
+      --code-bg: rgba(49, 51, 63, 0.06);
+      --border: rgba(49, 51, 63, 0.18);
+      --thumb-size: 1rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem 1rem;
+      line-height: 1.5;
+      font-size: 1rem;
+      background: white;
+    }
+
+    h1 {
+      margin: 0 0 0.75rem 0;
+      font-weight: 700;
+      font-size: 2.2rem;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 0 0 1rem 0;
+      font-size: 1.05rem;
+    }
+
+    code {
+      font-family: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: var(--code-bg);
+      padding: 0.08rem 0.32rem;
+      border-radius: 0.35rem;
+      font-size: 0.92em;
+    }
+
+    .controls-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0 1.1rem 0;
+      align-items: start;
+    }
+
+    .control {
+      min-width: 0;
+    }
+
+    .labelrow {
+      display: flex;
+      justify-content: flex-start;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.18rem;
+      min-height: 1.2rem;
+    }
+
+    .labelrow label {
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding-top: 0.68rem;
+      padding-bottom: 0.42rem;
+    }
+
+    .slider-value-bubble {
+      position: absolute;
+      top: -0.02rem;
+      left: var(--pct);
+      transform: translateX(-50%);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.84rem;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .slider-limits {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.02rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      --pct: 50%;
+    }
+
+    input[type="range"]:focus {
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background:
+        linear-gradient(to right,
+          var(--accent) 0%,
+          var(--accent) var(--pct),
+          var(--track) var(--pct),
+          var(--track) 100%);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--track);
+    }
+
+    input[type="range"]::-moz-range-progress {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      margin-top: -5px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+
+    .checkbox-card {
+      padding-top: 0.1rem;
+    }
+
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      min-height: 2.3rem;
+      padding: 0.42rem 0;
+    }
+
+    .checkbox-wrap input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 1.05rem;
+      height: 1.05rem;
+      border: 1.5px solid rgba(49, 51, 63, 0.35);
+      border-radius: 0.28rem;
+      background: white;
+      display: inline-grid;
+      place-content: center;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .checkbox-wrap input[type="checkbox"]::before {
+      content: "";
+      width: 0.58rem;
+      height: 0.58rem;
+      transform: scale(0);
+      transition: 120ms transform ease-in-out;
+      box-shadow: inset 1rem 1rem white;
+      clip-path: polygon(14% 44%, 0 59%, 50% 100%, 100% 16%, 84% 0, 43% 62%);
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .checkbox-wrap input[type="checkbox"]:checked::before {
+      transform: scale(1);
+    }
+
+    .checkbox-wrap label {
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .plot {
+      width: 100%;
+      margin: 0.5rem 0 1rem 0;
+    }
+
+    #timePlot {
+      height: 300px;
+    }
+
+    #freqPlot {
+      height: 300px;
+    }
+
+    .audio-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 0.8rem;
+    }
+
+    .audio-card h3 {
+      margin: 0 0 0.35rem 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    audio {
+      width: 100%;
+    }
+
+    details {
+      margin-top: 1.35rem;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .errorbox {
+      display: none;
+      margin: 1rem 0;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      background: rgba(255, 75, 75, 0.08);
+      color: rgb(120, 20, 20);
+      font-size: 0.95rem;
+    }
+
+    ul {
+      margin-top: 0.3rem;
+      padding-left: 1.25rem;
+    }
+
+    @media (max-width: 700px) {
+      .controls-row,
+      .audio-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>⬇️ Downsampling</h1>
+
+  <p>
+    Why do we need to low-pass a discrete signal before downsampling it?
+    Try it by yourself.
+  </p>
+
+  <div id="errorbox" class="errorbox"></div>
+
+  <div class="controls-row">
+    <div class="control">
+      <div class="labelrow">
+        <label for="factor">Downsampling factor ×</label>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-value-bubble" id="factorVal">2</div>
+        <input id="factor" type="range" min="1" max="16" step="1" value="2" />
+        <div class="slider-limits">
+          <span>1</span>
+          <span>16</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="control checkbox-card">
+      <div class="labelrow">
+        <label for="applyFilter">Anti-aliasing low-pass (pre-decimate)</label>
+      </div>
+      <div class="checkbox-wrap">
+        <input id="applyFilter" type="checkbox" checked />
+        <label for="applyFilter">Enable</label>
+      </div>
+    </div>
+  </div>
+
+  <div id="timePlot" class="plot"></div>
+  <div id="freqPlot" class="plot"></div>
+
+  <div class="audio-row">
+    <div class="audio-card">
+      <h3>Original signal</h3>
+      <audio id="audioOriginal" controls></audio>
+    </div>
+    <div class="audio-card">
+      <h3>Downsampled signal</h3>
+      <audio id="audioDownsampled" controls></audio>
+    </div>
+  </div>
+
+  <details>
+    <summary>Open for comments</summary>
+    <div id="notes"></div>
+  </details>
+
+  <script>
+    const fs = 8000;
+    const f0 = 150;
+    const duty = 60;
+    const duration = 0.5;
+
+    const els = {
+      factor: document.getElementById("factor"),
+      factorVal: document.getElementById("factorVal"),
+      applyFilter: document.getElementById("applyFilter"),
+      audioOriginal: document.getElementById("audioOriginal"),
+      audioDownsampled: document.getElementById("audioDownsampled"),
+      notes: document.getElementById("notes"),
+      errorbox: document.getElementById("errorbox")
+    };
+
+    function showError(msg) {
+      els.errorbox.style.display = "block";
+      els.errorbox.textContent = msg;
+    }
+
+    function setSliderUI(el, bubbleEl) {
+      const min = Number(el.min ?? 0);
+      const max = Number(el.max ?? 100);
+      const val = Number(el.value);
+      const pct = ((val - min) * 100) / (max - min);
+      el.style.setProperty("--pct", `${pct}%`);
+      bubbleEl.style.left = `${pct}%`;
+    }
+
+    function commonPlotLayout(title) {
+      return {
+        title,
+        font: {
+          family: '"Source Sans 3","Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+          size: 14,
+          color: "rgb(49, 51, 63)"
+        },
+        margin: { t: 42, l: 46, r: 12, b: 42 },
+        paper_bgcolor: "white",
+        plot_bgcolor: "white",
+        showlegend: true
+      };
+    }
+
+    function linspaceCount(n, fn) {
+      const out = new Float64Array(n);
+      for (let i = 0; i < n; i++) out[i] = fn(i);
+      return out;
+    }
+
+    function squareWave(t, f0, dutyCycle) {
+      const T = 1 / f0;
+      const phase = ((t % T) + T) % T;
+      return phase < (dutyCycle / 100) * T ? 1 : -1;
+    }
+
+    function hann(N) {
+      const w = new Float64Array(N);
+      if (N === 1) {
+        w[0] = 1;
+        return w;
+      }
+      for (let n = 0; n < N; n++) {
+        w[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (N - 1));
+      }
+      return w;
+    }
+
+    function rfftMag(x, fsLocal) {
+      const N = x.length;
+      if (N < 4) {
+        return { f: [0], db: [-120] };
+      }
+
+      const w = hann(N);
+      let cg = 0;
+      for (let i = 0; i < N; i++) cg += w[i];
+      cg /= N;
+
+      const K = Math.floor(N / 2) + 1;
+      const freqs = new Array(K);
+      const mags = new Array(K);
+
+      for (let k = 0; k < K; k++) {
+        let re = 0;
+        let im = 0;
+        for (let n = 0; n < N; n++) {
+          const xn = x[n] * w[n];
+          const ang = -2 * Math.PI * k * n / N;
+          re += xn * Math.cos(ang);
+          im += xn * Math.sin(ang);
+        }
+        const mag = (2 / N) * Math.hypot(re, im) / Math.max(cg, 1e-12);
+        mags[k] = 20 * Math.log10(Math.max(mag, 1e-12));
+        freqs[k] = k * fsLocal / N;
+      }
+
+      return { f: freqs, db: mags };
+    }
+
+    function convolve(x, h) {
+      const y = new Float64Array(x.length);
+      const M = h.length;
+      for (let n = 0; n < x.length; n++) {
+        let s = 0;
+        for (let k = 0; k < M; k++) {
+          const idx = n - k;
+          if (idx >= 0 && idx < x.length) s += h[k] * x[idx];
+        }
+        y[n] = s;
+      }
+      return y;
+    }
+
+    function lowpassFIR(cutoffHz, fsLocal, taps = 101) {
+      const h = new Float64Array(taps);
+      const fc = cutoffHz / fsLocal;
+      const M = taps - 1;
+
+      for (let n = 0; n < taps; n++) {
+        const m = n - M / 2;
+        let sinc;
+        if (Math.abs(m) < 1e-12) {
+          sinc = 2 * fc;
+        } else {
+          sinc = Math.sin(2 * Math.PI * fc * m) / (Math.PI * m);
+        }
+        const win = 0.54 - 0.46 * Math.cos((2 * Math.PI * n) / M);
+        h[n] = sinc * win;
+      }
+
+      let sum = 0;
+      for (let i = 0; i < taps; i++) sum += h[i];
+      for (let i = 0; i < taps; i++) h[i] /= sum;
+
+      return h;
+    }
+
+    function filtfiltApprox(x, h) {
+      const y1 = convolve(x, h);
+      const rev1 = Float64Array.from(y1).reverse();
+      const y2 = convolve(rev1, h);
+      return Float64Array.from(y2).reverse();
+    }
+
+    function makeWavBlobUrl(samples, sampleRate) {
+      const x = new Float32Array(samples.length);
+      for (let i = 0; i < samples.length; i++) {
+        x[i] = Math.max(-1, Math.min(1, samples[i]));
+      }
+
+      const numChannels = 1;
+      const bitsPerSample = 16;
+      const blockAlign = numChannels * bitsPerSample / 8;
+      const byteRate = sampleRate * blockAlign;
+      const dataSize = x.length * 2;
+      const buffer = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(buffer);
+
+      function writeString(offset, s) {
+        for (let i = 0; i < s.length; i++) {
+          view.setUint8(offset + i, s.charCodeAt(i));
+        }
+      }
+
+      writeString(0, "RIFF");
+      view.setUint32(4, 36 + dataSize, true);
+      writeString(8, "WAVE");
+      writeString(12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, byteRate, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitsPerSample, true);
+      writeString(36, "data");
+      view.setUint32(40, dataSize, true);
+
+      let offset = 44;
+      for (let i = 0; i < x.length; i++, offset += 2) {
+        const s = Math.max(-1, Math.min(1, x[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+      }
+
+      const blob = new Blob([buffer], { type: "audio/wav" });
+      return URL.createObjectURL(blob);
+    }
+
+    let prevOriginalUrl = null;
+    let prevDownsampledUrl = null;
+
+    function updateApp() {
+      try {
+        const factor = Math.max(1, Number(els.factor.value) || 1);
+        const applyFilter = els.applyFilter.checked;
+        els.factorVal.textContent = String(factor);
+        setSliderUI(els.factor, els.factorVal);
+
+        const N = Math.round(duration * fs);
+        const t = linspaceCount(N, i => i / fs);
+
+        const sig = new Float64Array(N);
+        for (let i = 0; i < N; i++) {
+          sig[i] = squareWave(t[i], f0, duty);
+        }
+
+        let fs_ds = Math.floor(fs / factor);
+        if (fs_ds < 1) fs_ds = 1;
+
+        let sig_proc = sig;
+        if (applyFilter && factor > 1) {
+          const ny_new = 0.5 * fs_ds;
+          const cutoff = 0.9 * ny_new;
+          const h = lowpassFIR(cutoff, fs, 121);
+          sig_proc = filtfiltApprox(sig, h);
+        }
+
+        const dsLen = Math.ceil(sig_proc.length / factor);
+        const sig_ds = new Float64Array(dsLen);
+        for (let i = 0, j = 0; i < sig_proc.length; i += factor, j++) {
+          sig_ds[j] = sig_proc[i];
+        }
+
+        const t_ds = new Float64Array(sig_ds.length);
+        for (let i = 0; i < sig_ds.length; i++) t_ds[i] = i / fs_ds;
+
+        const show_time = Math.min(N, Math.round(0.02 * fs));
+        const show_ds = Math.min(sig_ds.length, Math.round(show_time * fs_ds / fs));
+
+        Plotly.react("timePlot", [
+          {
+            x: Array.from(t.slice(0, show_time)),
+            y: Array.from(sig.slice(0, show_time)),
+            type: "scatter",
+            mode: "lines+markers",
+            marker: { size: 4 },
+            line: { width: 2 },
+            name: "Original",
+            opacity: 0.9
+          },
+          ...(applyFilter && factor > 1 ? [{
+            x: Array.from(t.slice(0, show_time)),
+            y: Array.from(sig_proc.slice(0, show_time)),
+            type: "scatter",
+            mode: "lines",
+            line: { width: 2 },
+            name: "Filtered (pre-downsample)",
+            opacity: 0.9
+          }] : []),
+          {
+            x: Array.from(t_ds.slice(0, show_ds)),
+            y: Array.from(sig_ds.slice(0, show_ds)),
+            type: "scatter",
+            mode: "lines+markers",
+            marker: { size: 5 },
+            line: { width: 2 },
+            name: `Downsampled ×${factor}`,
+            opacity: 0.9
+          }
+        ], {
+          ...commonPlotLayout("Time Domain"),
+          legend: {
+            x: 0.02,
+            y: 0.98,
+            xanchor: "left",
+            yanchor: "top",
+            bgcolor: "rgba(255,255,255,0.75)",
+            bordercolor: "rgba(0,0,0,0)"
+          },
+          xaxis: {
+            title: { text: "Time [s]", font: { size: 11 } },
+            tickfont: { size: 10 },
+            showline: false,
+            zeroline: false
+          },
+          yaxis: {
+            title: { text: "Amplitude", font: { size: 11 } },
+            tickfont: { size: 10 },
+            showline: false,
+            zeroline: false
+          }
+        }, { responsive: true });
+
+        const NfftOriginal = Math.min(2048, sig.length);
+        const NfftDs = Math.min(2048, sig_ds.length);
+
+        const specO = rfftMag(sig.slice(0, NfftOriginal), fs);
+        const specD = rfftMag(sig_ds.slice(0, NfftDs), fs_ds);
+
+        const xmax = Math.max(
+          specO.f.length ? specO.f[specO.f.length - 1] : fs / 2,
+          specD.f.length ? specD.f[specD.f.length - 1] : fs_ds / 2
+        );
+
+        Plotly.react("freqPlot", [
+          {
+            x: specO.f,
+            y: specO.db,
+            type: "scatter",
+            mode: "lines",
+            line: { width: 2 },
+            name: "Original (dB)",
+            opacity: 0.9
+          },
+          {
+            x: specD.f,
+            y: specD.db,
+            type: "scatter",
+            mode: "lines",
+            line: { width: 2 },
+            name: `Downsampled ×${factor} (dB)`,
+            opacity: 0.9
+          }
+        ], {
+          ...commonPlotLayout("Frequency Domain"),
+          legend: {
+            x: 0.98,
+            y: 0.98,
+            xanchor: "right",
+            yanchor: "top",
+            bgcolor: "rgba(255,255,255,0.75)",
+            bordercolor: "rgba(0,0,0,0)"
+          },
+          xaxis: {
+            title: { text: "Frequency [Hz]", font: { size: 11 } },
+            tickfont: { size: 10 },
+            range: [0, xmax],
+            showline: false,
+            zeroline: false,
+            gridcolor: "rgba(49, 51, 63, 0.10)"
+          },
+          yaxis: {
+            title: { text: "Magnitude [dB]", font: { size: 11 } },
+            tickfont: { size: 10 },
+            range: [-80, 0],
+            showline: false,
+            zeroline: false,
+            gridcolor: "rgba(49, 51, 63, 0.10)"
+          }
+        }, { responsive: true });
+
+        const sigPlay = new Float32Array(sig.length);
+        for (let i = 0; i < sig.length; i++) sigPlay[i] = 0.9 * sig[i];
+
+        const sigDsPlay = new Float32Array(sig_ds.length);
+        for (let i = 0; i < sig_ds.length; i++) sigDsPlay[i] = 0.9 * sig_ds[i];
+
+        if (prevOriginalUrl) URL.revokeObjectURL(prevOriginalUrl);
+        if (prevDownsampledUrl) URL.revokeObjectURL(prevDownsampledUrl);
+
+        prevOriginalUrl = makeWavBlobUrl(sigPlay, fs);
+        prevDownsampledUrl = makeWavBlobUrl(sigDsPlay, fs_ds);
+
+        els.audioOriginal.src = prevOriginalUrl;
+        els.audioDownsampled.src = prevDownsampledUrl;
+
+        const ny_orig = fs / 2;
+        const ny_new = fs_ds / 2;
+
+        els.notes.innerHTML = `
+          <p><strong>Sampling</strong></p>
+          <ul>
+            <li>Original fs: <strong>${fs} Hz</strong> (Nyquist: <strong>${ny_orig.toFixed(0)} Hz</strong>)</li>
+            <li>Downsampled fs: <strong>${fs_ds} Hz</strong> (Nyquist: <strong>${ny_new.toFixed(0)} Hz</strong>)</li>
+          </ul>
+
+          <p><strong>What to observe</strong></p>
+          <ul>
+            <li>A rectangular wave contains <strong>many harmonics</strong>.</li>
+            <li>With the filter <strong>OFF</strong>, harmonics above the new Nyquist (<strong>${ny_new.toFixed(0)} Hz</strong>) will <strong>alias</strong> into lower frequencies.</li>
+            <li>With the filter <strong>ON</strong>, those high harmonics are attenuated before decimation, reducing aliasing in the downsampled spectrum.</li>
+          </ul>
+
+          <p>
+            Notice that the downsampled signal in the "OFF" approach may seem closer to the initial rectangular signal in time.
+            In practice though, it sounds much worse than with the "ON" approach, and shows aliased frequency components below the new Nyquist frequency.
+          </p>
+        `;
+
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    function init() {
+      try {
+        setSliderUI(els.factor, els.factorVal);
+        els.factor.addEventListener("input", updateApp);
+        els.applyFilter.addEventListener("change", updateApp);
+        updateApp();
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>

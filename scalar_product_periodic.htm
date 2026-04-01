@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Measuring Frequency Content</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: {
+        fontCache: 'global'
+      },
+      startup: {
+        typeset: true
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --text: rgb(49, 51, 63);
+      --muted: rgb(90, 93, 108);
+      --accent: rgb(255, 75, 75);
+      --track: rgba(49, 51, 63, 0.18);
+      --code-bg: rgba(49, 51, 63, 0.06);
+      --thumb-size: 1rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem 1rem;
+      line-height: 1.5;
+      font-size: 1rem;
+      background: white;
+    }
+
+    h1 {
+      margin: 0 0 0.75rem 0;
+      font-weight: 700;
+      font-size: 2.2rem;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 0 0 1rem 0;
+      font-size: 1.05rem;
+    }
+
+    code {
+      font-family: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: var(--code-bg);
+      padding: 0.08rem 0.32rem;
+      border-radius: 0.35rem;
+      font-size: 0.92em;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.9rem;
+      margin: 1rem 0 1.2rem 0;
+    }
+
+    .slider-row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .control,
+    .fullwidth-control {
+      padding: 0;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      min-width: 0;
+    }
+
+    .labelrow {
+      display: flex;
+      justify-content: flex-start;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.18rem;
+      min-height: 1.2rem;
+    }
+
+    .labelrow label {
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    select {
+      width: 100%;
+      font: inherit;
+      color: var(--text);
+      border: 1px solid rgba(49, 51, 63, 0.22);
+      border-radius: 0.5rem;
+      padding: 0.5rem 2.2rem 0.5rem 0.75rem;
+      background:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%),
+        white;
+      background-position:
+        calc(100% - 16px) calc(50% - 1px),
+        calc(100% - 11px) calc(50% - 1px);
+      background-size: 5px 5px, 5px 5px;
+      background-repeat: no-repeat;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 0.2rem rgba(255, 75, 75, 0.12);
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding-top: 0.68rem;
+      padding-bottom: 0.42rem;
+    }
+
+    .slider-value-bubble {
+      position: absolute;
+      top: -0.02rem;
+      left: var(--pct);
+      transform: translateX(-50%);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.84rem;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .slider-limits {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.02rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      --pct: 50%;
+    }
+
+    input[type="range"]:focus {
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background:
+        linear-gradient(to right,
+          var(--accent) 0%,
+          var(--accent) var(--pct),
+          var(--track) var(--pct),
+          var(--track) 100%);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--track);
+    }
+
+    input[type="range"]::-moz-range-progress {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      margin-top: -5px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+
+    .section-gap {
+      margin-top: 1rem;
+    }
+
+    #signalPlot {
+      width: 100%;
+      height: 250px;
+      margin: 0.45rem 0 0.9rem 0;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .plot {
+      width: 100%;
+      height: 360px;
+    }
+
+    .errorbox {
+      display: none;
+      margin: 1rem 0;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      background: rgba(255, 75, 75, 0.08);
+      color: rgb(120, 20, 20);
+      font-size: 0.95rem;
+    }
+
+    details {
+      margin-top: 1.4rem;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .mathblock {
+      margin: 0.75rem 0;
+    }
+
+    @media (max-width: 700px) {
+      .row,
+      .slider-row-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Measuring frequency content</h1>
+
+  <p>
+    Suppose you are given a black box with some unknown periodic signal
+    $x_{T_0}(t)$ in it, whose fundamental amplitude $a$,
+    frequency $f_0 = 1/T_0$ and initial phase $\phi$ are unknown.
+    Suppose the only thing you can do is to provide another signal
+    $in(t)$ as input, in which case the black box will output the inner product
+    between the two.
+  </p>
+
+  <p>
+    What kind of periodic signal should you use as input to get the frequency,
+    amplitude and phase of the fundamental frequency component of $x_{T_0}(t)$?
+  </p>
+
+  <div id="errorbox" class="errorbox"></div>
+
+  <div class="controls">
+    <div class="control">
+      <div class="labelrow">
+        <label for="signalType">Choose a periodic signal</label>
+      </div>
+      <select id="signalType">
+        <option>Cosine</option>
+        <option>Square</option>
+        <option>Sawtooth</option>
+      </select>
+    </div>
+
+    <div class="slider-row-3">
+      <div class="control">
+        <div class="labelrow">
+          <label for="amplitude">Amplitude: $a$</label>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-value-bubble" id="amplitudeVal">1.00</div>
+          <input id="amplitude" type="range" min="0.5" max="2.0" step="0.01" value="1.0" />
+          <div class="slider-limits">
+            <span>0.5</span>
+            <span>2.0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="control">
+        <div class="labelrow">
+          <label for="f0">Frequency: $f_0$ [Hz]</label>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-value-bubble" id="f0Val">1</div>
+          <input id="f0" type="range" min="1" max="5" step="1" value="1" />
+          <div class="slider-limits">
+            <span>1</span>
+            <span>5</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="control">
+        <div class="labelrow">
+          <label for="phi">Initial phase: $\phi$ [rad]</label>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-value-bubble" id="phiVal">0.00</div>
+          <input id="phi" type="range" min="-3.1415926536" max="3.1415926536" step="0.01" value="0" />
+          <div class="slider-limits">
+            <span>-π</span>
+            <span>π</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fullwidth-control">
+    <div class="labelrow">
+      <label for="timeStamp">Time stamp [s]</label>
+    </div>
+    <div class="slider-wrap">
+      <div class="slider-value-bubble" id="timeStampVal">0.000</div>
+      <input id="timeStamp" type="range" min="0" max="2.0" step="0.001" value="0" />
+      <div class="slider-limits">
+        <span>0</span>
+        <span>2.0</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="signalPlot"></div>
+
+  <p class="section-gap">
+    Let us choose a phasor as <code>e<sup>j2πft</sup></code> as input signal $in(t)$,
+    and vary its frequency $f$.
+  </p>
+
+  <div class="fullwidth-control">
+    <div class="labelrow">
+      <label for="f">Frequency of the phasor: $f$ [Hz]</label>
+    </div>
+    <div class="slider-wrap">
+      <div class="slider-value-bubble" id="fVal">1</div>
+      <input id="f" type="range" min="-5" max="5" step="1" value="1" />
+      <div class="slider-limits">
+        <span>-5</span>
+        <span>5</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div id="plot3d" class="plot"></div>
+    <div id="polarPlot" class="plot"></div>
+  </div>
+
+  <details>
+    <summary>Open for comments</summary>
+
+    <p>
+      The first plot shows a periodic signal $x_{T_0}(t)$ with adjustable amplitude
+      $a$, frequency $f_0$ and phase $\phi$.
+      The two bottom plots show the product between this signal and a phasor with adjustable
+      frequency $f$.
+    </p>
+
+    <p>
+      The bottom-left plot shows the product signal as a function of time, while the bottom-right
+      plot shows a side view of the same product signal in the complex plane.
+      The orange marker follows the selected time stamp.
+      The green marker indicates the center of gravity, that is, the inner product average over time.
+    </p>
+
+    <div class="mathblock">
+      $$
+      \left\langle x_{T_0}(t), e^{j2\pi f_0 t}\right\rangle
+      =
+      \frac{\int_0^{T_0} x_{T_0}(t)e^{-j2\pi f_0 t}\,dt}{T_0}
+      $$
+    </div>
+
+    <p>
+      When the periodic signal is a cosine, the non-zero inner products occur at
+      $f = \pm f_0$, which gives the phasor decomposition of the cosine.
+    </p>
+
+    <div class="mathblock">
+      $$
+      a \cos(2\pi f_0 t + \phi)
+      =
+      \left\langle x(t), e^{j2\pi f_0 t}\right\rangle e^{j2\pi f_0 t}
+      +
+      \left\langle x(t), e^{-j2\pi f_0 t}\right\rangle e^{-j2\pi f_0 t}
+      $$
+    </div>
+
+    <p>
+      As a result, the modulus and argument of the inner product obtained with
+      $e^{j2\pi f_0 t}$ provide the amplitude and phase of the fundamental.
+      More generally, the inner products of a periodic signal with phasors provide its frequency content.
+    </p>
+  </details>
+
+  <script>
+    const FE = 1000;
+    const DUR = 2.0;
+    const N = Math.floor(FE * DUR);
+    const PI = Math.PI;
+
+    const els = {
+      signalType: document.getElementById("signalType"),
+      amplitude: document.getElementById("amplitude"),
+      f0: document.getElementById("f0"),
+      phi: document.getElementById("phi"),
+      timeStamp: document.getElementById("timeStamp"),
+      f: document.getElementById("f"),
+
+      amplitudeVal: document.getElementById("amplitudeVal"),
+      f0Val: document.getElementById("f0Val"),
+      phiVal: document.getElementById("phiVal"),
+      timeStampVal: document.getElementById("timeStampVal"),
+      fVal: document.getElementById("fVal"),
+      errorbox: document.getElementById("errorbox"),
+    };
+
+    const t = new Float64Array(N);
+    for (let i = 0; i < N; i++) t[i] = i / FE;
+
+    function showError(msg) {
+      els.errorbox.style.display = "block";
+      els.errorbox.textContent = msg;
+    }
+
+    function setSliderUI(el, bubbleEl) {
+      const min = Number(el.min ?? 0);
+      const max = Number(el.max ?? 100);
+      const val = Number(el.value);
+      const pct = ((val - min) * 100) / (max - min);
+
+      el.style.setProperty("--pct", `${pct}%`);
+      bubbleEl.style.left = `${pct}%`;
+    }
+
+    function periodicSquare(tVal, f0) {
+      const phase = ((tVal % (1 / f0)) + (1 / f0)) % (1 / f0);
+      return Math.abs(phase * f0) <= 0.5 ? 1 : -1;
+    }
+
+    function periodicSawtooth(tVal, f0) {
+      const phase = ((tVal % (1 / f0)) + (1 / f0)) % (1 / f0);
+      return 2 * (1 - Math.abs(phase * f0)) - 1;
+    }
+
+    function formatRadiansLabel(rad) {
+      const x = rad / PI;
+      if (Math.abs(x) < 1e-9) return "0";
+      if (Math.abs(x - 1) < 1e-9) return "π";
+      if (Math.abs(x + 1) < 1e-9) return "-π";
+      return x.toFixed(2).replace(/\.00$/, "") + "π";
+    }
+
+    function downsample(arr, maxPoints = 2500) {
+      if (arr.length <= maxPoints) return Array.from(arr);
+      const step = Math.ceil(arr.length / maxPoints);
+      const out = [];
+      for (let i = 0; i < arr.length; i += step) out.push(arr[i]);
+      return out;
+    }
+
+    function downsampleTriple(a, b, c, maxPoints = 2500) {
+      if (a.length <= maxPoints) {
+        return { x: Array.from(a), y: Array.from(b), z: Array.from(c) };
+      }
+      const step = Math.ceil(a.length / maxPoints);
+      const x = [], y = [], z = [];
+      for (let i = 0; i < a.length; i += step) {
+        x.push(a[i]);
+        y.push(b[i]);
+        z.push(c[i]);
+      }
+      return { x, y, z };
+    }
+
+    function updateLabels() {
+      els.amplitudeVal.textContent = Number(els.amplitude.value).toFixed(2);
+      els.f0Val.textContent = els.f0.value;
+      els.phiVal.textContent = Number(els.phi.value).toFixed(2);
+      els.timeStampVal.textContent = Number(els.timeStamp.value).toFixed(3);
+      els.fVal.textContent = els.f.value;
+    }
+
+    function updateSliderUIs() {
+      setSliderUI(els.amplitude, els.amplitudeVal);
+      setSliderUI(els.f0, els.f0Val);
+      setSliderUI(els.phi, els.phiVal);
+      setSliderUI(els.timeStamp, els.timeStampVal);
+      setSliderUI(els.f, els.fVal);
+    }
+
+    function computeSignal(type, a, f0, phi) {
+      const signal = new Float64Array(N);
+
+      if (type === "Cosine") {
+        for (let i = 0; i < N; i++) {
+          signal[i] = a * Math.cos(2 * PI * f0 * t[i] + phi);
+        }
+      } else if (type === "Square") {
+        const shift = phi / (2 * PI * f0);
+        for (let i = 0; i < N; i++) {
+          signal[i] = a * periodicSquare(t[i] + shift, f0);
+        }
+      } else {
+        const shift = phi / (2 * PI * f0);
+        for (let i = 0; i < N; i++) {
+          signal[i] = a * periodicSawtooth(t[i] + shift, f0);
+        }
+      }
+
+      return signal;
+    }
+
+    function commonPlotLayout(title) {
+      return {
+        title,
+        font: {
+          family: '"Source Sans 3","Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+          size: 14,
+          color: "rgb(49, 51, 63)"
+        },
+        margin: { t: 42, l: 42, r: 12, b: 42 },
+        showlegend: false,
+        paper_bgcolor: "white",
+        plot_bgcolor: "white"
+      };
+    }
+
+    function updateApp() {
+      updateLabels();
+      updateSliderUIs();
+
+      const type = els.signalType.value;
+      const a = Number(els.amplitude.value);
+      const f0 = Number(els.f0.value);
+      const phi = Number(els.phi.value);
+      const timeStamp = Number(els.timeStamp.value);
+      const f = Number(els.f.value);
+
+      let sampleStamp = Math.ceil(timeStamp * FE) - 1;
+      if (sampleStamp < 0) sampleStamp = 0;
+      if (sampleStamp >= N) sampleStamp = N - 1;
+
+      const signal = computeSignal(type, a, f0, phi);
+
+      const prodReal = new Float64Array(N);
+      const prodImag = new Float64Array(N);
+
+      let sumReal = 0;
+      let sumImag = 0;
+
+      for (let i = 0; i < N; i++) {
+        prodReal[i] = Math.cos(-2 * PI * t[i] * f) * signal[i];
+        prodImag[i] = Math.sin(-2 * PI * t[i] * f) * signal[i];
+        sumReal += prodReal[i];
+        sumImag += prodImag[i];
+      }
+
+      const scalProdReal = sumReal / FE;
+      const scalProdImag = sumImag / FE;
+      const scalProdAbs = Math.hypot(scalProdReal, scalProdImag);
+      const scalProdArg = Math.atan2(scalProdImag, scalProdReal);
+
+      const prodTimeStampReal = prodReal[sampleStamp];
+      const prodTimeStampImag = prodImag[sampleStamp];
+      const prodTimeStampAbs = Math.hypot(prodTimeStampReal, prodTimeStampImag);
+      const prodTimeStampArg = Math.atan2(prodTimeStampImag, prodTimeStampReal);
+
+      const signalDS = downsample(signal, 2500);
+      const tDS = downsample(t, 2500);
+
+      Plotly.react("signalPlot", [
+        {
+          x: tDS,
+          y: signalDS,
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2 }
+        },
+        {
+          x: [timeStamp],
+          y: [signal[sampleStamp]],
+          type: "scatter",
+          mode: "markers",
+          marker: { size: 9, color: "orange" }
+        }
+      ], {
+        ...commonPlotLayout("$x_{T_0}(t)$"),
+        xaxis: {
+          title: { text: "Time [s]", font: { size: 11 } },
+          tickfont: { size: 10 },
+          range: [0, DUR],
+          showline: false,
+          zeroline: false
+        },
+        yaxis: {
+          title: { text: "Amplitude", font: { size: 11 } },
+          tickfont: { size: 10 },
+          showline: false,
+          zeroline: false
+        }
+      }, { responsive: true });
+
+      const ds3 = downsampleTriple(t, prodReal, prodImag, 2500);
+
+      Plotly.react("plot3d", [
+        {
+          x: ds3.x,
+          y: ds3.y,
+          z: ds3.z,
+          type: "scatter3d",
+          mode: "lines",
+          line: { width: 4 }
+        },
+        {
+          x: [timeStamp],
+          y: [prodTimeStampReal],
+          z: [prodTimeStampImag],
+          type: "scatter3d",
+          mode: "markers",
+          marker: { size: 5, color: "orange" }
+        },
+        {
+          x: [0, DUR],
+          y: [scalProdReal / DUR, scalProdReal / DUR],
+          z: [scalProdImag / DUR, scalProdImag / DUR],
+          type: "scatter3d",
+          mode: "lines",
+          line: { width: 6, color: "green" }
+        }
+      ], {
+        ...commonPlotLayout("$x(t)e^{-j2\\pi f t}$"),
+        scene: {
+          xaxis: {
+            title: { text: "Time [s]", font: { size: 11 } },
+            tickfont: { size: 10 },
+            range: [0, DUR],
+            showline: false,
+            zeroline: false
+          },
+          yaxis: {
+            title: { text: "real", font: { size: 11 } },
+            tickfont: { size: 10 },
+            range: [-2, 2],
+            showline: false,
+            zeroline: false
+          },
+          zaxis: {
+            title: { text: "imag", font: { size: 11 } },
+            tickfont: { size: 10 },
+            range: [-2, 2],
+            showline: false,
+            zeroline: false
+          }
+        },
+        margin: { t: 42, l: 0, r: 0, b: 0 }
+      }, { responsive: true });
+
+      const theta = new Array(N);
+      const radius = new Array(N);
+      for (let i = 0; i < N; i++) {
+        theta[i] = (-2 * PI * t[i] * f + (signal[i] < 0 ? PI : 0)) * 180 / PI;
+        radius[i] = Math.abs(signal[i]);
+      }
+
+      const stepPolar = Math.ceil(N / 2500);
+      const thetaDS = [];
+      const radiusDS = [];
+      for (let i = 0; i < N; i += stepPolar) {
+        thetaDS.push(theta[i]);
+        radiusDS.push(radius[i]);
+      }
+
+      const polarTickVals = [-180, -135, -90, -45, 0, 45, 90, 135, 180];
+      const polarTickText = polarTickVals.map(v => formatRadiansLabel(v * PI / 180));
+
+      Plotly.react("polarPlot", [
+        {
+          type: "scatterpolar",
+          mode: "lines",
+          theta: thetaDS,
+          r: radiusDS,
+          line: { width: 2 }
+        },
+        {
+          type: "scatterpolar",
+          mode: "markers",
+          theta: [prodTimeStampArg * 180 / PI],
+          r: [prodTimeStampAbs],
+          marker: { size: 10, color: "orange" }
+        },
+        {
+          type: "scatterpolar",
+          mode: "markers",
+          theta: [scalProdArg * 180 / PI],
+          r: [scalProdAbs / DUR],
+          marker: { size: 10, color: "green" }
+        }
+      ], {
+        ...commonPlotLayout("$x(t)e^{-j2\\pi f t}$"),
+        polar: {
+          bgcolor: "white",
+          radialaxis: {
+            tickfont: { size: 10 }
+          },
+          angularaxis: {
+            tickfont: { size: 10 },
+            tickmode: "array",
+            tickvals: polarTickVals,
+            ticktext: polarTickText,
+            direction: "counterclockwise"
+          }
+        }
+      }, { responsive: true });
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise().catch(err => showError("MathJax error: " + err.message));
+      }
+    }
+
+    async function init() {
+      try {
+        if (window.MathJax && window.MathJax.startup) {
+          await window.MathJax.startup.promise;
+        }
+
+        [els.signalType, els.amplitude, els.f0, els.phi, els.timeStamp, els.f]
+          .forEach(el => el.addEventListener("input", updateApp));
+
+        updateApp();
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>

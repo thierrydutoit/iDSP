@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Binary Transmission Error Simulator</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --text: rgb(49, 51, 63);
+      --muted: rgb(90, 93, 108);
+      --accent: rgb(255, 75, 75);
+      --track: rgba(49, 51, 63, 0.18);
+      --code-bg: rgba(49, 51, 63, 0.06);
+      --border: rgba(49, 51, 63, 0.18);
+      --thumb-size: 1rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem 1rem;
+      line-height: 1.5;
+      font-size: 1rem;
+      background: white;
+    }
+
+    h1 {
+      margin: 0 0 0.75rem 0;
+      font-weight: 700;
+      font-size: 2.2rem;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    h2, h3 {
+      margin: 0 0 0.45rem 0;
+      font-weight: 600;
+      line-height: 1.25;
+    }
+
+    h3 {
+      font-size: 1.12rem;
+    }
+
+    p {
+      margin: 0 0 1rem 0;
+      font-size: 1.05rem;
+    }
+
+    code, pre, .mono {
+      font-family: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .controls {
+      margin: 1rem 0 1rem 0;
+    }
+
+    .labelrow {
+      display: flex;
+      justify-content: flex-start;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.18rem;
+      min-height: 1.2rem;
+    }
+
+    .labelrow label {
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding-top: 0.68rem;
+      padding-bottom: 0.42rem;
+    }
+
+    .slider-value-bubble {
+      position: absolute;
+      top: -0.02rem;
+      left: var(--pct);
+      transform: translateX(-50%);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.84rem;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .slider-limits {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.02rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      --pct: 50%;
+    }
+
+    input[type="range"]:focus {
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background:
+        linear-gradient(to right,
+          var(--accent) 0%,
+          var(--accent) var(--pct),
+          var(--track) var(--pct),
+          var(--track) 100%);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--track);
+    }
+
+    input[type="range"]::-moz-range-progress {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      margin-top: -5px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+      margin-top: 1rem;
+    }
+
+    .card {
+      min-width: 0;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 9rem;
+      resize: vertical;
+      font: inherit;
+      color: var(--text);
+      border: 1px solid rgba(49, 51, 63, 0.22);
+      border-radius: 0.5rem;
+      padding: 0.7rem 0.8rem;
+      background: white;
+      outline: none;
+      line-height: 1.45;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 0.2rem rgba(255, 75, 75, 0.12);
+    }
+
+    .received-box {
+      width: 100%;
+      min-height: 9rem;
+      border: 1px solid rgba(49, 51, 63, 0.12);
+      border-radius: 0.5rem;
+      padding: 0.7rem 0.8rem;
+      background: rgba(49, 51, 63, 0.03);
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.45;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.96rem;
+      margin-bottom: 0.45rem;
+    }
+
+    #bitPlot {
+      width: 100%;
+      height: 300px;
+      margin: 0.7rem 0 1rem 0;
+    }
+
+    details {
+      margin-top: 1.35rem;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .errorbox {
+      display: none;
+      margin: 1rem 0;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      background: rgba(255, 75, 75, 0.08);
+      color: rgb(120, 20, 20);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 700px) {
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Binary Transmission Error Simulator</h1>
+
+  <p>
+    What is the actual effect of a given bit error rate on text?<br>
+    In this application, text is encoded as 7-bit ASCII characters and the resulting bit
+    sequence is artificially scrambled with a given bit error rate (BER).
+  </p>
+
+  <div id="errorbox" class="errorbox"></div>
+
+  <div class="controls">
+    <div class="labelrow">
+      <label for="ber">Bit Error Rate (BER)</label>
+    </div>
+    <div class="slider-wrap">
+      <div class="slider-value-bubble" id="berVal">0.100</div>
+      <input id="ber" type="range" min="0" max="0.1" step="0.001" value="0.1" />
+      <div class="slider-limits">
+        <span>0.000</span>
+        <span>0.100</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <h3>Emitted message:</h3>
+      <div class="labelrow">
+        <label for="message">Enter your message:</label>
+      </div>
+      <textarea id="message">Binary Transmission Error Simulator</textarea>
+    </div>
+
+    <div class="card">
+      <h3>Received message:</h3>
+      <div class="meta" id="bitCount">Number of bits: 0</div>
+      <div class="received-box mono" id="receivedMessage"></div>
+    </div>
+  </div>
+
+  <div id="bitPlot"></div>
+
+  <details>
+    <summary>Open for comments</summary>
+    <p>
+      Obviously, a BER of 0.001 (or lower) on textual information makes transmission
+      errors acceptable to the eye.
+    </p>
+    <p>
+      Notice that, in practice, error correction codes can still be added to encoded bits,
+      to detect and correct such transmission errors.
+    </p>
+  </details>
+
+  <script>
+    const els = {
+      ber: document.getElementById("ber"),
+      berVal: document.getElementById("berVal"),
+      message: document.getElementById("message"),
+      bitCount: document.getElementById("bitCount"),
+      receivedMessage: document.getElementById("receivedMessage"),
+      errorbox: document.getElementById("errorbox")
+    };
+
+    function showError(msg) {
+      els.errorbox.style.display = "block";
+      els.errorbox.textContent = msg;
+    }
+
+    function clearError() {
+      els.errorbox.style.display = "none";
+      els.errorbox.textContent = "";
+    }
+
+    function setSliderUI(el, bubbleEl) {
+      const min = Number(el.min ?? 0);
+      const max = Number(el.max ?? 100);
+      const val = Number(el.value);
+      const pct = ((val - min) * 100) / (max - min || 1);
+      el.style.setProperty("--pct", `${pct}%`);
+      bubbleEl.style.left = `${pct}%`;
+    }
+
+    function textToBits(text) {
+      const bits = [];
+      for (const ch of text) {
+        const code = ch.charCodeAt(0);
+        const bin = code.toString(2).padStart(7, "0").slice(-7);
+        for (const b of bin) bits.push(Number(b));
+      }
+      return bits;
+    }
+
+    function introduceErrors(bits, ber) {
+      const out = new Array(bits.length);
+      for (let i = 0; i < bits.length; i++) {
+        const error = Math.random() < ber ? 1 : 0;
+        out[i] = bits[i] ^ error;
+      }
+      return out;
+    }
+
+    function bitsToText(bits) {
+      const usableLength = bits.length - (bits.length % 7);
+      let text = "";
+      for (let i = 0; i < usableLength; i += 7) {
+        let s = "";
+        for (let j = 0; j < 7; j++) s += String(bits[i + j]);
+        text += String.fromCharCode(parseInt(s, 2));
+      }
+      return text;
+    }
+
+    function commonPlotLayout(title) {
+      return {
+        title,
+        font: {
+          family: '"Source Sans 3","Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+          size: 14,
+          color: "rgb(49, 51, 63)"
+        },
+        margin: { t: 42, l: 46, r: 12, b: 42 },
+        paper_bgcolor: "white",
+        plot_bgcolor: "white",
+        showlegend: true,
+        legend: {
+          x: 0.02,
+          y: 0.98,
+          xanchor: "left",
+          yanchor: "top",
+          bgcolor: "rgba(255,255,255,0.75)",
+          bordercolor: "rgba(0,0,0,0)"
+        }
+      };
+    }
+
+    function updateApp() {
+      try {
+        clearError();
+
+        const message = els.message.value ?? "";
+        const ber = Number(els.ber.value);
+
+        els.berVal.textContent = ber.toFixed(3);
+        setSliderUI(els.ber, els.berVal);
+
+        const bits = textToBits(message);
+        els.bitCount.textContent = `Number of bits: ${bits.length}`;
+
+        if (message.length === 0) {
+          els.receivedMessage.textContent = "";
+          Plotly.react("bitPlot", [], {
+            ...commonPlotLayout("Bit Sequence"),
+            xaxis: {
+              title: { text: "Index", font: { size: 11 } },
+              tickfont: { size: 10 },
+              showline: false,
+              zeroline: false
+            },
+            yaxis: {
+              title: { text: "Value", font: { size: 11 } },
+              tickfont: { size: 10 },
+              range: [-0.1, 1.1],
+              showline: false,
+              zeroline: false
+            }
+          }, { responsive: true });
+          return;
+        }
+
+        const bitsWithErrors = introduceErrors(bits, ber);
+        const reconstructedMessage = bitsToText(bitsWithErrors);
+        els.receivedMessage.textContent = reconstructedMessage;
+
+        const x = Array.from({ length: bits.length }, (_, i) => i);
+
+        Plotly.react("bitPlot", [
+          {
+            x,
+            y: bits,
+            type: "scatter",
+            mode: "lines",
+            line: { width: 2 },
+            name: "Emitted bits"
+          },
+          {
+            x,
+            y: bitsWithErrors,
+            type: "scatter",
+            mode: "lines",
+            line: { width: 2 },
+            name: "Received bits"
+          }
+        ], {
+          ...commonPlotLayout("Bit Sequence"),
+          xaxis: {
+            title: { text: "Index", font: { size: 11 } },
+            tickfont: { size: 10 },
+            range: [0, Math.max(bits.length - 1, 1)],
+            showline: false,
+            zeroline: false
+          },
+          yaxis: {
+            title: { text: "Value", font: { size: 11 } },
+            tickfont: { size: 10 },
+            range: [-0.1, 1.1],
+            showline: false,
+            zeroline: false
+          }
+        }, { responsive: true });
+
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    function init() {
+      try {
+        setSliderUI(els.ber, els.berVal);
+        els.ber.addEventListener("input", updateApp);
+        els.message.addEventListener("input", updateApp);
+        updateApp();
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
