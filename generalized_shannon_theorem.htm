@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Generalized Shannon Theorem</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' },
+      startup: { typeset: true }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    :root {
+      --text: rgb(49, 51, 63);
+      --muted: rgb(90, 93, 108);
+      --accent: rgb(255, 75, 75);
+      --track: rgba(49, 51, 63, 0.18);
+      --thumb-size: 1rem;
+      --panel: #ffffff;
+      --plot-bg: #fafafa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Source Sans Pro", "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 2.75rem 1rem;
+      line-height: 1.6;
+      font-size: 1rem;
+      background: white;
+    }
+
+    h1 {
+      margin: 0 0 0.9rem 0;
+      font-weight: 700;
+      font-size: 2.2rem;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 0 0 1rem 0;
+      font-size: 1.03rem;
+    }
+
+    .control-block {
+      margin: 1.2rem 0 1rem 0;
+    }
+
+    .labelrow {
+      display: flex;
+      justify-content: flex-start;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.25rem;
+      min-height: 1.2rem;
+    }
+
+    .labelrow label {
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding-top: 0.78rem;
+      padding-bottom: 0.45rem;
+    }
+
+    .slider-value-bubble {
+      position: absolute;
+      top: 0;
+      left: var(--pct);
+      transform: translateX(-50%);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.85rem;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .slider-limits {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.04rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      --pct: 100%;
+    }
+
+    input[type="range"]:focus { outline: none; }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 0.38rem;
+      border-radius: 999px;
+      background:
+        linear-gradient(to right,
+          var(--accent) 0%,
+          var(--accent) var(--pct),
+          var(--track) var(--pct),
+          var(--track) 100%);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 0.38rem;
+      border-radius: 999px;
+      background: var(--track);
+    }
+
+    input[type="range"]::-moz-range-progress {
+      height: 0.38rem;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.14);
+      margin-top: -5px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.14);
+      cursor: pointer;
+    }
+
+    .plot-card {
+      margin-top: 1rem;
+    }
+
+    .plot {
+      width: 100%;
+      height: 390px;
+      margin: 0.25rem 0 0.85rem 0;
+      background: transparent;
+    }
+
+    .audio-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+      margin: 1rem 0 1.15rem 0;
+    }
+
+    .audio-block {
+      min-width: 0;
+    }
+
+    .audio-label {
+      margin: 0 0 0.35rem 0;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    audio {
+      width: 100%;
+      display: block;
+    }
+
+    details {
+      margin-top: 1.2rem;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 0.85rem;
+    }
+
+    .mathblock { margin: 0.8rem 0; }
+
+    .errorbox {
+      display: none;
+      margin: 1rem 0;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      background: rgba(255, 75, 75, 0.08);
+      color: rgb(120, 20, 20);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 700px) {
+      .audio-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>The Generalized Shannon Theorem</h1>
+
+  <p>
+    Sampling a narrowband signal with sampling frequency $F_s$ lower than twice the maximum
+    frequency of the signal does not always lead to aliasing.<br>
+    In this example, you can adjust the sampling frequency to see how it affects the spectral
+    content of the sampled signal (in red). The original signal (in blue) is a narrowband
+    signal with central frequency $F_0=1000\ \mathrm{Hz}$ and bandwidth $B=200\ \mathrm{Hz}$.<br>
+    Find which sampling frequencies are acceptable, and why.
+  </p>
+
+  <div id="errorbox" class="errorbox"></div>
+
+  <div class="control-block">
+    <div class="labelrow">
+      <label for="samplingSlider">Sampling frequency $F_s$ (Hz)</label>
+    </div>
+    <div class="slider-wrap">
+      <div class="slider-value-bubble" id="samplingVal">4000</div>
+      <input id="samplingSlider" type="range" min="300" max="4000" step="1" value="4000" />
+      <div class="slider-limits">
+        <span>300</span>
+        <span>4000</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="plot-card">
+    <div id="spectrumPlot" class="plot"></div>
+  </div>
+
+  <div class="plot-card">
+    <div id="timePlot" class="plot"></div>
+  </div>
+
+  <div class="audio-row">
+    <div class="audio-block">
+      <p class="audio-label">Original signal</p>
+      <audio id="originalAudio" controls></audio>
+    </div>
+
+    <div class="audio-block">
+      <p class="audio-label">Sampled signal</p>
+      <audio id="sampledAudio" controls></audio>
+    </div>
+  </div>
+
+  <details>
+    <summary>Open for comments</summary>
+
+    <p>In this example, aliasing occurs when $F_s$ lies in:</p>
+
+    <div class="mathblock">
+      $$
+      [0,440] \cup [450,550] \cup [600,733] \cup [900,1100] \cup [1800,2200]
+      $$
+    </div>
+
+    <p>
+      The generalized Shannon theorem states that to avoid aliasing when sampling a narrowband
+      signal (with central frequency $F_0$ and bandwidth $B$), the sampling frequency must
+      obviously be at least twice the bandwidth of the signal:
+    </p>
+
+    <div class="mathblock">
+      $$
+      F_s \geq 2B
+      $$
+    </div>
+
+    <p>
+      Yet, not all such frequencies are acceptable, given the possible overlap between positive
+      and negative spectral images. This excludes the following sampling frequencies:
+    </p>
+
+    <div class="mathblock">
+      $$
+      \left[\frac{2F_0-B}{k}, \frac{2F_0+B}{k}\right],
+      $$
+    </div>
+
+    <p>
+      with $k$ integer but not 0. As a matter of fact, for $k$ odd, values of $F_s$ in these
+      intervals put the Nyquist frequency inside a spectral image; for $k$ even, they put the
+      zero frequency inside a spectral image. In both cases, this causes aliasing.<br><br>
+      In our example, this clearly leads to excluding $F_s$ from:
+    </p>
+
+    <div class="mathblock">
+      $$
+      [0,400] \cup [333,440] \cup [450,550] \cup [600,733] \cup [900,1100] \cup [1800,2200]
+      $$
+    </div>
+
+    <p>
+      So, in this example, the smallest possible sampling frequency is $440\ \mathrm{Hz}$.<br>
+      Notice, by examining the spectral content of the sampled signal, and by listening to it,
+      that using sampling frequencies $F_s&lt;2(F_0+B/2)$ leads to signals in the
+      $[0,F_s/2]$ band that are different from the original signal. However, since no aliasing
+      occurs, it is still possible to recover the original signal by further digital upsampling
+      and band-pass filtering.<br><br>
+      <em>Nota Bene</em>: for convenience, the effect of the sampling frequency on the magnitude
+      of the sampled signal spectrum has been compensated for in the plot.
+    </p>
+  </details>
+
+  <script>
+    const els = {
+      samplingSlider: document.getElementById("samplingSlider"),
+      samplingVal: document.getElementById("samplingVal"),
+      originalAudio: document.getElementById("originalAudio"),
+      sampledAudio: document.getElementById("sampledAudio"),
+      errorbox: document.getElementById("errorbox")
+    };
+
+    const duration = 0.1;
+    const centerFrequency = 1000;
+    const bandwidth = 200;
+    const pseudoSamplingRate = 4000;
+
+    function showError(msg) {
+      els.errorbox.style.display = "block";
+      els.errorbox.textContent = msg;
+    }
+
+    function setSliderUI(el, bubbleEl, digits = 0) {
+      const min = Number(el.min ?? 0);
+      const max = Number(el.max ?? 100);
+      const val = Number(el.value);
+      const pct = ((val - min) * 100) / (max - min || 1);
+      el.style.setProperty("--pct", `${pct}%`);
+      bubbleEl.style.left = `${pct}%`;
+      bubbleEl.textContent = val.toFixed(digits);
+    }
+
+    function arange(start, stop, step) {
+      const n = Math.max(0, Math.ceil((stop - start) / step));
+      const out = new Float64Array(n);
+      for (let i = 0; i < n; i++) out[i] = start + i * step;
+      return out;
+    }
+
+    function sinc(x) {
+      if (Math.abs(x) < 1e-12) return 1;
+      return Math.sin(Math.PI * x) / (Math.PI * x);
+    }
+
+    function buildSignal(timeArray) {
+      const out = new Float64Array(timeArray.length);
+      for (let i = 0; i < timeArray.length; i++) {
+        const t = timeArray[i];
+        out[i] =
+          Math.cos(2 * Math.PI * centerFrequency * t) * sinc(bandwidth * t) +
+          0.01 * Math.cos(2 * Math.PI * (centerFrequency + bandwidth / 3) * t);
+      }
+      return out;
+    }
+
+    function fftRealMagnitude(signal, fs) {
+      const N = signal.length;
+      const re = new Float64Array(N);
+      const im = new Float64Array(N);
+
+      for (let k = 0; k < N; k++) {
+        let sumRe = 0;
+        let sumIm = 0;
+        for (let n = 0; n < N; n++) {
+          const angle = -2 * Math.PI * k * n / N;
+          sumRe += signal[n] * Math.cos(angle);
+          sumIm += signal[n] * Math.sin(angle);
+        }
+        re[k] = sumRe;
+        im[k] = sumIm;
+      }
+
+      const freqs = new Float64Array(N);
+      const mags = new Float64Array(N);
+
+      for (let k = 0; k < N; k++) {
+        const freq = k < N / 2 ? k * fs / N : (k - N) * fs / N;
+        freqs[k] = freq;
+        mags[k] = Math.sqrt(re[k] * re[k] + im[k] * im[k]) / fs;
+      }
+
+      return fftShift(freqs, mags);
+    }
+
+    function fftShift(freqs, mags) {
+      const N = freqs.length;
+      const half = Math.floor(N / 2);
+      const shiftedFreqs = new Float64Array(N);
+      const shiftedMags = new Float64Array(N);
+
+      for (let i = 0; i < N; i++) {
+        const j = (i + half) % N;
+        shiftedFreqs[i] = freqs[j];
+        shiftedMags[i] = mags[j];
+      }
+      return { frequencies: shiftedFreqs, spectrum: shiftedMags };
+    }
+
+    function concatShiftedImages(baseFreqs, baseSpectrum, fs, minI = -7, maxI = 6) {
+      const outFreqs = [];
+      const outSpectrum = [];
+      for (let i = minI; i <= maxI; i++) {
+        for (let k = 0; k < baseFreqs.length; k++) {
+          outFreqs.push(baseFreqs[k] + i * fs);
+          outSpectrum.push(baseSpectrum[k]);
+        }
+      }
+      return { frequencies: outFreqs, spectrum: outSpectrum };
+    }
+
+    function commonLayout(title, height = 380) {
+      return {
+        title: {
+          text: title,
+          x: 0.5,
+          xref: "paper",
+          xanchor: "center",
+          y: 0.98,
+          yanchor: "top",
+          font: {
+            family: '"Source Sans Pro","Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+            size: 20,
+            color: "rgb(49, 51, 63)"
+          }
+        },
+        font: {
+          family: '"Source Sans Pro","Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+          size: 13,
+          color: "rgb(49, 51, 63)"
+        },
+        margin: { t: 54, l: 62, r: 18, b: 52 },
+        height,
+        showlegend: true,
+        legend: {
+          orientation: "h",
+          x: 0.01,
+          y: 0.995,
+          xanchor: "left",
+          yanchor: "top",
+          bgcolor: "rgba(255,255,255,0.78)",
+          bordercolor: "rgba(0,0,0,0)",
+          borderwidth: 0,
+          font: { size: 12 }
+        },
+        paper_bgcolor: "white",
+        plot_bgcolor: "#fafafa"
+      };
+    }
+
+    function axisStyle(title, range = null) {
+      return {
+        title: { text: title, font: { size: 13 } },
+        tickfont: { size: 11 },
+        range,
+        showline: true,
+        linewidth: 1,
+        linecolor: "rgba(49, 51, 63, 0.22)",
+        zeroline: true,
+        zerolinewidth: 1,
+        zerolinecolor: "rgba(49, 51, 63, 0.18)",
+        showgrid: true,
+        gridcolor: "rgba(49, 51, 63, 0.08)"
+      };
+    }
+
+    function renderSpectrumPlot(fs, originalFreqs, originalSpectrum, sampledFreqs, sampledSpectrum) {
+      const images = concatShiftedImages(sampledFreqs, sampledSpectrum, fs, -7, 6);
+
+      Plotly.react("spectrumPlot", [
+        {
+          x: Array.from(originalFreqs),
+          y: Array.from(originalSpectrum),
+          type: "scatter",
+          mode: "lines",
+          name: "Original Spectrum",
+          line: { width: 4, color: "#1f77b4" }
+        },
+        {
+          x: [null],
+          y: [null],
+          type: "scatter",
+          mode: "lines",
+          name: "Nyquist frequency F_s/2",
+          line: { width: 2, color: "green" }
+        },
+        {
+          x: images.frequencies,
+          y: images.spectrum,
+          type: "scatter",
+          mode: "lines",
+          name: "Sampled Spectrum",
+          line: { width: 2.5, color: "red", dash: "dash" }
+        }
+      ], {
+        ...commonLayout("Spectral View of Original and Sampled Signals", 390),
+        xaxis: axisStyle("Frequency (Hz)", [-2000, 2000]),
+        yaxis: axisStyle("Magnitude", [0, 0.006]),
+        shapes: [
+          {
+            type: "line",
+            xref: "x",
+            yref: "y",
+            x0: -fs / 2,
+            x1: -fs / 2,
+            y0: 0,
+            y1: 0.006,
+            line: { color: "green", width: 2 }
+          },
+          {
+            type: "line",
+            xref: "x",
+            yref: "y",
+            x0: fs / 2,
+            x1: fs / 2,
+            y0: 0,
+            y1: 0.006,
+            line: { color: "green", width: 2 }
+          }
+        ]
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function renderTimePlot(fs, tsShort, signalShort, tShort, sampledSignalShort) {
+      const stemX = [];
+      const stemY = [];
+      for (let i = 0; i < tShort.length; i++) {
+        stemX.push(tShort[i], tShort[i], null);
+        stemY.push(0, sampledSignalShort[i], null);
+      }
+
+      Plotly.react("timePlot", [
+        {
+          x: Array.from(tsShort),
+          y: Array.from(signalShort),
+          type: "scatter",
+          mode: "lines",
+          name: "Original signal",
+          line: { width: 2.5, color: "#1f77b4" }
+        },
+        {
+          x: stemX,
+          y: stemY,
+          type: "scatter",
+          mode: "lines",
+          name: "Sampled signal",
+          line: { width: 1.6, color: "red" }
+        },
+        {
+          x: Array.from(tShort),
+          y: Array.from(sampledSignalShort),
+          type: "scatter",
+          mode: "markers",
+          showlegend: false,
+          marker: { size: 6, color: "red" }
+        }
+      ], {
+        ...commonLayout("Original and Sampled Signals", 390),
+        xaxis: axisStyle("Time (s)"),
+        yaxis: axisStyle("Amplitude")
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function audioBufferToWav(samples, sampleRate) {
+      const numSamples = samples.length;
+      const buffer = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(buffer);
+
+      function writeString(offset, str) {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      }
+
+      let offset = 0;
+      writeString(offset, "RIFF"); offset += 4;
+      view.setUint32(offset, 36 + numSamples * 2, true); offset += 4;
+      writeString(offset, "WAVE"); offset += 4;
+      writeString(offset, "fmt "); offset += 4;
+      view.setUint32(offset, 16, true); offset += 4;
+      view.setUint16(offset, 1, true); offset += 2;
+      view.setUint16(offset, 1, true); offset += 2;
+      view.setUint32(offset, sampleRate, true); offset += 4;
+      view.setUint32(offset, sampleRate * 2, true); offset += 4;
+      view.setUint16(offset, 2, true); offset += 2;
+      view.setUint16(offset, 16, true); offset += 2;
+      writeString(offset, "data"); offset += 4;
+      view.setUint32(offset, numSamples * 2, true); offset += 4;
+
+      let peak = 0;
+      for (let i = 0; i < numSamples; i++) peak = Math.max(peak, Math.abs(samples[i]));
+      const scale = peak > 0 ? 0.95 / peak : 1;
+
+      for (let i = 0; i < numSamples; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i] * scale));
+        view.setInt16(44 + i * 2, s < 0 ? s * 32768 : s * 32767, true);
+      }
+
+      return new Blob([view], { type: "audio/wav" });
+    }
+
+    function updateAudio(el, samples, fs) {
+      const wavBlob = audioBufferToWav(samples, fs);
+      const url = URL.createObjectURL(wavBlob);
+      if (el.dataset.prevUrl) URL.revokeObjectURL(el.dataset.prevUrl);
+      el.src = url;
+      el.dataset.prevUrl = url;
+    }
+
+    function updateApp() {
+      try {
+        const samplingRate = Number(els.samplingSlider.value);
+        setSliderUI(els.samplingSlider, els.samplingVal, 0);
+
+        const t = arange(-duration, duration, 1 / pseudoSamplingRate);
+        const signal = buildSignal(t);
+
+        const ts = arange(-duration, duration, 1 / samplingRate);
+        const sampledSignal = buildSignal(ts);
+
+        const originalFFT = fftRealMagnitude(signal, pseudoSamplingRate);
+        const sampledFFT = fftRealMagnitude(sampledSignal, samplingRate);
+
+        renderSpectrumPlot(
+          samplingRate,
+          originalFFT.frequencies,
+          originalFFT.spectrum,
+          sampledFFT.frequencies,
+          sampledFFT.spectrum
+        );
+
+        const tsShort = arange(-0.01, 0.01, 1 / 20000);
+        const signalShort = buildSignal(tsShort);
+
+        const tShort = arange(-0.01, 0.01, 1 / samplingRate);
+        const sampledSignalShort = buildSignal(tShort);
+
+        renderTimePlot(
+          samplingRate,
+          tsShort,
+          signalShort,
+          tShort,
+          sampledSignalShort
+        );
+
+        updateAudio(els.originalAudio, signal, pseudoSamplingRate);
+        updateAudio(els.sampledAudio, sampledSignal, samplingRate);
+
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise().catch(err => showError("MathJax error: " + err.message));
+        }
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    function init() {
+      try {
+        els.samplingSlider.addEventListener("input", updateApp);
+        updateApp();
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
