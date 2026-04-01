@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My first damped sine wave</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: {
+        fontCache: 'global'
+      },
+      startup: {
+        typeset: true
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    :root {
+      --text: rgb(49, 51, 63);
+      --muted: rgb(90, 93, 108);
+      --accent: rgb(255, 75, 75);
+      --track: rgba(49, 51, 63, 0.18);
+      --thumb-size: 1rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      max-width: 46rem;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem 1rem;
+      line-height: 1.5;
+      font-size: 1rem;
+      background: white;
+    }
+
+    h1 {
+      margin: 0 0 0.75rem 0;
+      font-weight: 700;
+      font-size: 2.2rem;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 0 0 1rem 0;
+      font-size: 1.05rem;
+    }
+
+    .control-block {
+      margin: 1rem 0 1.8rem 0;
+    }
+
+    .labelrow {
+      display: flex;
+      justify-content: flex-start;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.18rem;
+      min-height: 1.2rem;
+    }
+
+    .labelrow label {
+      font-weight: 600;
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding-top: 0.68rem;
+      padding-bottom: 0.42rem;
+    }
+
+    .slider-value-bubble {
+      position: absolute;
+      top: -0.02rem;
+      left: var(--pct);
+      transform: translateX(-50%);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.84rem;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .slider-limits {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.02rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      --pct: 20%;
+    }
+
+    input[type="range"]:focus {
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background:
+        linear-gradient(to right,
+          var(--accent) 0%,
+          var(--accent) var(--pct),
+          var(--track) var(--pct),
+          var(--track) 100%);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--track);
+    }
+
+    input[type="range"]::-moz-range-progress {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      margin-top: -5px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+
+    .plot-card {
+      margin-top: 1rem;
+    }
+
+    .plot-title {
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem 0;
+      min-height: 1.9rem;
+    }
+
+    #signalPlot {
+      width: 100%;
+      height: 330px;
+      margin: 0.2rem 0 0.9rem 0;
+    }
+
+    .audio-block {
+      margin: 1rem 0 1.15rem 0;
+    }
+
+    .audio-label {
+      margin: 0 0 0.35rem 0;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    audio {
+      width: 100%;
+      display: block;
+    }
+
+    .errorbox {
+      display: none;
+      margin: 1rem 0;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      background: rgba(255, 75, 75, 0.08);
+      color: rgb(120, 20, 20);
+      font-size: 0.95rem;
+    }
+
+    details {
+      margin-top: 1.4rem;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .mathblock {
+      margin: 0.75rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>My first damped sine wave</h1>
+
+  <p>
+    How does the time constant of a damped sine wave influence its shape and sound?
+    Let us try...
+  </p>
+
+  <div id="errorbox" class="errorbox"></div>
+
+  <div class="control-block">
+    <div class="labelrow">
+      <label for="tauSlider">Time constant $tau$ [s]</label>
+    </div>
+    <div class="slider-wrap">
+      <div class="slider-value-bubble" id="tauVal">0.20</div>
+      <input id="tauSlider" type="range" min="0.01" max="1.0" step="0.01" value="0.20" />
+      <div class="slider-limits">
+        <span>0.01</span>
+        <span>1.00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="plot-card">
+    <div id="signalPlotTitle" class="plot-title">$\\sin(2 \\pi 200 t)  e^{-t/\\tau}$</div>
+    <div id="signalPlot"></div>
+  </div>
+
+  <div class="audio-block">
+    <p class="audio-label">Damped sine wave</p>
+    <audio id="signalAudio" controls></audio>
+  </div>
+
+  <details>
+    <summary>Open for comments</summary>
+
+    <p>Damping signal $f$ is defined as:</p>
+    <div class="mathblock">
+      $$
+      f_d(t) = f(t)\,e^{-t/tau}
+      $$
+    </div>
+
+    <p>Its time constant $tau$ is such that:</p>
+    <div class="mathblock">
+      $$
+      f_d(t) \approx 0 \text{ for } t > 5\tau
+      $$
+    </div>
+
+    <p>and that:</p>
+    <div class="mathblock">
+      $$
+      f_d'(t=0) = -1 / \tau
+      $$
+    </div>
+
+    <p>
+      This means that the tangent of the envelope of $f(t)$ at $t=0$ is as shown in orange on the plot.
+    </p>
+  </details>
+
+  <script>
+    const f = 200;
+    const fe = 10000;
+
+    const els = {
+      tauSlider: document.getElementById("tauSlider"),
+      tauVal: document.getElementById("tauVal"),
+      signalAudio: document.getElementById("signalAudio"),
+      signalPlotTitle: document.getElementById("signalPlotTitle"),
+      errorbox: document.getElementById("errorbox")
+    };
+
+    function showError(msg) {
+      els.errorbox.style.display = "block";
+      els.errorbox.textContent = msg;
+    }
+
+    function setSliderUI(el, bubbleEl, digits = 2) {
+      const min = Number(el.min ?? 0);
+      const max = Number(el.max ?? 100);
+      const val = Number(el.value);
+      const pct = ((val - min) * 100) / (max - min || 1);
+      el.style.setProperty("--pct", `${pct}%`);
+      bubbleEl.style.left = `${pct}%`;
+      bubbleEl.textContent = val.toFixed(digits);
+    }
+
+    function arange(start, stop, step) {
+      const n = Math.max(0, Math.ceil((stop - start) / step));
+      const out = new Float64Array(n);
+      for (let i = 0; i < n; i++) out[i] = start + i * step;
+      return out;
+    }
+
+    function buildSignal(tau) {
+      const t = arange(0.0, 1.0, 1 / fe);
+      const signal = new Float64Array(t.length);
+      for (let i = 0; i < t.length; i++) {
+        signal[i] = Math.sin(2 * Math.PI * f * t[i]) * Math.exp(-t[i] / tau);
+      }
+      return { t, signal };
+    }
+
+    function commonPlotLayout() {
+      return {
+        font: {
+          family: '"Source Sans 3","Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+          size: 14,
+          color: "rgb(49, 51, 63)"
+        },
+        margin: { t: 14, l: 52, r: 12, b: 44 },
+        showlegend: false,
+        paper_bgcolor: "white",
+        plot_bgcolor: "white"
+      };
+    }
+
+    function renderSignalPlot(t, signal, tau) {
+      Plotly.react("signalPlot", [
+        {
+          x: Array.from(t),
+          y: Array.from(signal),
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2, color: "#1f77b4" }
+        },
+        {
+          x: [0, tau],
+          y: [1, 0],
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2, color: "orange" }
+        }
+      ], {
+        ...commonPlotLayout(),
+        xaxis: {
+          title: { text: "Time (seconds)", font: { size: 11 } },
+          tickfont: { size: 10 },
+          range: [0, 1],
+          showline: false,
+          zeroline: false
+        },
+        yaxis: {
+          tickfont: { size: 10 },
+          range: [-1, 1],
+          showline: false,
+          zeroline: false
+        }
+      }, { responsive: true });
+    }
+
+    function audioBufferToWav(samples, sampleRate) {
+      const numSamples = samples.length;
+      const buffer = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(buffer);
+
+      function writeString(offset, str) {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      }
+
+      let offset = 0;
+      writeString(offset, "RIFF"); offset += 4;
+      view.setUint32(offset, 36 + numSamples * 2, true); offset += 4;
+      writeString(offset, "WAVE"); offset += 4;
+      writeString(offset, "fmt "); offset += 4;
+      view.setUint32(offset, 16, true); offset += 4;
+      view.setUint16(offset, 1, true); offset += 2;
+      view.setUint16(offset, 1, true); offset += 2;
+      view.setUint32(offset, sampleRate, true); offset += 4;
+      view.setUint32(offset, sampleRate * 2, true); offset += 4;
+      view.setUint16(offset, 2, true); offset += 2;
+      view.setUint16(offset, 16, true); offset += 2;
+      writeString(offset, "data"); offset += 4;
+      view.setUint32(offset, numSamples * 2, true); offset += 4;
+
+      let peak = 0;
+      for (let i = 0; i < numSamples; i++) peak = Math.max(peak, Math.abs(samples[i]));
+      const scale = peak > 0 ? 0.95 / peak : 1;
+
+      for (let i = 0; i < numSamples; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i] * scale));
+        view.setInt16(44 + i * 2, s < 0 ? s * 32768 : s * 32767, true);
+      }
+
+      return new Blob([view], { type: "audio/wav" });
+    }
+
+    function updateAudio(el, samples, fs) {
+      const wavBlob = audioBufferToWav(samples, fs);
+      const url = URL.createObjectURL(wavBlob);
+      if (el.dataset.prevUrl) URL.revokeObjectURL(el.dataset.prevUrl);
+      el.src = url;
+      el.dataset.prevUrl = url;
+    }
+
+    function updateApp() {
+      setSliderUI(els.tauSlider, els.tauVal, 2);
+
+      const tau = Number(els.tauSlider.value);
+      const { t, signal } = buildSignal(tau);
+
+      renderSignalPlot(t, signal, tau);
+      updateAudio(els.signalAudio, signal, fe);
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([els.signalPlotTitle]).catch(err => showError("MathJax error: " + err.message));
+      }
+    }
+
+    async function init() {
+      try {
+        if (window.MathJax && window.MathJax.startup) {
+          await window.MathJax.startup.promise;
+        }
+
+        els.tauSlider.addEventListener("input", updateApp);
+        updateApp();
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
