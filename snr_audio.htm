@@ -23,18 +23,12 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
-
   <style>
     :root {
       --text: rgb(49, 51, 63);
       --muted: rgb(90, 93, 108);
       --accent: rgb(255, 75, 75);
       --track: rgba(49, 51, 63, 0.18);
-      --code-bg: rgba(49, 51, 63, 0.06);
-      --grid: rgba(49, 51, 63, 0.10);
       --thumb-size: 1rem;
     }
 
@@ -64,27 +58,15 @@
       font-size: 1.05rem;
     }
 
-    code {
-      font-family: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      background: var(--code-bg);
-      padding: 0.08rem 0.32rem;
-      border-radius: 0.35rem;
-      font-size: 0.92em;
-    }
-
     .controls {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 0.9rem;
-      margin: 1rem 0 1.2rem 0;
+      gap: 1rem;
+      margin: 1rem 0 1.8rem 0;
     }
 
-    .control,
-    .fullwidth-control {
-      padding: 0;
-      background: transparent;
-      border: none;
-      box-shadow: none;
+    .control {
+      min-width: 0;
     }
 
     .labelrow {
@@ -92,8 +74,8 @@
       justify-content: flex-start;
       align-items: baseline;
       gap: 0.75rem;
-      margin-bottom: 0.4rem;
-      min-height: 1.4rem;
+      margin-bottom: 0.18rem;
+      min-height: 1.2rem;
     }
 
     .labelrow label {
@@ -104,18 +86,18 @@
 
     .slider-wrap {
       position: relative;
-      padding-top: 1.85rem;
-      padding-bottom: 1.3rem;
+      padding-top: 0.68rem;
+      padding-bottom: 0.42rem;
     }
 
     .slider-value-bubble {
       position: absolute;
-      top: 0;
+      top: -0.02rem;
       left: var(--pct);
       transform: translateX(-50%);
       color: var(--text);
       font-weight: 600;
-      font-size: 0.96rem;
+      font-size: 0.84rem;
       line-height: 1;
       white-space: nowrap;
       pointer-events: none;
@@ -125,12 +107,12 @@
       position: absolute;
       left: 0;
       right: 0;
-      bottom: 0;
+      bottom: -0.02rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       color: var(--muted);
-      font-size: 0.88rem;
+      font-size: 0.74rem;
       line-height: 1;
       pointer-events: none;
     }
@@ -194,38 +176,43 @@
       cursor: pointer;
     }
 
-    .button-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin: 0.4rem 0 0.8rem 0;
+    .plot-card {
+      margin-top: 0.5rem;
     }
 
-    button {
-      font: inherit;
-      padding: 0.45rem 0.9rem;
-      border-radius: 0.5rem;
-      border: 1px solid rgba(49, 51, 63, 0.20);
-      background: white;
-      color: var(--text);
-      cursor: pointer;
+    .plot-title {
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem 0;
+      min-height: 1.9rem;
     }
 
-    button:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
+    #signalPlot {
+      width: 100%;
+      height: 330px;
+      margin: 0.2rem 0 0.9rem 0;
+    }
+
+    .audio-block {
+      margin: 1rem 0 1.15rem 0;
+    }
+
+    .audio-label {
+      margin: 0 0 0.35rem 0;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    audio {
+      width: 100%;
+      display: block;
     }
 
     #status {
-      margin: 0.5rem 0 1rem 0;
+      margin: 0.15rem 0 0.65rem 0;
       font-size: 0.96rem;
       color: var(--muted);
-    }
-
-    #plot {
-      width: 100%;
-      height: 380px;
-      margin: 0.6rem 0 1rem 0;
     }
 
     .errorbox {
@@ -268,27 +255,30 @@
   <div id="status">Loading embedded samples...</div>
 
   <div class="controls">
-    <div class="fullwidth-control">
+    <div class="control">
       <div class="labelrow">
         <label for="snrSlider">SNR [dB]</label>
       </div>
-
-      <div class="slider-wrap" id="snrSliderWrap">
+      <div class="slider-wrap">
         <div class="slider-value-bubble" id="snrValueBubble">40</div>
-        <input id="snrSlider" type="range" min="-10" max="40" value="40" step="1" />
+        <input id="snrSlider" type="range" min="-10" max="40" step="1" value="40" />
         <div class="slider-limits">
-          <span id="snrMinLabel">-10</span>
-          <span id="snrMaxLabel">40</span>
+          <span>-10</span>
+          <span>40</span>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="button-row">
-    <button id="playBtn" disabled>Play noisy audio</button>
+  <div class="plot-card">
+    <div id="signalPlotTitle" class="plot-title">Noisy waveform</div>
+    <div id="signalPlot"></div>
   </div>
 
-  <div id="plot"></div>
+  <div class="audio-block">
+    <p class="audio-label">Noisy audio</p>
+    <audio id="signalAudio" controls></audio>
+  </div>
 
   <details>
     <summary>Open for comments</summary>
@@ -328,7 +318,6 @@
   </details>
 
   <script>
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const EMBEDDED_SAMPLE_RATE = 8000;
 
     const PAR8_SAMPLES = Float32Array.from([
@@ -5970,34 +5959,28 @@
     let noisySignal = null;
     let sampleRate = EMBEDDED_SAMPLE_RATE;
 
-    const statusEl = document.getElementById("status");
-    const errorboxEl = document.getElementById("errorbox");
-    const snrSlider = document.getElementById("snrSlider");
-    const snrValueBubble = document.getElementById("snrValueBubble");
-    const playBtn = document.getElementById("playBtn");
+    const els = {
+      snrSlider: document.getElementById("snrSlider"),
+      snrValueBubble: document.getElementById("snrValueBubble"),
+      signalAudio: document.getElementById("signalAudio"),
+      signalPlotTitle: document.getElementById("signalPlotTitle"),
+      status: document.getElementById("status"),
+      errorbox: document.getElementById("errorbox")
+    };
 
     function showError(msg) {
-      errorboxEl.style.display = "block";
-      errorboxEl.textContent = msg;
+      els.errorbox.style.display = "block";
+      els.errorbox.textContent = msg;
     }
 
-    function formatSliderValue(el) {
-      const step = Number(el.step || 1);
-      const value = Number(el.value);
-      if (Number.isInteger(step)) return String(Math.round(value));
-      const decimals = (String(step).split(".")[1] || "").length;
-      return value.toFixed(decimals);
-    }
-
-    function setSliderUI(el, bubbleEl) {
+    function setSliderUI(el, bubbleEl, digits = 0) {
       const min = Number(el.min ?? 0);
       const max = Number(el.max ?? 100);
       const val = Number(el.value);
-      const pct = ((val - min) * 100) / (max - min);
-
+      const pct = ((val - min) * 100) / (max - min || 1);
       el.style.setProperty("--pct", `${pct}%`);
       bubbleEl.style.left = `${pct}%`;
-      bubbleEl.textContent = formatSliderValue(el);
+      bubbleEl.textContent = val.toFixed(digits);
     }
 
     function mean(arr) {
@@ -6073,118 +6056,129 @@
       return {
         font: {
           family: '"Source Sans 3","Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
-          size: 16,
+          size: 14,
           color: "rgb(49, 51, 63)"
         },
-        margin: { t: 20, l: 48, r: 12, b: 42 },
+        margin: { t: 14, l: 52, r: 12, b: 44 },
         showlegend: false,
         paper_bgcolor: "white",
         plot_bgcolor: "white"
       };
     }
 
-    function plotSignal(signal, fs, snrDb) {
+    function renderSignalPlot(signal, fs) {
       const ds = downsampleForPlot(signal, fs);
 
-      Plotly.react(
-        "plot",
-        [{
+      Plotly.react("signalPlot", [
+        {
           x: ds.t,
           y: ds.y,
           type: "scatter",
           mode: "lines",
           line: { width: 2, color: "#1f77b4" },
           hovertemplate: "t=%{x:.3f} s<br>x=%{y:.3f}<extra></extra>"
-        }],
-        {
-          ...commonPlotLayout(),
-          xaxis: {
-            title: {
-              text: "Time [s]",
-              font: { size: 13 }
-            },
-            tickfont: { size: 11 },
-            showline: false,
-            zeroline: false,
-            gridcolor: "rgba(49, 51, 63, 0.10)"
-          },
-          yaxis: {
-            title: {
-              text: "Amplitude",
-              font: { size: 13 }
-            },
-            tickfont: { size: 11 },
-            range: [-2, 2],
-            showline: false,
-            zeroline: false,
-            gridcolor: "rgba(49, 51, 63, 0.10)"
-          },
-          annotations: [{
-            x: ds.t[Math.floor(ds.t.length * 0.53)] || 0,
-            y: 1.65,
-            text: `SNR [dB] = ${snrDb.toFixed(2)}`,
-            showarrow: false,
-            font: {
-              family: '"Source Sans 3","Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
-              size: 22,
-              color: "rgb(49, 51, 63)"
-            }
-          }]
+        }
+      ], {
+        ...commonPlotLayout(),
+        xaxis: {
+          title: { text: "Time (seconds)", font: { size: 11 } },
+          tickfont: { size: 10 },
+          showline: true,
+          linecolor: "rgb(49, 51, 63)",
+          linewidth: 1,
+          mirror: true,
+          zeroline: false,
+          gridcolor: "rgba(49, 51, 63, 0.10)"
         },
-        { responsive: true }
-      );
+        yaxis: {
+          tickfont: { size: 10 },
+          range: [-2, 2],
+          showline: true,
+          linecolor: "rgb(49, 51, 63)",
+          linewidth: 1,
+          mirror: true,
+          zeroline: false,
+          gridcolor: "rgba(49, 51, 63, 0.10)"
+        }
+      }, { responsive: true });
     }
 
-    function playSignal(signal, fs) {
-      const buffer = audioContext.createBuffer(1, signal.length, fs);
-      buffer.copyToChannel(signal, 0);
+    function audioBufferToWav(samples, sampleRate) {
+      const numSamples = samples.length;
+      const buffer = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(buffer);
 
-      const source = audioContext.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioContext.destination);
-      source.start();
+      function writeString(offset, str) {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      }
+
+      let offset = 0;
+      writeString(offset, "RIFF"); offset += 4;
+      view.setUint32(offset, 36 + numSamples * 2, true); offset += 4;
+      writeString(offset, "WAVE"); offset += 4;
+      writeString(offset, "fmt "); offset += 4;
+      view.setUint32(offset, 16, true); offset += 4;
+      view.setUint16(offset, 1, true); offset += 2;
+      view.setUint16(offset, 1, true); offset += 2;
+      view.setUint32(offset, sampleRate, true); offset += 4;
+      view.setUint32(offset, sampleRate * 2, true); offset += 4;
+      view.setUint16(offset, 2, true); offset += 2;
+      view.setUint16(offset, 16, true); offset += 2;
+      writeString(offset, "data"); offset += 4;
+      view.setUint32(offset, numSamples * 2, true); offset += 4;
+
+      let peak = 0;
+      for (let i = 0; i < numSamples; i++) peak = Math.max(peak, Math.abs(samples[i]));
+      const scale = peak > 0 ? 0.95 / peak : 1;
+
+      for (let i = 0; i < numSamples; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i] * scale));
+        view.setInt16(44 + i * 2, s < 0 ? s * 32768 : s * 32767, true);
+      }
+
+      return new Blob([view], { type: "audio/wav" });
     }
 
-    function loadEmbeddedSamples() {
-      originalSignal = PAR8_SAMPLES.slice();
-      sampleRate = EMBEDDED_SAMPLE_RATE;
-      playBtn.disabled = false;
-      updateApp();
-
-      statusEl.textContent = "";
+    function updateAudio(el, samples, fs) {
+      const wavBlob = audioBufferToWav(samples, fs);
+      const url = URL.createObjectURL(wavBlob);
+      if (el.dataset.prevUrl) URL.revokeObjectURL(el.dataset.prevUrl);
+      el.src = url;
+      el.dataset.prevUrl = url;
     }
 
     function updateApp() {
-      setSliderUI(snrSlider, snrValueBubble);
+      setSliderUI(els.snrSlider, els.snrValueBubble, 0);
 
       if (!originalSignal || !sampleRate) return;
 
-      const snrDb = Number(snrSlider.value);
+      const snrDb = Number(els.snrSlider.value);
       noisySignal = computeNoisySignal(originalSignal, snrDb);
-      plotSignal(noisySignal, sampleRate, snrDb);
+
+      els.signalPlotTitle.textContent = `Noisy signal at ${snrDb.toFixed(0)} dB SNR`;
+
+      renderSignalPlot(noisySignal, sampleRate);
+      updateAudio(els.signalAudio, noisySignal, sampleRate);
 
       if (window.MathJax && window.MathJax.typesetPromise) {
         window.MathJax.typesetPromise().catch(err => showError("MathJax error: " + err.message));
       }
     }
 
-    snrSlider.addEventListener("input", updateApp);
-
-    playBtn.addEventListener("click", async () => {
-      if (!noisySignal) return;
-      if (audioContext.state === "suspended") {
-        await audioContext.resume();
-      }
-      playSignal(noisySignal, sampleRate);
-    });
-
     async function init() {
       try {
         if (window.MathJax && window.MathJax.startup) {
           await window.MathJax.startup.promise;
         }
-        setSliderUI(snrSlider, snrValueBubble);
-        loadEmbeddedSamples();
+
+        originalSignal = PAR8_SAMPLES.slice();
+        sampleRate = EMBEDDED_SAMPLE_RATE;
+        els.status.textContent = "";
+
+        els.snrSlider.addEventListener("input", updateApp);
+        updateApp();
       } catch (err) {
         showError("Error: " + err.message);
       }
