@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Measuring Time Content</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    macros: {
+      rect: "{\\operatorname{rect}}",
+      tri: "{\\operatorname{tri}}",
+      sinc: "{\\operatorname{sinc}}"
+    }
+  },
+  svg: { fontCache: 'global' }
+};  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --text: rgb(49, 51, 63);
+      --muted: rgb(90, 93, 108);
+      --accent: rgb(255, 75, 75);
+      --track: rgba(49, 51, 63, 0.18);
+      --thumb-size: 1rem;
+      --panel: #ffffff;
+      --plot-bg: #fafafa;
+      --grid: rgba(49, 51, 63, 0.08);
+      --axis: rgba(49, 51, 63, 0.22);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      max-width: 62rem;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 2.5rem 1rem;
+      line-height: 1.5;
+      font-size: 1rem;
+      background: white;
+    }
+
+    h1 {
+      margin: 0 0 0.75rem 0;
+      font-weight: 700;
+      font-size: 2rem;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 0 0 1rem 0;
+      font-size: 1rem;
+    }
+
+    .controls-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0 1rem 0;
+      align-items: start;
+    }
+
+    .control {
+      min-width: 0;
+      background: var(--panel);
+      border-radius: 0.5rem;
+    }
+
+    .labelrow {
+      display: flex;
+      justify-content: flex-start;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.18rem;
+      min-height: 1.2rem;
+    }
+
+    .labelrow label {
+      font-weight: 600;
+      font-size: 0.98rem;
+      margin: 0;
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding-top: 0.68rem;
+      padding-bottom: 0.42rem;
+    }
+
+    .slider-value-bubble {
+      position: absolute;
+      top: -0.02rem;
+      left: var(--pct);
+      transform: translateX(-50%);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 0.84rem;
+      line-height: 1;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .slider-limits {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.02rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      --pct: 50%;
+    }
+
+    input[type="range"]:focus { outline: none; }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background:
+        linear-gradient(to right,
+          var(--accent) 0%,
+          var(--accent) var(--pct),
+          var(--track) var(--pct),
+          var(--track) 100%);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--track);
+    }
+
+    input[type="range"]::-moz-range-progress {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+      margin-top: -5px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+      cursor: pointer;
+    }
+
+    .plots-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.7rem;
+      margin-top: 1rem;
+      align-items: start;
+    }
+
+    .plot-col {
+      min-width: 0;
+    }
+
+    .plot {
+      width: 100%;
+      height: 215px;
+      margin: 0 0 0.6rem 0;
+      border: none;
+      border-radius: 0;
+      overflow: visible;
+      background: transparent;
+    }
+
+    details {
+      margin-top: 1.35rem;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .mathblock { margin: 0.75rem 0; }
+
+    .errorbox {
+      display: none;
+      margin: 1rem 0;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      background: rgba(255, 75, 75, 0.08);
+      color: rgb(120, 20, 20);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 1100px) {
+      .plot { height: 195px; }
+    }
+
+    @media (max-width: 900px) {
+      .plots-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 700px) {
+      .controls-row,
+      .plots-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Measuring Time Content</h1>
+
+  <p>
+    Suppose you are given a black box with some unknown signal $f(t)$ in it, and the only
+    thing you can do is to provide another signal $in(t)$ as input, in which case the black
+    box will output the scalar product between the two: $\langle f(t), in(t)\rangle$.
+  </p>
+
+  <p>
+    What kind of input signal should you use to get the value of $f(\Delta)$?
+  </p>
+
+  <div id="errorbox" class="errorbox"></div>
+
+  <div class="controls-row">
+    <div class="control">
+      <div class="labelrow">
+        <label for="aSlider">Amplification: $a$</label>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-value-bubble" id="aVal">1.0</div>
+        <input id="aSlider" type="range" min="1" max="20" step="0.1" value="1" />
+        <div class="slider-limits">
+          <span>1.0</span>
+          <span>20.0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="labelrow">
+        <label for="shiftSlider">Time shift: $\Delta$</label>
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-value-bubble" id="shiftVal">0.0</div>
+        <input id="shiftSlider" type="range" min="-3" max="3" step="0.1" value="0" />
+        <div class="slider-limits">
+          <span>-3.0</span>
+          <span>3.0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="plots-grid">
+    <div class="plot-col">
+      <div id="rectSignal" class="plot"></div>
+      <div id="rectInput" class="plot"></div>
+      <div id="rectProduct" class="plot"></div>
+    </div>
+
+    <div class="plot-col">
+      <div id="triSignal" class="plot"></div>
+      <div id="triInput" class="plot"></div>
+      <div id="triProduct" class="plot"></div>
+    </div>
+
+    <div class="plot-col">
+      <div id="sincSignal" class="plot"></div>
+      <div id="sincInput" class="plot"></div>
+      <div id="sincProduct" class="plot"></div>
+    </div>
+
+    <div class="plot-col" id="deltaColumn" style="display:none;">
+      <div id="deltaSignal" class="plot"></div>
+      <div id="deltaInput" class="plot"></div>
+      <div id="deltaProduct" class="plot"></div>
+    </div>
+  </div>
+
+  <details>
+    <summary>Open for comments</summary>
+
+    <p>
+      The three plots on the top left show the unknown function $f(t)=\cos(3t)$.
+      The next three plots show possible candidates for $in(t)$: rectangle, triangle
+      and sinc functions which can be modified using sliders $a$ and $\Delta$.
+      Notice that the integral of these three functions is always 1, whatever $a$.
+    </p>
+
+    <p>
+      In the three bottom left plots, we multiply our three functions $in(t)$ with
+      $f(t)$. Then we compute and print the scalar product as the integral of this product,
+      i.e. the signed area in blue.
+    </p>
+
+    <div class="mathblock">
+      $$
+      \langle f(t),in(t-\Delta)\rangle=\int_{-\infty}^{\infty} f(t)\,in(t-\Delta)\,dt
+      $$
+    </div>
+
+    <p>
+      When $a$ grows, we see that our three functions, although not fully identical,
+      tend to have the same effect when used in the integral: only their values very
+      close to their maximum contribute to the result.
+    </p>
+
+    <p>
+      When $a$ tends to infinity (here, to 20), these functions can no longer be plotted.
+      They are therefore termed as a Dirac impulse $\delta(t)$ and symbolically represented
+      on the right plots as an arrow, the amplitude of which is set to the integral of the
+      functions: 1 on the top plot and $f(\Delta)$ on the bottom plot.
+    </p>
+
+    <p>
+      As a matter of fact, we see that when $\Delta$ is set to 0, all integrals tend to $f(0)$:
+    </p>
+
+    <div class="mathblock">
+      $$
+      \langle f(t),\delta(t)\rangle=\int_{-\infty}^{\infty} f(t)\,\delta(t)\,dt=f(0)
+      $$
+    </div>
+
+    <p>
+      When $\Delta$ is modified, all integrals tend to $f(\Delta)$:
+    </p>
+
+    <div class="mathblock">
+      $$
+      \langle f(t),\delta(t-\Delta)\rangle=\int_{-\infty}^{\infty} f(t)\,\delta(t-\Delta)\,dt=f(\Delta)
+      $$
+    </div>
+
+    <p>
+      The ideal input function $in(t)$ is therefore $\delta(t-\Delta)$.
+    </p>
+  </details>
+
+  <script>
+    const fe = 10000;
+    const tMin = -3;
+    const tMax = 3;
+    const N = Math.round((tMax - tMin) * fe);
+    const t = new Float64Array(N);
+
+    for (let i = 0; i < N; i++) {
+      t[i] = tMin + i / fe;
+    }
+
+    const els = {
+      aSlider: document.getElementById("aSlider"),
+      shiftSlider: document.getElementById("shiftSlider"),
+      aVal: document.getElementById("aVal"),
+      shiftVal: document.getElementById("shiftVal"),
+      deltaColumn: document.getElementById("deltaColumn"),
+      errorbox: document.getElementById("errorbox")
+    };
+
+    function showError(msg) {
+      els.errorbox.style.display = "block";
+      els.errorbox.textContent = msg;
+    }
+
+    function setSliderUI(el, bubbleEl, digits = 1) {
+      const min = Number(el.min ?? 0);
+      const max = Number(el.max ?? 100);
+      const val = Number(el.value);
+      const pct = ((val - min) * 100) / (max - min || 1);
+      el.style.setProperty("--pct", `${pct}%`);
+      bubbleEl.style.left = `${pct}%`;
+      bubbleEl.textContent = val.toFixed(digits);
+    }
+
+    function rect(x) {
+      return Math.abs(x) <= 0.5 ? 1 : 0;
+    }
+
+    function tri(x) {
+      return Math.abs(x) <= 1 ? 1 - Math.abs(x) : 0;
+    }
+
+    function sincCard(x) {
+      if (Math.abs(x) < 1e-12) return 1;
+      return Math.sin(Math.PI * x) / (Math.PI * x);
+    }
+
+    function cosineArray() {
+      const y = new Float64Array(N);
+      for (let i = 0; i < N; i++) y[i] = Math.cos(3 * t[i]);
+      return y;
+    }
+
+    function buildKernel(a, shift, kind) {
+      const y = new Float64Array(N);
+      for (let i = 0; i < N; i++) {
+        const x = a * (t[i] - shift);
+        if (kind === "rect") y[i] = rect(x) * a;
+        else if (kind === "tri") y[i] = tri(x) * a;
+        else y[i] = sincCard(x) * a;
+      }
+      return y;
+    }
+
+    function multiplyArrays(a, b) {
+      const y = new Float64Array(a.length);
+      for (let i = 0; i < a.length; i++) y[i] = a[i] * b[i];
+      return y;
+    }
+
+    function scalarProduct(x) {
+      let s = 0;
+      for (let i = 0; i < x.length; i++) s += x[i];
+      return s / fe;
+    }
+
+    function commonLayout(title, titleFontSize = 14) {
+      return {
+        title: {
+          text: title,
+          font: {
+            family: '"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+            size: titleFontSize,
+            color: "rgb(49, 51, 63)"
+          },
+          x: 0.5,
+          xref: "paper",
+          xanchor: "center",
+          y: 0.94,
+          yanchor: "top",
+          pad: { t: 0, b: 0, l: 0, r: 0 }
+        },
+        font: {
+          family: '"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+          size: 12,
+          color: "rgb(49, 51, 63)"
+        },
+        margin: { t: 28, l: 34, r: 10, b: 28 },
+        showlegend: false,
+        paper_bgcolor: "white",
+        plot_bgcolor: "#fafafa"
+      };
+    }
+
+    function axis2D() {
+      return {
+        title: { text: "Time (s)", font: { size: 10 } },
+        tickfont: { size: 9 },
+        range: [tMin, tMax],
+        showline: true,
+        linewidth: 1,
+        linecolor: "rgba(49, 51, 63, 0.22)",
+        mirror: false,
+        zeroline: true,
+        zerolinewidth: 1,
+        zerolinecolor: "rgba(49, 51, 63, 0.22)",
+        showgrid: true,
+        gridcolor: "rgba(49, 51, 63, 0.08)"
+      };
+    }
+
+    function yAxis() {
+      return {
+        tickfont: { size: 9 },
+        range: [-2, 2],
+        showline: true,
+        linewidth: 1,
+        linecolor: "rgba(49, 51, 63, 0.22)",
+        mirror: false,
+        zeroline: true,
+        zerolinewidth: 1,
+        zerolinecolor: "rgba(49, 51, 63, 0.22)",
+        showgrid: true,
+        gridcolor: "rgba(49, 51, 63, 0.08)"
+      };
+    }
+
+    function plotAreaFrame() {
+      return [{
+        type: "rect",
+        xref: "paper",
+        yref: "paper",
+        x0: 0,
+        x1: 1,
+        y0: 0,
+        y1: 0.86,
+        line: {
+          color: "rgba(49, 51, 63, 0.14)",
+          width: 1
+        },
+        fillcolor: "rgba(0,0,0,0)"
+      }];
+    }
+
+    function productAnnotation(value) {
+      return [{
+        x: 0.5,
+        y: 0.06,
+        xref: "paper",
+        yref: "paper",
+        text: `&lt;f(t),in(t)&gt; = ${value.toFixed(2)}`,
+        showarrow: false,
+        font: {
+          family: '"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+          size: 15,
+          color: "rgb(49, 51, 63)"
+        },
+        align: "center",
+        xanchor: "center",
+        yanchor: "bottom",
+        bgcolor: "rgba(255,255,255,0.82)"
+      }];
+    }
+
+    function diracAnnotation(x, y) {
+      return {
+        x: x,
+        y: y,
+        xref: "x",
+        yref: "y",
+        ax: 0,
+        ay: 38,
+        axref: "pixel",
+        ayref: "pixel",
+        showarrow: true,
+        arrowhead: 2,
+        arrowsize: 1,
+        arrowwidth: 2,
+        arrowcolor: "rgb(49, 51, 63)"
+      };
+    }
+
+    function renderStandardColumn(signalDiv, inputDiv, productDiv, inputTitle, inputY, productY, integralVal) {
+      const cosY = cosineArray();
+
+      Plotly.react(signalDiv, [
+        {
+          x: Array.from(t),
+          y: Array.from(cosY),
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2, dash: "dash" },
+          cliponaxis: true
+        }
+      ], {
+        ...commonLayout("$f(t)=\\cos(3t)$", 14),
+        xaxis: axis2D(),
+        yaxis: yAxis(),
+        shapes: plotAreaFrame()
+      }, { responsive: true, displayModeBar: false });
+
+      Plotly.react(inputDiv, [
+        {
+          x: Array.from(t),
+          y: Array.from(inputY),
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2 },
+          cliponaxis: true
+        }
+      ], {
+        ...commonLayout(inputTitle, 14),
+        xaxis: axis2D(),
+        yaxis: yAxis(),
+        shapes: plotAreaFrame()
+      }, { responsive: true, displayModeBar: false });
+
+      Plotly.react(productDiv, [
+        {
+          x: Array.from(t),
+          y: Array.from(productY),
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2 },
+          fill: "tozeroy",
+          cliponaxis: true
+        }
+      ], {
+        ...commonLayout("$f(t)\\,in(t)$", 14),
+        xaxis: axis2D(),
+        yaxis: yAxis(),
+        annotations: productAnnotation(integralVal),
+        shapes: plotAreaFrame()
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function renderDeltaColumn(shift) {
+      const cosY = cosineArray();
+      const fDelta = Math.cos(3 * shift);
+
+      Plotly.react("deltaSignal", [
+        {
+          x: Array.from(t),
+          y: Array.from(cosY),
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2, dash: "dash" },
+          cliponaxis: true
+        }
+      ], {
+        ...commonLayout("$f(t)=\\cos(3t)$", 14),
+        xaxis: axis2D(),
+        yaxis: yAxis(),
+        shapes: plotAreaFrame()
+      }, { responsive: true, displayModeBar: false });
+
+      Plotly.react("deltaInput", [
+        {
+          x: [tMin, tMax],
+          y: [0, 0],
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2 },
+          cliponaxis: true
+        }
+      ], {
+        ...commonLayout("$in(t)=\\delta(t-\\Delta)$", 14),
+        xaxis: axis2D(),
+        yaxis: yAxis(),
+        annotations: [diracAnnotation(shift, 1)],
+        shapes: plotAreaFrame()
+      }, { responsive: true, displayModeBar: false });
+
+      Plotly.react("deltaProduct", [
+        {
+          x: [tMin, tMax],
+          y: [0, 0],
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2 },
+          cliponaxis: true
+        },
+        {
+          x: Array.from(t),
+          y: Array.from(cosY),
+          type: "scatter",
+          mode: "lines",
+          line: { width: 2, dash: "dash" },
+          cliponaxis: true
+        }
+      ], {
+        ...commonLayout("$f(t)\\,in(t)$", 14),
+        xaxis: axis2D(),
+        yaxis: yAxis(),
+        annotations: [
+          diracAnnotation(shift, fDelta),
+          ...productAnnotation(fDelta)
+        ],
+        shapes: plotAreaFrame()
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function updateApp() {
+      try {
+        const a = Number(els.aSlider.value);
+        const shift = Number(els.shiftSlider.value);
+
+        setSliderUI(els.aSlider, els.aVal, 1);
+        setSliderUI(els.shiftSlider, els.shiftVal, 1);
+
+        const cosY = cosineArray();
+
+        const rectA = buildKernel(a, shift, "rect");
+        const triA = buildKernel(a, shift, "tri");
+        const sincA = buildKernel(a, shift, "sinc");
+
+        const rectProd = multiplyArrays(rectA, cosY);
+        const triProd = multiplyArrays(triA, cosY);
+        const sincProd = multiplyArrays(sincA, cosY);
+
+        const integral1 = scalarProduct(rectProd);
+        const integral2 = scalarProduct(triProd);
+        const integral3 = scalarProduct(sincProd);
+
+        renderStandardColumn(
+          "rectSignal",
+          "rectInput",
+          "rectProduct",
+          "<i>in(t) = a  rect(a(t - Δ))</i>",             
+          rectA,
+          rectProd,
+          integral1
+        );
+
+        renderStandardColumn(
+          "triSignal",
+          "triInput",
+          "triProduct",
+          "<i>in(t) = a  tri(a(t - Δ))</i>",
+          triA,
+          triProd,
+          integral2
+        );
+
+        renderStandardColumn(
+          "sincSignal",
+          "sincInput",
+          "sincProduct",
+          "<i>in(t) = a  sinc(a(t - Δ))</i>",              
+          sincA,
+          sincProd,
+          integral3
+        );
+
+        if (a > 19.5) {
+          els.deltaColumn.style.display = "block";
+          renderDeltaColumn(shift);
+        } else {
+          els.deltaColumn.style.display = "none";
+        }
+
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise().catch(err => showError("MathJax error: " + err.message));
+        }
+
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    function init() {
+      try {
+        els.aSlider.addEventListener("input", updateApp);
+        els.shiftSlider.addEventListener("input", updateApp);
+        updateApp();
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
