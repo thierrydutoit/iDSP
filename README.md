@@ -14,7 +14,7 @@ This material is taken from third parties when available (with their own license
 
 If you want to contribute, or make suggestions or comments, [drop us a line](mailto://thierry.dutoit@umons.ac.be).
 
-If you want to create an iDSP app using the python StreamLit library, see this [How-To guide](https://github.com/thierrydutoit/iDSP/blob/gh-pages/iDSP%20-%20HowTo.pdf).
+Streamlit has been used for the design of most iDSP apps, and then transformed into html5/javascript code by AI. If you want to create an iDSP app using the python StreamLit library, see this [How-To guide](https://github.com/thierrydutoit/iDSP/blob/gh-pages/iDSP%20-%20HowTo.pdf).
 
 ---
 
