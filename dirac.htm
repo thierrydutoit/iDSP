@@ -555,22 +555,22 @@ window.MathJax = {
     }
 
     function diracAnnotation(x, y) {
-      return {
-        x: x,
-        y: y,
-        xref: "x",
-        yref: "y",
-        ax: 0,
-        ay: 38,
-        axref: "pixel",
-        ayref: "pixel",
-        showarrow: true,
-        arrowhead: 2,
-        arrowsize: 1,
-        arrowwidth: 2,
-        arrowcolor: "rgb(49, 51, 63)"
-      };
-    }
+  return {
+    x: x,
+    y: y,
+    xref: "x",
+    yref: "y",
+    ax: x,
+    ay: 0,
+    axref: "x",
+    ayref: "y",
+    showarrow: true,
+    arrowhead: 2,
+    arrowsize: 1,
+    arrowwidth: 2,
+    arrowcolor: "rgb(49, 51, 63)"
+  };
+}
 
     function renderStandardColumn(signalDiv, inputDiv, productDiv, inputTitle, inputY, productY, integralVal) {
       const cosY = cosineArray();
