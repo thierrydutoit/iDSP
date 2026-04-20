@@ -178,7 +178,7 @@
 
     .audio-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 1rem;
       align-items: start;
       margin: 1rem 0 1.15rem 0;
@@ -226,7 +226,11 @@
 
     @media (max-width: 700px) {
       .audio-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .audio-label {
+        font-size: 0.92rem;
       }
     }
   </style>
@@ -276,6 +280,11 @@
     <div class="audio-block">
       <p class="audio-label">Sampled signal</p>
       <audio id="sampledAudio" controls></audio>
+    </div>
+
+    <div class="audio-block">
+      <p class="audio-label">Band-pass reconstruction</p>
+      <audio id="reconstructedAudio" controls></audio>
     </div>
   </div>
 
@@ -331,8 +340,8 @@
       Notice, by examining the spectral content of the sampled signal, and by listening to it,
       that using sampling frequencies $F_s&lt;2(F_0+B/2)$ leads to signals in the
       $[0,F_s/2]$ band that are different from the original signal. However, since no aliasing
-      occurs, it is still possible to recover the original signal by further digital upsampling
-      and band-pass filtering.<br><br>
+      occurs, it is still possible to recover the original signal by ideal band-pass filtering
+      around the original band.<br><br>
       <em>Nota Bene</em>: for convenience, the effect of the sampling frequency on the magnitude
       of the sampled signal spectrum has been compensated for in the plot.
     </p>
@@ -344,13 +353,14 @@
       samplingVal: document.getElementById("samplingVal"),
       originalAudio: document.getElementById("originalAudio"),
       sampledAudio: document.getElementById("sampledAudio"),
+      reconstructedAudio: document.getElementById("reconstructedAudio"),
       errorbox: document.getElementById("errorbox")
     };
 
     const duration = 0.1;
     const centerFrequency = 1000;
     const bandwidth = 200;
-    const pseudoSamplingRate = 4000;
+    const pseudoSamplingRate = 20000;
 
     function showError(msg) {
       els.errorbox.style.display = "block";
@@ -390,35 +400,6 @@
       return out;
     }
 
-    function fftRealMagnitude(signal, fs) {
-      const N = signal.length;
-      const re = new Float64Array(N);
-      const im = new Float64Array(N);
-
-      for (let k = 0; k < N; k++) {
-        let sumRe = 0;
-        let sumIm = 0;
-        for (let n = 0; n < N; n++) {
-          const angle = -2 * Math.PI * k * n / N;
-          sumRe += signal[n] * Math.cos(angle);
-          sumIm += signal[n] * Math.sin(angle);
-        }
-        re[k] = sumRe;
-        im[k] = sumIm;
-      }
-
-      const freqs = new Float64Array(N);
-      const mags = new Float64Array(N);
-
-      for (let k = 0; k < N; k++) {
-        const freq = k < N / 2 ? k * fs / N : (k - N) * fs / N;
-        freqs[k] = freq;
-        mags[k] = Math.sqrt(re[k] * re[k] + im[k] * im[k]) / fs;
-      }
-
-      return fftShift(freqs, mags);
-    }
-
     function fftShift(freqs, mags) {
       const N = freqs.length;
       const half = Math.floor(N / 2);
@@ -433,6 +414,96 @@
       return { frequencies: shiftedFreqs, spectrum: shiftedMags };
     }
 
+    function nextPow2(n) {
+      return 1 << Math.ceil(Math.log2(Math.max(1, n)));
+    }
+
+    function fftComplexInPlace(re, im, inverse = false) {
+      const n = re.length;
+      let j = 0;
+
+      for (let i = 1; i < n; i++) {
+        let bit = n >> 1;
+        while (j & bit) {
+          j ^= bit;
+          bit >>= 1;
+        }
+        j ^= bit;
+
+        if (i < j) {
+          [re[i], re[j]] = [re[j], re[i]];
+          [im[i], im[j]] = [im[j], im[i]];
+        }
+      }
+
+      for (let len = 2; len <= n; len <<= 1) {
+        const ang = 2 * Math.PI / len * (inverse ? 1 : -1);
+        const wlenCos = Math.cos(ang);
+        const wlenSin = Math.sin(ang);
+
+        for (let i = 0; i < n; i += len) {
+          let wCos = 1;
+          let wSin = 0;
+
+          for (let k = 0; k < len / 2; k++) {
+            const uRe = re[i + k];
+            const uIm = im[i + k];
+            const vRe = re[i + k + len / 2] * wCos - im[i + k + len / 2] * wSin;
+            const vIm = re[i + k + len / 2] * wSin + im[i + k + len / 2] * wCos;
+
+            re[i + k] = uRe + vRe;
+            im[i + k] = uIm + vIm;
+            re[i + k + len / 2] = uRe - vRe;
+            im[i + k + len / 2] = uIm - vIm;
+
+            const nextWCos = wCos * wlenCos - wSin * wlenSin;
+            const nextWSin = wCos * wlenSin + wSin * wlenCos;
+            wCos = nextWCos;
+            wSin = nextWSin;
+          }
+        }
+      }
+
+      if (inverse) {
+        for (let i = 0; i < n; i++) {
+          re[i] /= n;
+          im[i] /= n;
+        }
+      }
+    }
+
+    function fftReal(signal) {
+      const N = nextPow2(signal.length);
+      const re = new Float64Array(N);
+      const im = new Float64Array(N);
+
+      for (let i = 0; i < signal.length; i++) re[i] = signal[i];
+      fftComplexInPlace(re, im, false);
+
+      return { re, im, N };
+    }
+
+    function ifftComplex(reIn, imIn) {
+      const re = new Float64Array(reIn);
+      const im = new Float64Array(imIn);
+      fftComplexInPlace(re, im, true);
+      return re;
+    }
+
+    function fftRealMagnitude(signal, fs) {
+      const { re, im, N } = fftReal(signal);
+
+      const freqs = new Float64Array(N);
+      const mags = new Float64Array(N);
+
+      for (let k = 0; k < N; k++) {
+        freqs[k] = k < N / 2 ? k * fs / N : (k - N) * fs / N;
+        mags[k] = Math.sqrt(re[k] * re[k] + im[k] * im[k]) / fs;
+      }
+
+      return fftShift(freqs, mags);
+    }
+
     function concatShiftedImages(baseFreqs, baseSpectrum, fs, minI = -7, maxI = 6) {
       const outFreqs = [];
       const outSpectrum = [];
@@ -443,6 +514,49 @@
         }
       }
       return { frequencies: outFreqs, spectrum: outSpectrum };
+    }
+
+    function buildImpulseTrain(tRec, ts, sampledSignal, denseFs, fs) {
+      const impulseTrain = new Float64Array(tRec.length);
+      const t0 = tRec[0];
+      const scale = denseFs / fs;
+
+      for (let i = 0; i < ts.length; i++) {
+        const idx = Math.round((ts[i] - t0) * denseFs);
+        if (idx >= 0 && idx < impulseTrain.length) {
+          impulseTrain[idx] += sampledSignal[i] * scale;
+        }
+      }
+      return impulseTrain;
+    }
+
+    function reconstructSignal(ts, sampledSignal, denseFs, samplingRate) {
+      const tRec = arange(-duration, duration, 1 / denseFs);
+      const impulseTrain = buildImpulseTrain(tRec, ts, sampledSignal, denseFs, samplingRate);
+
+      const { re, im, N } = fftReal(impulseTrain);
+
+      const fLow = centerFrequency - bandwidth / 2;
+      const fHigh = centerFrequency + bandwidth / 2;
+
+      const reFiltered = new Float64Array(re);
+      const imFiltered = new Float64Array(im);
+
+      for (let k = 0; k < N; k++) {
+        const freq = k < N / 2 ? k * denseFs / N : (k - N) * denseFs / N;
+        const pass = Math.abs(freq) >= fLow && Math.abs(freq) <= fHigh;
+        if (!pass) {
+          reFiltered[k] = 0;
+          imFiltered[k] = 0;
+        }
+      }
+
+      const reconstructedFull = ifftComplex(reFiltered, imFiltered);
+
+      return {
+        tRec,
+        reconstructedSignal: reconstructedFull.subarray(0, tRec.length)
+      };
     }
 
     function commonLayout(title, height = 380) {
@@ -500,7 +614,7 @@
       };
     }
 
-    function renderSpectrumPlot(fs, originalFreqs, originalSpectrum, sampledFreqs, sampledSpectrum) {
+    function renderSpectrumPlot(fs, originalFreqs, originalSpectrum, sampledFreqs, sampledSpectrum, reconstructedFreqs, reconstructedSpectrum) {
       const images = concatShiftedImages(sampledFreqs, sampledSpectrum, fs, -7, 6);
 
       Plotly.react("spectrumPlot", [
@@ -557,7 +671,7 @@
       }, { responsive: true, displayModeBar: false });
     }
 
-    function renderTimePlot(fs, tsShort, signalShort, tShort, sampledSignalShort) {
+    function renderTimePlot(fs, tsShort, signalShort, tShort, sampledSignalShort, tRecShort, reconstructedSignalShort) {
       const stemX = [];
       const stemY = [];
       for (let i = 0; i < tShort.length; i++) {
@@ -571,7 +685,7 @@
           y: Array.from(signalShort),
           type: "scatter",
           mode: "lines",
-          name: "Original signal",
+          name: "Original",
           line: { width: 2.5, color: "#1f77b4" }
         },
         {
@@ -579,7 +693,7 @@
           y: stemY,
           type: "scatter",
           mode: "lines",
-          name: "Sampled signal",
+          name: "Samples",
           line: { width: 1.6, color: "red" }
         },
         {
@@ -589,9 +703,17 @@
           mode: "markers",
           showlegend: false,
           marker: { size: 6, color: "red" }
+        },
+        {
+          x: Array.from(tRecShort),
+          y: Array.from(reconstructedSignalShort),
+          type: "scatter",
+          mode: "lines",
+          name: "Band-pass filtered reconstruction",
+          line: { width: 2.5, color: "orange"}
         }
       ], {
-        ...commonLayout("Original and Sampled Signals", 390),
+        ...commonLayout("Original, Sampled, and Reconstructed Signals", 390),
         xaxis: axisStyle("Time (s)"),
         yaxis: axisStyle("Amplitude")
       }, { responsive: true, displayModeBar: false });
@@ -645,6 +767,8 @@
 
     function updateApp() {
       try {
+        els.errorbox.style.display = "none";
+
         const samplingRate = Number(els.samplingSlider.value);
         setSliderUI(els.samplingSlider, els.samplingVal, 0);
 
@@ -654,33 +778,50 @@
         const ts = arange(-duration, duration, 1 / samplingRate);
         const sampledSignal = buildSignal(ts);
 
+        const { tRec, reconstructedSignal } = reconstructSignal(ts, sampledSignal, pseudoSamplingRate, samplingRate);
+
         const originalFFT = fftRealMagnitude(signal, pseudoSamplingRate);
         const sampledFFT = fftRealMagnitude(sampledSignal, samplingRate);
+        const reconstructedFFT = fftRealMagnitude(reconstructedSignal, pseudoSamplingRate);
 
         renderSpectrumPlot(
           samplingRate,
           originalFFT.frequencies,
           originalFFT.spectrum,
           sampledFFT.frequencies,
-          sampledFFT.spectrum
+          sampledFFT.spectrum,
+          reconstructedFFT.frequencies,
+          reconstructedFFT.spectrum
         );
 
-        const tsShort = arange(-0.01, 0.01, 1 / 20000);
+        const tsShort = arange(-0.01, 0.01, 1 / pseudoSamplingRate);
         const signalShort = buildSignal(tsShort);
 
         const tShort = arange(-0.01, 0.01, 1 / samplingRate);
         const sampledSignalShort = buildSignal(tShort);
+
+        const tRecShortArr = [];
+        const reconstructedSignalShortArr = [];
+        for (let i = 0; i < tRec.length; i++) {
+          if (tRec[i] >= -0.01 && tRec[i] < 0.01) {
+            tRecShortArr.push(tRec[i]);
+            reconstructedSignalShortArr.push(reconstructedSignal[i]);
+          }
+        }
 
         renderTimePlot(
           samplingRate,
           tsShort,
           signalShort,
           tShort,
-          sampledSignalShort
+          sampledSignalShort,
+          tRecShortArr,
+          reconstructedSignalShortArr
         );
 
         updateAudio(els.originalAudio, signal, pseudoSamplingRate);
         updateAudio(els.sampledAudio, sampledSignal, samplingRate);
+        updateAudio(els.reconstructedAudio, reconstructedSignal, pseudoSamplingRate);
 
         if (window.MathJax && window.MathJax.typesetPromise) {
           window.MathJax.typesetPromise().catch(err => showError("MathJax error: " + err.message));
