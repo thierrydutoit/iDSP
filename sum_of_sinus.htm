@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sinusoid and Phasor Sum</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #262730;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --panel: #ffffff;
+      --accent: #ff4b4b;
+      --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.1);
+      --radius: 0.75rem;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem;
+    }
+
+    h1 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      margin: 0 0 0.8rem;
+      letter-spacing: -0.02em;
+    }
+
+    .intro {
+      font-size: 1rem;
+      line-height: 1.65;
+      margin-bottom: 1.4rem;
+    }
+
+    .slider-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1rem;
+      margin: 1.25rem 0 1.1rem;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .control label {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+
+    .value {
+      font-size: 0.9rem;
+      color: var(--muted);
+      min-height: 1.2rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .plots {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      align-items: start;
+      margin-top: 0.8rem;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 0.85rem 0.85rem 0.4rem;
+    }
+
+    .chart {
+      width: 100%;
+      height: 430px;
+    }
+
+    details {
+      margin-top: 1.2rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fafafa;
+      overflow: hidden;
+    }
+
+    summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 0.9rem 1rem;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '▾';
+      float: right;
+      color: var(--muted);
+    }
+    details[open] summary::after { content: '▴'; }
+
+    .details-body {
+      padding: 0 1rem 1rem;
+      line-height: 1.65;
+      font-size: 0.98rem;
+      background: white;
+      border-top: 1px solid var(--border);
+    }
+
+    .caption {
+      margin-top: 0.9rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .caption a {
+      color: inherit;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+      .slider-grid, .plots {
+        grid-template-columns: 1fr;
+      }
+      .chart { height: 400px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Summing sinusoids with same frequency</h1>
+    <div class="intro">
+      <p>
+        What is the sum of two sinusoids $x_1(t) = A_1 \sin(\omega t + \phi_1)$ and
+        $x_2(t) = A_2 \sin(\omega t + \phi_2)$ with <strong>identical frequency</strong>
+        but different amplitudes and phases?
+      </p>
+      <p>Try by yourself</p>
+    </div>
+
+    <div class="slider-grid">
+      <div class="control">
+        <label for="A1">Amplitude A1</label>
+        <input id="A1" type="range" min="0" max="5" step="0.1" value="5" />
+        <div class="value" id="A1-value"></div>
+      </div>
+      <div class="control">
+        <label for="phi1">Phase φ1 (degrees)</label>
+        <input id="phi1" type="range" min="-180" max="180" step="1" value="0" />
+        <div class="value" id="phi1-value"></div>
+      </div>
+      <div class="control">
+        <label for="A2">Amplitude A2</label>
+        <input id="A2" type="range" min="0" max="5" step="0.1" value="5" />
+        <div class="value" id="A2-value"></div>
+      </div>
+      <div class="control">
+        <label for="phi2">Phase φ2 (degrees)</label>
+        <input id="phi2" type="range" min="-180" max="180" step="1" value="90" />
+        <div class="value" id="phi2-value"></div>
+      </div>
+    </div>
+
+    <div class="plots">
+      <div class="card">
+        <div id="timePlot" class="chart"></div>
+      </div>
+      <div class="card">
+        <div id="phasorPlot" class="chart"></div>
+      </div>
+    </div>
+
+    <details>
+      <summary>Open for comments</summary>
+      <div class="details-body" id="comments"></div>
+    </details>
+
+    <div class="caption">
+      <a href="https://thierrydutoit.github.io/iDSP/" target="_blank" rel="noopener noreferrer">See other iDSP apps</a>
+    </div>
+  </div>
+
+  <script>
+    const f = 1.0;
+    const omega = 2 * Math.PI * f;
+
+    const controls = {
+      A1: document.getElementById('A1'),
+      phi1: document.getElementById('phi1'),
+      A2: document.getElementById('A2'),
+      phi2: document.getElementById('phi2')
+    };
+
+    const valueEls = {
+      A1: document.getElementById('A1-value'),
+      phi1: document.getElementById('phi1-value'),
+      A2: document.getElementById('A2-value'),
+      phi2: document.getElementById('phi2-value')
+    };
+
+    function linspace(start, stop, n) {
+      const arr = [];
+      const step = (stop - start) / (n - 1);
+      for (let i = 0; i < n; i++) arr.push(start + i * step);
+      return arr;
+    }
+
+    function fmt(n, digits = 1) {
+      return Number(n).toFixed(digits);
+    }
+
+    function deg2rad(d) {
+      return d * Math.PI / 180;
+    }
+
+    function wrapDeg180(angleDeg) {
+      let a = ((angleDeg + 180) % 360 + 360) % 360 - 180;
+      if (a === -180) a = 180;
+      return a;
+    }
+
+    function update() {
+      const A1 = parseFloat(controls.A1.value);
+      const phi1Deg = parseFloat(controls.phi1.value);
+      const A2 = parseFloat(controls.A2.value);
+      const phi2Deg = parseFloat(controls.phi2.value);
+
+      valueEls.A1.textContent = fmt(A1, 1);
+      valueEls.phi1.textContent = `${fmt(phi1Deg, 0)}°`;
+      valueEls.A2.textContent = fmt(A2, 1);
+      valueEls.phi2.textContent = `${fmt(phi2Deg, 0)}°`;
+
+      const phi1 = deg2rad(phi1Deg);
+      const phi2 = deg2rad(phi2Deg);
+
+      const t = linspace(0, 2 / f, 1000);
+      const x1 = t.map(tt => A1 * Math.sin(omega * tt + phi1));
+      const x2 = t.map(tt => A2 * Math.sin(omega * tt + phi2));
+      const xSum = x1.map((v, i) => v + x2[i]);
+
+      const P1 = { re: A1 * Math.cos(phi1), im: A1 * Math.sin(phi1) };
+      const P2 = { re: A2 * Math.cos(phi2), im: A2 * Math.sin(phi2) };
+      const Psum = { re: P1.re + P2.re, im: P1.im + P2.im };
+
+      const Asum = Math.hypot(Psum.re, Psum.im);
+      const phiSum = Math.atan2(Psum.im, Psum.re);
+      const phiSumDeg = wrapDeg180(phiSum * 180 / Math.PI);
+
+      const timeColors = {
+        x1: '#1f77b4',
+        x2: '#ff7f0e',
+        sum: '#2ca02c'
+      };
+
+      const timeData = [
+        {
+          x: t,
+          y: x1,
+          mode: 'lines',
+          name: `x₁(t)=${A1.toFixed(2)}sin(ωt + ${phi1Deg.toFixed(1)}°)`,
+          line: { width: 2, color: timeColors.x1 }
+        },
+        {
+          x: t,
+          y: x2,
+          mode: 'lines',
+          name: `x₂(t)=${A2.toFixed(2)}sin(ωt + ${phi2Deg.toFixed(1)}°)`,
+          line: { width: 2, color: timeColors.x2 }
+        },
+        {
+          x: t,
+          y: xSum,
+          mode: 'lines',
+          name: 'x₁(t)+x₂(t)',
+          line: { width: 3, color: timeColors.sum }
+        }
+      ];
+
+      const timeLayout = {
+        title: { text: 'Two sinusoids with identical frequency and their sum', font: { size: 16 } },
+        margin: { l: 55, r: 20, t: 50, b: 55 },
+        xaxis: { title: 'Time (s)', showgrid: true, gridcolor: 'rgba(0,0,0,0.12)' },
+        yaxis: { title: 'Amplitude', range: [-11, 11], showgrid: true, gridcolor: 'rgba(0,0,0,0.12)' },
+        legend: { x: 1, xanchor: 'right', y: 1 },
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white'
+      };
+
+      Plotly.react('timePlot', timeData, timeLayout, { responsive: true, displayModeBar: false });
+
+      const headScale = 0.35;
+      const phasorData = [
+        {
+          x: [0, P1.re], y: [0, P1.im], mode: 'lines+markers+text',
+          text: ['', 'P1'], textposition: 'top right', name: 'P1',
+          line: { width: 3, color: timeColors.x1 }, marker: { size: [0, 8], color: timeColors.x1 }, showlegend: false
+        },
+        {
+          x: [0, P2.re], y: [0, P2.im], mode: 'lines+markers+text',
+          text: ['', 'P2'], textposition: 'top right', name: 'P2',
+          line: { width: 3, color: timeColors.x2 }, marker: { size: [0, 8], color: timeColors.x2 }, showlegend: false
+        },
+        {
+          x: [0, Psum.re], y: [0, Psum.im], mode: 'lines+markers',
+          name: 'P1 + P2', line: { width: 4, color: timeColors.sum }, marker: { size: [0, 9], color: timeColors.sum }, showlegend: false
+        },
+        {
+          x: [P1.re, Psum.re], y: [P1.im, Psum.im], mode: 'lines',
+          line: { width: 2, dash: 'dash', color: timeColors.x2 }, hoverinfo: 'skip', showlegend: false
+        },
+        {
+          x: [P2.re, Psum.re], y: [P2.im, Psum.im], mode: 'lines',
+          line: { width: 2, dash: 'dash', color: timeColors.x1 }, hoverinfo: 'skip', showlegend: false
+        }
+      ];
+
+      const annotations = [
+        {
+          x: P1.re, y: P1.im, ax: 0, ay: 0,
+          axref: 'x', ayref: 'y',
+          showarrow: true, arrowhead: 3, arrowsize: 1, arrowwidth: 2,
+          arrowcolor: timeColors.x1
+        },
+        {
+          x: P2.re, y: P2.im, ax: 0, ay: 0,
+          axref: 'x', ayref: 'y',
+          showarrow: true, arrowhead: 3, arrowsize: 1, arrowwidth: 2,
+          arrowcolor: timeColors.x2
+        },
+        {
+          x: Psum.re, y: Psum.im, ax: 0, ay: 0,
+          axref: 'x', ayref: 'y',
+          showarrow: true, arrowhead: 3, arrowsize: 1, arrowwidth: 2.5,
+          arrowcolor: timeColors.sum
+        },
+        {
+          x: Psum.re,
+          y: Psum.im,
+          xanchor: 'left',
+          yanchor: 'bottom',
+          text: `P1 + P2<br>A = ${Asum.toFixed(1)}<br>φ = ${phiSumDeg.toFixed(0)}°`,
+          showarrow: false,
+          align: 'left',
+          font: { size: 13, color: '#262730' },
+          bgcolor: 'rgba(255,255,255,0.85)'
+        }
+      ];
+
+      const phasorLayout = {
+        title: { text: 'Phasor addition', font: { size: 16 } },
+        margin: { l: 55, r: 20, t: 50, b: 55 },
+        xaxis: {
+          title: 'Real', range: [-11, 11], zeroline: true, showgrid: true,
+          gridcolor: 'rgba(0,0,0,0.12)'
+        },
+        yaxis: {
+          title: 'Imaginary', range: [-11, 11], zeroline: true, showgrid: true,
+          gridcolor: 'rgba(0,0,0,0.12)', scaleanchor: 'x', scaleratio: 1
+        },
+        annotations,
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white'
+      };
+
+      Plotly.react('phasorPlot', phasorData, phasorLayout, { responsive: true, displayModeBar: false });
+
+      const comments = document.getElementById('comments');
+      comments.innerHTML = `
+        <p>Because the two sinusoids have the <strong>same frequency</strong>, their sum is also a sinusoid at that frequency:</p>
+        <p>$$x_1(t)+x_2(t) = A_\\Sigma \\sin(\\omega t + \\phi_\\Sigma)$$</p>
+        <p>where:</p>
+        <ul>
+          <li>$A_\\Sigma = |P_1 + P_2| = ${Asum.toFixed(3)}$</li>
+          <li>$\\phi_\\Sigma = \\angle(P_1 + P_2) = ${phiSumDeg.toFixed(3)}^\\circ$</li>
+        </ul>
+        <p>This can be easily obtained by phasor sum.</p>
+        <p>If each sinusoid is represented by a phasor:</p>
+        <ul>
+          <li>$P_1 = A_1 e^{j\\phi_1} = ${A1.toFixed(2)} e^{j ${phi1Deg.toFixed(1)}^\\circ}$</li>
+          <li>$P_2 = A_2 e^{j\\phi_2} = ${A2.toFixed(2)} e^{j ${phi2Deg.toFixed(1)}^\\circ}$</li>
+        </ul>
+        <p>their vector sum is:</p>
+        <p>$$P_\\Sigma = P_1 + P_2$$</p>
+        <p>The <strong>magnitude</strong> of $P_\\Sigma$ is the amplitude of the summed sinusoid, and the <strong>angle</strong> of $P_\\Sigma$ is its phase:</p>
+        <p>$$A_\\Sigma = |P_\\Sigma|, \\qquad \\phi_\\Sigma = \\angle P_\\Sigma$$</p>
+        <p>This is why phasor addition is a convenient way to add same-frequency sinusoids.</p>
+      `;
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([comments]).catch(() => {});
+      }
+    }
+
+    Object.values(controls).forEach(el => el.addEventListener('input', update));
+    update();
+  </script>
+</body>
+</html>
