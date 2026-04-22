@@ -20,6 +20,7 @@ Streamlit has been used for the design of most iDSP apps, and then transformed i
 
 | Figure     | iDSP content  |
 | ---------- | ------------- | 
+| <a href="https://idmil.github.io/DigitalAudioWorkbench/sampling/"><img src="./sampling_300.jpg" /> | [Sampling](https://idmil.github.io/DigitalAudioWorkbench/sampling/) / [Video](https://www.youtube.com/watch?v=f5SKkB8GETk) / [Git](https://github.com/idmil/dawb) / [Paper](https://dl.acm.org/doi/abs/10.1145/3478384.3478397)  |
 | <a href="./sinus.htm"><img src="./sinus_300.jpg" /></a> | [Sine wave](./sinus.htm) / [Git](https://github.com/thierrydutoit/sine-wave)  |
 | <a href="./sum_of_sinus.htm"><img src="./sum_of_sinus_300.jpg" /></a> | [Sum of sinusoids](./sum_of_sinus.htm) / [Git](https://github.com/thierrydutoit/sum_of_sinus)  |
 | <a href="./damped_sinus.htm"><img src="./damped_sinus_300.jpg" /></a> | [Damped sine wave](./damped_sinus.htm) / [Git](https://github.com/thierrydutoit/damped_sinus)  |
@@ -27,7 +28,6 @@ Streamlit has been used for the design of most iDSP apps, and then transformed i
 | <a href="./scalar_product_periodic.htm"><img src="./scalar-product-periodic-300.jpg" /></a>  | [Measuring frequency content](./scalar_product_periodic.htm) / [Git](https://github.com/thierrydutoit/scalar_product_periodic)  |
 | <a href="./snr_audio.htm"><img src="./snr_audio_300.jpg" /></a>  | [Signal-to-Noise ratio (audio)](./snr_audio.htm) / [Git](https://github.com/thierrydutoit/snr-audio)  |
 | <a href="https://idmil.github.io/DigitalAudioWorkbench/quantization/"><img src="./quantization_300.jpg" /></a> | [Quantization and dithering](https://idmil.github.io/DigitalAudioWorkbench/quantization/) / [Video](https://www.youtube.com/watch?v=E5aPP7KB5F4) / [Git](https://github.com/idmil/dawb) / [Paper](https://dl.acm.org/doi/abs/10.1145/3478384.3478397) |
-| <a href="https://idmil.github.io/DigitalAudioWorkbench/sampling/"><img src="./sampling_300.jpg" /> | [Sampling](https://idmil.github.io/DigitalAudioWorkbench/sampling/) / [Video](https://www.youtube.com/watch?v=f5SKkB8GETk) / [Git](https://github.com/idmil/dawb) / [Paper](https://dl.acm.org/doi/abs/10.1145/3478384.3478397)  |
 | <a href="./downsampling.htm"><img src="./downsampling_300.jpg" /></a>  | [Downsampling](./downsampling.htm) / [Git](https://github.com/thierrydutoit/downsampling)  |
 | <a href="./generalized_shannon_theorem.htm"><img src="./generalized_shannon_theorem_300.jpg" /></a>  | [Generalized Shannon Theorem](./generalized_shannon_theorem.htm) / [Git](https://github.com/thierrydutoit/generalized-shannon-theorem)  |
 | <a href="./ber_to_text.htm"><img src="./ber_to_text_300.jpg" /></a>  | [Binary Transmission Error Simulator](./ber_to_text.htm) / [Git](https://github.com/thierrydutoit/bit_error_rate_on_text)  |
