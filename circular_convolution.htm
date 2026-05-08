@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linear vs circular convolution</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #262730;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #ff4b4b;
+      --radius: 0.75rem;
+      --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.10);
+      --blue: #1f77b4;
+      --orange: #ff7f0e;
+      --green: #2ca02c;
+      --red: #d62728;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem;
+    }
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 0.8rem;
+      letter-spacing: -0.02em;
+    }
+    .intro {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .control {
+      margin: 0.6rem 0 1rem;
+    }
+    .control label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .value {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 0.15rem;
+    }
+    .plot {
+      width: 100%;
+      background: white;
+    }
+    .plot-top { height: 230px; }
+    .plot-mid { height: 500px; }
+    .plot-bottom { height: 260px; }
+    .pane-title {
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0.2rem 0 0.2rem;
+      min-height: 1.4rem;
+    }
+    .pane-title-green { color: var(--green); }
+    .pane-title-red { color: var(--red); }
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+    details {
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fafafa;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 0.9rem 1rem;
+      font-weight: 600;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '▾';
+      float: right;
+      color: var(--muted);
+    }
+    details[open] summary::after { content: '▴'; }
+    .details-body {
+      padding: 0 1rem 1rem;
+      background: white;
+      border-top: 1px solid var(--border);
+      line-height: 1.6;
+    }
+    @media (max-width: 800px) {
+      .two-col { grid-template-columns: 1fr; }
+      .plot-mid { height: 420px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Linear vs circular convolution</h1>
+    <div class="intro">How do linear and circular convolutions differ? Try it by yourself.</div>
+
+    <div id="inputPlot" class="plot plot-top"></div>
+
+    <div class="control">
+      <label for="nSlider">Selected output index n</label>
+      <input id="nSlider" type="range" min="0" max="22" step="1" value="0" />
+      <div class="value" id="nValue">0</div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div class="pane-title pane-title-green">Linear convolution: x[k] and h[n-k]</div>
+        <div id="linearPane" class="plot plot-mid"></div>
+      </div>
+      <div>
+        <div class="pane-title pane-title-red">Circular convolution: x[k] and h[(n-k) mod 12]</div>
+        <div id="circularPane" class="plot plot-mid"></div>
+      </div>
+    </div>
+
+    <div id="outputPlot" class="plot plot-bottom"></div>
+
+    <details>
+      <summary>Comments</summary>
+      <div class="details-body" id="comments"></div>
+    </details>
+  </div>
+
+  <script>
+    const N = 12;
+    const kBase = Array.from({length: N}, (_, i) => i);
+    const x = Array.from({length: N}, (_, i) => i / (N - 1));
+    const h = Array.from({length: N}, (_, i) => i < 7 ? 1 : 0);
+
+    const blue = '#1f77b4';
+    const orange = '#ff7f0e';
+    const green = '#2ca02c';
+    const red = '#d62728';
+    const gridColor = 'rgba(0,0,0,0.12)';
+
+    function convolveLinear(x, h) {
+      const y = Array(x.length + h.length - 1).fill(0);
+      for (let n = 0; n < y.length; n++) {
+        let s = 0;
+        for (let k = 0; k < x.length; k++) {
+          const idx = n - k;
+          if (idx >= 0 && idx < h.length) s += x[k] * h[idx];
+        }
+        y[n] = s;
+      }
+      return y;
+    }
+
+    function convolveCircular(x, h) {
+      const N = x.length;
+      const y = Array(N).fill(0);
+      for (let n = 0; n < N; n++) {
+        let s = 0;
+        for (let k = 0; k < N; k++) {
+          s += x[k] * h[((n - k) % N + N) % N];
+        }
+        y[n] = s;
+      }
+      return y;
+    }
+
+    function hLinearAsFunctionOfK(n0, h, kAxis) {
+      return kAxis.map(k => {
+        const idx = n0 - k;
+        return (idx >= 0 && idx < h.length) ? h[idx] : 0;
+      });
+    }
+
+    function hCircularAsFunctionOfK(n0, h, N) {
+      return Array.from({length: N}, (_, k) => h[((n0 - k) % N + N) % N]);
+    }
+
+    function periodicExtension(y, length) {
+      return Array.from({length}, (_, n) => y[n % y.length]);
+    }
+
+    function makeLineTrace(xVals, yVals, color, name, width=2, size=6) {
+      return {
+        x: xVals,
+        y: yVals,
+        mode: 'lines+markers',
+        name,
+        line: {color, width},
+        marker: {color, size}
+      };
+    }
+
+    function stemTraces(xVals, yVals, color, name) {
+      const xs = [];
+      const ys = [];
+      for (let i = 0; i < xVals.length; i++) {
+        xs.push(xVals[i], xVals[i], null);
+        ys.push(0, yVals[i], null);
+      }
+      return [
+        {
+          x: xs,
+          y: ys,
+          mode: 'lines',
+          line: {color, width: 2},
+          hoverinfo: 'skip',
+          showlegend: false
+        },
+        {
+          x: xVals,
+          y: yVals,
+          mode: 'markers',
+          marker: {color, size: 7},
+          name,
+          showlegend: true
+        }
+      ];
+    }
+
+    function circleOverlayData(xVals, hVals) {
+      const angles = Array.from({length: N}, (_, i) => Math.PI / 2 - 2 * Math.PI * i / N);
+      const maxAbs = Math.max(1, ...xVals.map(v => Math.abs(v)), ...hVals.map(v => Math.abs(v)));
+      const scale = 0.65 / maxAbs;
+      const baseRadius = 1.0;
+      const delta = 0.03;
+
+      const guideT = Array.from({length: 361}, (_, i) => 2 * Math.PI * i / 360);
+      const guide = {
+        x: guideT.map(t => Math.cos(t)),
+        y: guideT.map(t => Math.sin(t)),
+        mode: 'lines',
+        line: {color: 'rgba(0,0,0,0.28)', dash: 'dash', width: 1},
+        hoverinfo: 'skip',
+        showlegend: false
+      };
+
+      const spokes = [];
+      const indexLabels = [];
+      for (let k = 0; k < N; k++) {
+        const a = angles[k];
+        spokes.push({
+          x: [0, Math.cos(a)],
+          y: [0, Math.sin(a)],
+          mode: 'lines',
+          line: {color: 'rgba(0,0,0,0.08)', width: 1},
+          hoverinfo: 'skip',
+          showlegend: false
+        });
+        indexLabels.push({
+          x: 1.18 * Math.cos(a),
+          y: 1.18 * Math.sin(a),
+          text: String(k),
+          showarrow: false,
+          font: {size: 11, color: '#262730'}
+        });
+      }
+
+      function radialTraces(vals, angleOffset, color, name) {
+        const lineTraces = [];
+        const px = [];
+        const py = [];
+        for (let i = 0; i < vals.length; i++) {
+          const a = angles[i] + angleOffset;
+          const r = baseRadius + scale * vals[i];
+          const x0 = baseRadius * Math.cos(a);
+          const y0 = baseRadius * Math.sin(a);
+          const x1 = r * Math.cos(a);
+          const y1 = r * Math.sin(a);
+          lineTraces.push({
+            x: [x0, x1],
+            y: [y0, y1],
+            mode: 'lines',
+            line: {color, width: 2},
+            hoverinfo: 'skip',
+            showlegend: false
+          });
+          px.push(x1);
+          py.push(y1);
+        }
+        lineTraces.push({
+          x: px,
+          y: py,
+          mode: 'markers',
+          marker: {color, size: 7},
+          name,
+          showlegend: true
+        });
+        return lineTraces;
+      }
+
+      const data = [guide, ...spokes, ...radialTraces(xVals, -delta, blue, 'x[k]'), ...radialTraces(hVals, +delta, orange, 'h[(n-k) mod 12]')];
+      return {data, annotations: indexLabels};
+    }
+
+    const yLinear = convolveLinear(x, h);
+    const yCircular = convolveCircular(x, h);
+    const yCircularExtended = periodicExtension(yCircular, 23);
+
+    function render() {
+      const n0 = parseInt(document.getElementById('nSlider').value, 10);
+      document.getElementById('nValue').textContent = String(n0);
+
+      const inputData = [
+        makeLineTrace(kBase, x, blue, 'x[n]', 2, 5),
+        makeLineTrace(kBase, h, orange, 'h[n]', 2, 5)
+      ];
+      Plotly.react('inputPlot', inputData, {
+        margin: {l: 60, r: 20, t: 40, b: 45},
+        title: {text: 'Input sequences', font: {size: 16}},
+        xaxis: {title: 'n', tickmode: 'array', tickvals: kBase, showgrid: true, gridcolor: gridColor},
+        yaxis: {title: 'Amplitude', showgrid: true, gridcolor: gridColor},
+        legend: {orientation: 'h', x: 0, y: 1.16},
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white'
+      }, {responsive: true, displayModeBar: false});
+
+      const kLinearView = Array.from({length: 41}, (_, i) => i - 20);
+      const xLinearView = kLinearView.map(k => (k >= 0 && k < N) ? x[k] : 0);
+      const hLinearView = hLinearAsFunctionOfK(n0, h, kLinearView);
+
+      const linearData = [
+        ...stemTraces(kLinearView, xLinearView, blue, 'x[k]'),
+        ...stemTraces(kLinearView, hLinearView, orange, 'h[n-k]')
+      ];
+      Plotly.react('linearPane', linearData, {
+        margin: {l: 60, r: 20, t: 55, b: 45},
+        title: {text: '', font: {size: 16, color: green}},
+        xaxis: {title: 'k', range: [-20, 20], tickmode: 'array', tickvals: [-20,-15,-10,-5,0,5,10,15,20], showgrid: true, gridcolor: gridColor},
+        yaxis: {title: 'Amplitude', showgrid: true, gridcolor: gridColor},
+        legend: {orientation: 'h', x: 0, y: 1.12},
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white'
+      }, {responsive: true, displayModeBar: false});
+
+      const hCircularView = hCircularAsFunctionOfK(n0, h, N);
+      const circleStuff = circleOverlayData(x, hCircularView);
+      Plotly.react('circularPane', circleStuff.data, {
+        margin: {l: 10, r: 10, t: 55, b: 10},
+        title: {text: '', font: {size: 16, color: red}},
+        xaxis: {visible: false, range: [-1.85, 1.85]},
+        yaxis: {visible: false, range: [-1.85, 1.85], scaleanchor: 'x', scaleratio: 1},
+        annotations: circleStuff.annotations,
+        legend: {orientation: 'h', x: 0, y: 1.12},
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white'
+      }, {responsive: true, displayModeBar: false});
+
+      const outputData = [
+        makeLineTrace(Array.from({length: yLinear.length}, (_, i) => i), yLinear, green, 'linear convolution', 2, 4.5),
+        makeLineTrace(Array.from({length: yCircularExtended.length}, (_, i) => i), yCircularExtended, red, 'circular convolution', 2, 4.5),
+        {
+          x: [n0], y: [yLinear[n0]], mode: 'markers', marker: {color: green, size: 10},
+          name: 'selected linear sample', showlegend: false
+        },
+        {
+          x: [n0], y: [yCircularExtended[n0]], mode: 'markers', marker: {color: red, size: 10},
+          name: 'selected circular sample', showlegend: false
+        }
+      ];
+      Plotly.react('outputPlot', outputData, {
+        margin: {l: 70, r: 20, t: 40, b: 45},
+        title: {text: 'Linear and circular convolution outputs', font: {size: 16}},
+        xaxis: {title: 'n', range: [0, 22], tickmode: 'array', tickvals: Array.from({length: 23}, (_, i) => i), showgrid: true, gridcolor: gridColor},
+        yaxis: {title: 'Output value', showgrid: true, gridcolor: gridColor},
+        legend: {orientation: 'h', x: 0, y: 1.1},
+        shapes: [{
+          type: 'line', x0: n0, x1: n0, y0: 0, y1: 1, xref: 'x', yref: 'paper',
+          line: {color: 'rgba(0,0,0,0.45)', dash: 'dash', width: 1}
+        }],
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white'
+      }, {responsive: true, displayModeBar: false});
+
+      const comments = document.getElementById('comments');
+      comments.innerHTML = `
+        <p>For <strong>linear convolution</strong>, the signal used at index $n$ is:</p>
+        <p>$$h[n-k]$$</p>
+        <p>This is a <strong>reversed</strong> version of $h$, shifted by $n$. The output is</p>
+        <p>$$y_{\\mathrm{lin}}[n] = \\sum_k x[k]\,h[n-k]$$</p>
+        <p>For <strong>circular convolution</strong> of length $12$, the signal used is</p>
+        <p>$$h[(n-k)\\bmod 12]$$</p>
+        <p>and the output is</p>
+        <p>$$y_{\\mathrm{circ}}[n] = \\sum_{k=0}^{11} x[k]\,h[(n-k)\\bmod 12]$$</p>
+        <p>In circular convolution, the index wraps around modulo 12, which is why the circular pane shows the orange sequence arranged around the same circle as $x[k]$.</p>
+        
+      `;
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([document.body]).catch(() => {});
+      }
+    }
+
+    document.getElementById('nSlider').addEventListener('input', render);
+    render();
+  </script>
+</body>
+</html>
