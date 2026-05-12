@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Power of a discrete periodic waveform</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #262730;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --panel: #ffffff;
+      --accent: #ff4b4b;
+      --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.1);
+      --radius: 0.75rem;
+      --blue: #1f77b4;
+      --orange: #ff7f0e;
+      --green: #2ca02c;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem;
+    }
+    h1 {
+      font-size: 2.05rem;
+      font-weight: 700;
+      margin: 0 0 0.8rem;
+      letter-spacing: -0.02em;
+    }
+    .intro {
+      font-size: 1rem;
+      line-height: 1.65;
+      margin-bottom: 1rem;
+    }
+    .equation {
+      margin: 1rem 0;
+      font-size: 1.05rem;
+    }
+    details {
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fafafa;
+      overflow: hidden;
+    }
+    summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 0.9rem 1rem;
+      font-weight: 600;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '▾';
+      float: right;
+      color: var(--muted);
+    }
+    details[open] summary::after { content: '▴'; }
+    .details-body {
+      padding: 0 1rem 1rem;
+      background: white;
+      border-top: 1px solid var(--border);
+    }
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem 1.2rem;
+      padding-top: 1rem;
+    }
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .control label {
+      font-size: 0.92rem;
+      font-weight: 600;
+    }
+    .value {
+      font-size: 0.9rem;
+      color: var(--muted);
+      min-height: 1.2rem;
+    }
+    input[type="range"], select {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    select {
+      padding: 0.55rem 0.7rem;
+      border-radius: 0.55rem;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .standalone-control {
+      margin: 1rem 0 1.2rem;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .card {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      margin-top: 0.8rem;
+    }
+    .chart {
+      width: 100%;
+      height: 250px;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+    }
+    .help {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      line-height: 1.45;
+    }
+    @media (max-width: 760px) {
+      .control-grid { grid-template-columns: 1fr; }
+      .chart { height: 265px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Power of a discrete periodic waveform</h1>
+
+    <div class="intro">
+      <p>
+        The power of a discrete periodic signal $x_{N_0}(n)$ is the long-term average value of its squared samples:
+      </p>
+    </div>
+
+    <div class="equation">
+      $$P_x = \lim_{N\to\infty}\frac{1}{N}\sum_{n=0}^{N-1}|x_{N_0}(n)|^2$$
+    </div>
+
+    <div class="intro">
+      <p>
+        When the signal is zero-mean, this is nothing else than the variance of the samples (and the RMS of the signal is therefore the standard deviation of the samples).
+        Try it by yourself...
+      </p>
+    </div>
+
+    <details>
+      <summary>Controls</summary>
+      <div class="details-body">
+        <div class="control-grid">
+          <div class="control">
+            <label for="waveform">Waveform type</label>
+            <select id="waveform">
+              <option selected>Sine</option>
+              <option>Square</option>
+              <option>Triangle</option>
+              <option>Sawtooth</option>
+              <option>Full-wave rectified sine</option>
+              <option>Sine + harmonics</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="f0">Fundamental frequency f0 [Hz]</label>
+            <input id="f0" type="range" min="110" max="440" step="1" value="220" />
+            <div class="value" id="f0-value"></div>
+          </div>
+
+          <div class="control">
+            <label for="amplitude">Amplitude multiplier</label>
+            <input id="amplitude" type="range" min="0.10" max="3.00" step="0.05" value="1.00" />
+            <div class="value" id="amplitude-value"></div>
+          </div>
+
+          <div class="control">
+            <label for="dcOffset">DC offset</label>
+            <input id="dcOffset" type="range" min="-2.00" max="2.00" step="0.05" value="0.00" />
+            <div class="value" id="dcOffset-value"></div>
+          </div>
+
+          <div class="control">
+            <label for="phase">Phase [degrees]</label>
+            <input id="phase" type="range" min="-180" max="180" step="5" value="0" />
+            <div class="value" id="phase-value"></div>
+          </div>
+
+          <div class="control harmonic-control" id="harmonic2-wrap">
+            <label for="harmonic2">2nd harmonic coefficient</label>
+            <input id="harmonic2" type="range" min="-1.00" max="1.00" step="0.05" value="0.35" />
+            <div class="value" id="harmonic2-value"></div>
+          </div>
+
+          <div class="control harmonic-control" id="harmonic3-wrap">
+            <label for="harmonic3">3rd harmonic coefficient</label>
+            <input id="harmonic3" type="range" min="-1.00" max="1.00" step="0.05" value="0.20" />
+            <div class="value" id="harmonic3-value"></div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <div class="standalone-control">
+      <div class="control">
+        <label for="sampleCount">Averaging number of samples $N$</label>
+        <input id="sampleCount" type="range" min="1" max="50" step="1" value="10" />
+        <div class="value" id="sampleCount-value"></div>
+      </div>
+    </div>
+
+    <div class="card"><div id="wavePlot" class="chart"></div></div>
+    <div class="card"><div id="squarePlot" class="chart"></div></div>
+    <div class="card"><div id="avgPlot" class="chart"></div></div>
+
+    <details>
+      <summary>Comments</summary>
+      <div class="details-body" id="comments"></div>
+    </details>
+  </div>
+
+  <script>
+    const REFERENCE_F0_HZ = 220.0;
+    const VIEW_PERIODS_AT_REFERENCE = 5.0;
+    const VIEWPORT_DURATION_S = VIEW_PERIODS_AT_REFERENCE / REFERENCE_F0_HZ;
+    const SAMPLE_RATE_HZ = 2200;
+
+    const els = {
+      waveform: document.getElementById('waveform'),
+      f0: document.getElementById('f0'),
+      amplitude: document.getElementById('amplitude'),
+      dcOffset: document.getElementById('dcOffset'),
+      phase: document.getElementById('phase'),
+      harmonic2: document.getElementById('harmonic2'),
+      harmonic3: document.getElementById('harmonic3'),
+      sampleCount: document.getElementById('sampleCount')
+    };
+
+    const valueEls = {
+      f0: document.getElementById('f0-value'),
+      amplitude: document.getElementById('amplitude-value'),
+      dcOffset: document.getElementById('dcOffset-value'),
+      phase: document.getElementById('phase-value'),
+      harmonic2: document.getElementById('harmonic2-value'),
+      harmonic3: document.getElementById('harmonic3-value'),
+      sampleCount: document.getElementById('sampleCount-value')
+    };
+
+    function cumulativeSum(y) {
+      const out = new Array(y.length).fill(0);
+      let acc = 0;
+      for (let i = 1; i < y.length; i++) {
+        acc += y[i - 1];
+        out[i] = acc;
+      }
+      return out;
+    }
+
+    function periodicWaveform(t, waveform, f0Hz, amplitude, dcOffset, phaseRad, harmonic2 = 0.0, harmonic3 = 0.0) {
+      const out = new Array(t.length);
+      for (let i = 0; i < t.length; i++) {
+        const theta = 2 * Math.PI * f0Hz * t[i] + phaseRad;
+        let base;
+        if (waveform === 'Sine') {
+          base = Math.sin(theta);
+        } else if (waveform === 'Square') {
+          base = Math.sin(theta) >= 0 ? 1 : -1;
+        } else if (waveform === 'Triangle') {
+          base = (2 / Math.PI) * Math.asin(Math.sin(theta));
+        } else if (waveform === 'Sawtooth') {
+          const cycles = theta / (2 * Math.PI);
+          base = 2 * (cycles - Math.floor(cycles + 0.5));
+        } else if (waveform === 'Full-wave rectified sine') {
+          base = Math.abs(Math.sin(theta));
+        } else if (waveform === 'Sine + harmonics') {
+          base = Math.sin(theta) + harmonic2 * Math.sin(2 * theta) + harmonic3 * Math.sin(3 * theta);
+        } else {
+          base = Math.sin(theta);
+        }
+        out[i] = dcOffset + amplitude * base;
+      }
+      return out;
+    }
+
+    function fmt(n, digits) {
+      return Number(n).toFixed(digits);
+    }
+
+    function updateHarmonicVisibility() {
+      const show = els.waveform.value === 'Sine + harmonics';
+      document.getElementById('harmonic2-wrap').style.display = show ? 'flex' : 'none';
+      document.getElementById('harmonic3-wrap').style.display = show ? 'flex' : 'none';
+    }
+
+    function update() {
+      updateHarmonicVisibility();
+
+      const waveform = els.waveform.value;
+      const f0Hz = parseFloat(els.f0.value);
+      const amplitude = parseFloat(els.amplitude.value);
+      const dcOffset = parseFloat(els.dcOffset.value);
+      const phaseDeg = parseFloat(els.phase.value);
+      const phaseRad = phaseDeg * Math.PI / 180;
+      const harmonic2 = parseFloat(els.harmonic2.value);
+      const harmonic3 = parseFloat(els.harmonic3.value);
+      const selectedN = parseInt(els.sampleCount.value, 10);
+
+      valueEls.f0.textContent = `${fmt(f0Hz, 1)} Hz`;
+      valueEls.amplitude.textContent = fmt(amplitude, 2);
+      valueEls.dcOffset.textContent = fmt(dcOffset, 2);
+      valueEls.phase.textContent = `${fmt(phaseDeg, 0)}°`;
+      valueEls.harmonic2.textContent = fmt(harmonic2, 2);
+      valueEls.harmonic3.textContent = fmt(harmonic3, 2);
+      valueEls.sampleCount.textContent = `${selectedN} samples`;
+
+      const Ts = 1 / f0Hz;
+      const dt = 1 / SAMPLE_RATE_HZ;
+      const nSamplesView = Math.floor(VIEWPORT_DURATION_S * SAMPLE_RATE_HZ) + 1;
+
+      els.sampleCount.max = String(Math.max(1, nSamplesView - 1));
+      if (selectedN > nSamplesView - 1) {
+        els.sampleCount.value = String(nSamplesView - 1);
+      }
+      const Nsel = Math.min(parseInt(els.sampleCount.value, 10), nSamplesView - 1);
+      valueEls.sampleCount.textContent = `${Nsel} samples`;
+
+      const tView = new Array(nSamplesView);
+      for (let i = 0; i < nSamplesView; i++) tView[i] = i * dt;
+      const tViewMs = tView.map(v => 1000 * v);
+
+      const xView = periodicWaveform(tView, waveform, f0Hz, amplitude, dcOffset, phaseRad, harmonic2, harmonic3);
+      const pView = xView.map(v => v * v);
+
+      const cumulativeSamples = cumulativeSum(pView);
+      const runningAverage = new Array(tView.length).fill(NaN);
+      for (let i = 1; i < tView.length; i++) {
+        runningAverage[i] = cumulativeSamples[i] / i;
+      }
+
+      const selectedTimeMs = tViewMs[Nsel];
+      const averagePowerN = cumulativeSamples[Nsel] / Nsel;
+
+      const samplesOnePeriod = Math.max(4, Math.floor(Ts * SAMPLE_RATE_HZ));
+      const tPeriod = new Array(samplesOnePeriod);
+      for (let i = 0; i < samplesOnePeriod; i++) tPeriod[i] = i * dt;
+      const xPeriod = periodicWaveform(tPeriod, waveform, f0Hz, amplitude, dcOffset, phaseRad, harmonic2, harmonic3);
+      const pPeriod = xPeriod.map(v => v * v);
+      const averagePowerOnePeriod = pPeriod.reduce((a, b) => a + b, 0) / pPeriod.length;
+      const rmsValue = Math.sqrt(averagePowerOnePeriod);
+
+      const rectShapes = [];
+      for (let i = 0; i < Nsel; i++) {
+        rectShapes.push({
+          type: 'rect',
+          x0: tViewMs[i],
+          x1: tViewMs[i + 1],
+          y0: 0,
+          y1: pView[i],
+          xref: 'x',
+          yref: 'y',
+          fillcolor: 'rgba(31,119,180,0.18)',
+          line: { color: 'rgba(31,119,180,0.35)', width: 1 },
+          layer: 'below'
+        });
+      }
+
+      const commonConfig = { responsive: true, displayModeBar: false };
+      const commonAxisGrid = 'rgba(0,0,0,0.12)';
+
+      Plotly.react('wavePlot', [
+        {
+          x: tViewMs,
+          y: xView,
+          mode: 'lines+markers',
+          line: { width: 1.6, color: '#1f77b4' },
+          marker: { size: 4, color: '#1f77b4' },
+          name: 'x[n]'
+        },
+        {
+          x: [0, 1000 * VIEWPORT_DURATION_S],
+          y: [rmsValue, rmsValue],
+          mode: 'lines',
+          line: { dash: 'dash', width: 2, color: '#ff7f0e' },
+          name: 'RMS of x[n]'
+        }
+      ], {
+        title: { text: '' },
+        margin: { l: 80, r: 20, t: 15, b: 50 },
+        xaxis: { title: 'time [ms]', range: [0, 1000 * VIEWPORT_DURATION_S], showgrid: true, gridcolor: commonAxisGrid },
+        yaxis: { title: '$x[n]$', showgrid: true, gridcolor: commonAxisGrid, titlefont: { size: 16 } },
+        showlegend: true,
+        legend: { x: 1, xanchor: 'right', y: 1 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'white',
+        shapes: [
+          {
+            type: 'rect',
+            x0: 0, x1: selectedTimeMs, y0: 0, y1: 1,
+            xref: 'x', yref: 'paper',
+            fillcolor: 'rgba(31,119,180,0.16)',
+            line: { width: 0 },
+            layer: 'below'
+          },
+          {
+            type: 'line',
+            x0: 0, x1: 0, y0: 0, y1: 1,
+            xref: 'x', yref: 'paper',
+            line: { dash: 'dash', width: 1.2, color: '#444' }
+          },
+          {
+            type: 'line',
+            x0: selectedTimeMs, x1: selectedTimeMs, y0: 0, y1: 1,
+            xref: 'x', yref: 'paper',
+            line: { dash: 'dash', width: 1.2, color: '#444' }
+          }
+        ],
+        annotations: [
+          {
+            x: selectedTimeMs / 2,
+            y: 1.02,
+            xref: 'x',
+            yref: 'paper',
+            text: 'selected frame [0,N-1]',
+            showarrow: false,
+            font: { size: 11, color: '#4b5563' }
+          }
+        ]
+      }, commonConfig);
+
+      Plotly.react('squarePlot', [
+        {
+          x: tViewMs,
+          y: pView,
+          mode: 'lines+markers',
+          line: { width: 1.6, color: '#1f77b4' },
+          marker: { size: 4, color: '#1f77b4' },
+          name: 'x²[n]'
+        },
+        {
+          x: [0, 1000 * VIEWPORT_DURATION_S],
+          y: [averagePowerN, averagePowerN],
+          mode: 'lines',
+          line: { dash: 'dash', width: 2, color: '#ff7f0e' },
+          name: 'average of x²[n] in selected frame'
+        }
+      ], {
+        margin: { l: 80, r: 20, t: 15, b: 50 },
+        xaxis: { title: 'time [ms]', range: [0, 1000 * VIEWPORT_DURATION_S], showgrid: true, gridcolor: commonAxisGrid },
+        yaxis: { title: '$x_{N_0}[n]^2$', showgrid: true, gridcolor: commonAxisGrid, titlefont: { size: 16 } },
+        showlegend: true,
+        legend: { x: 1, xanchor: 'right', y: 1 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'white',
+        shapes: rectShapes
+      }, commonConfig);
+
+      Plotly.react('avgPlot', [
+        {
+          x: Array.from({length: runningAverage.length - 1}, (_, i) => i + 1),
+          y: runningAverage.slice(1),
+          mode: 'lines+markers',
+          line: { width: 1.8, color: '#ff7f0e' },
+          marker: { size: 3, color: '#ff7f0e' },
+          name: 'average from 0 to N-1'
+        },
+        {
+          x: [1, runningAverage.length - 1],
+          y: [averagePowerOnePeriod, averagePowerOnePeriod],
+          mode: 'lines',
+          line: { dash: 'dash', width: 2, color: '#1f77b4' },
+          name: 'one-period average power'
+        },
+        {
+          x: [Nsel],
+          y: [averagePowerN],
+          mode: 'markers',
+          marker: { size: 9, color: '#ff7f0e' },
+          name: 'selected frame average power'
+        }
+      ], {
+        margin: { l: 95, r: 20, t: 15, b: 58 },
+        xaxis: { title: 'averaging number of samples N', range: [1, runningAverage.length - 1], showgrid: true, gridcolor: commonAxisGrid },
+        yaxis: { title: '$\\frac{1}{N}\\sum_{n=0}^{N-1} |x_{N_0}(n)|^2$', showgrid: true, gridcolor: commonAxisGrid, titlefont: { size: 16 } },
+        showlegend: true,
+        legend: { x: 1, xanchor: 'right', y: 1 },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'white',
+        shapes: [
+          {
+            type: 'line',
+            x0: Nsel, x1: Nsel,
+            y0: 0, y1: 1,
+            xref: 'x', yref: 'paper',
+            line: { dash: 'dot', width: 1.5, color: '#444' }
+          }
+        ]
+      }, commonConfig);
+
+      const comments = document.getElementById('comments');
+      comments.innerHTML = `
+        <p>
+          For a discrete signal, the power is
+          $$P_x = \\lim_{N\\to\\infty}\\frac{1}{N}\\sum_{n=0}^{N-1}|x_{N_0}(n)|^2.$$
+        </p>
+        <p>
+          The selected frame now contains the first <strong>${Nsel}</strong> samples.
+        </p>
+        <p>
+          The average over that frame is
+          $$P_x(N) = \\frac{1}{N}\\sum_{n=0}^{N-1} x_{N_0}^2[n].$$
+        </p>
+        <p>
+          When the selected frame contains an integer number of periods, this average equals the signal power.
+          As $N$ grows, edge effects become less important, so the running average approaches the same value.
+        </p>
+        <p>
+          If the signal is zero-mean, this power is also its variance, and its RMS is the standard deviation.
+        </p>
+      `;
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([document.body]).catch(() => {});
+      }
+    }
+
+    function bindEvents() {
+      Object.values(els).forEach(el => el.addEventListener('input', update));
+      els.waveform.addEventListener('change', update);
+    }
+
+    bindEvents();
+    update();
+  </script>
+</body>
+</html>
