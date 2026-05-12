@@ -159,8 +159,8 @@
     </div>
 
     <div class="equation">
-      $$P_x = \lim_{\tau\to\infty}\frac{1}{\tau}\int_{0}^{\tau}|x(t)|^2\,dt
-      =\frac{1}{T_0}\int_{0}^{T_0}|x(t)|^2\,dt$$
+      $$P_x = \lim_{\tau\to\infty}\frac{1}{\tau}\int_{0}^{\tau}|x_{T_0}(t)|^2\,dt
+      =\frac{1}{T_0}\int_{0}^{T_0}|x_{T_0}(t)|^2\,dt$$
     </div>
 
     <div class="intro"><p>Try it by yourself...</p></div>
@@ -429,7 +429,7 @@
         title: { text: '' },
         margin: { l: 80, r: 20, t: 15, b: 50 },
         xaxis: { title: 'time [ms]', range: [0, 1000 * VIEWPORT_DURATION_S], showgrid: true, gridcolor: commonAxisGrid },
-        yaxis: { title: '$x(t)$', showgrid: true, gridcolor: commonAxisGrid, titlefont: { size: 16 } },
+        yaxis: { title: '$x_{T_0}(t)$', showgrid: true, gridcolor: commonAxisGrid, titlefont: { size: 16 } },
         showlegend: true,
         legend: { x: 1, xanchor: 'right', y: 1 },
         paper_bgcolor: 'rgba(0,0,0,0)',
@@ -492,7 +492,7 @@
       ], {
         margin: { l: 80, r: 20, t: 15, b: 50 },
         xaxis: { title: 'time [ms]', range: [0, 1000 * VIEWPORT_DURATION_S], showgrid: true, gridcolor: commonAxisGrid },
-        yaxis: { title: '$x(t)^2$', showgrid: true, gridcolor: commonAxisGrid, titlefont: { size: 16 } },
+        yaxis: { title: '$x_{T_0}(t)^2$', showgrid: true, gridcolor: commonAxisGrid, titlefont: { size: 16 } },
         showlegend: true,
         legend: { x: 1, xanchor: 'right', y: 1 },
         paper_bgcolor: 'rgba(0,0,0,0)',
@@ -512,19 +512,19 @@
           y: [averagePowerOnePeriod, averagePowerOnePeriod],
           mode: 'lines',
           line: { dash: 'dash', width: 2, color: '#1f77b4' },
-          name: 'one-period average power'
+          name: 'power over one-period'
         },
         {
           x: [tauMs],
           y: [averagePowerTau],
           mode: 'markers',
           marker: { size: 9, color: '#ff7f0e' },
-          name: 'selected frame average power'
+          name: 'power over selected frame'
         }
       ], {
         margin: { l: 95, r: 20, t: 15, b: 58 },
         xaxis: { title: 'averaging time τ [ms]', range: [0, 1000 * VIEWPORT_DURATION_S], showgrid: true, gridcolor: commonAxisGrid },
-        yaxis: { title: '$\\frac{1}{\\tau}\\int_0^\\tau |x(t)|^2\\,dt$', showgrid: true, gridcolor: commonAxisGrid, titlefont: { size: 16 } },
+        yaxis: { title: '$\\frac{1}{\\tau}\\int_0^\\tau |x_{T_0}(t)|^2\\,dt$', showgrid: true, gridcolor: commonAxisGrid, titlefont: { size: 16 } },
         showlegend: true,
         legend: { x: 1, xanchor: 'right', y: 1 },
         paper_bgcolor: 'rgba(0,0,0,0)',
@@ -551,9 +551,9 @@
           If $x_{T_0}(t)$ is periodic with period $T_0$, then $x_{T_0}(t)^2$ is periodic as well. For any integer $N$, the squared-waveform
           area over $N$ complete periods is $N$ times the area over one period:
         </p>
-        <p>$$\\int_{t_0}^{t_0+NT_0}|x(t)|^2\\,dt = N\\int_{t_0}^{t_0+T_0}|x(t)|^2\\,dt$$</p>
+        <p>$$\\int_{t_0}^{t_0+NT_0}|x_{T_0}(t)|^2\\,dt = N\\int_{t_0}^{t_0+T_0}|x_{T_0}(t)|^2\\,dt$$</p>
         <p>Dividing by the total averaging time $NT_0$ gives:</p>
-        <p>$$\\frac{1}{NT_0}\\int_{t_0}^{t_0+NT_0}|x(t)|^2\\,dt = \\frac{1}{T_0}\\int_{t_0}^{t_0+T_0}|x(t)|^2\\,dt$$</p>
+        <p>$$\\frac{1}{NT_0}\\int_{t_0}^{t_0+NT_0}|x_{T_0}(t)|^2\\,dt = \\frac{1}{T_0}\\int_{t_0}^{t_0+T_0}|x_{T_0}(t)|^2\\,dt$$</p>
         <p>
           That is why the power of a periodic waveform can be computed from a single period, rather than from an infinite-time average.
         </p>
