@@ -21,6 +21,8 @@ Streamlit has been used for the design of most iDSP apps, and then transformed i
 | Figure     | iDSP content  |
 | ---------- | ------------- | 
 | <a href="https://idmil.github.io/DigitalAudioWorkbench/sampling/"><img src="./sampling_300.jpg" /> | [Sampling](https://idmil.github.io/DigitalAudioWorkbench/sampling/) / [Video](https://www.youtube.com/watch?v=f5SKkB8GETk) / [Git](https://github.com/idmil/dawb) / [Paper](https://dl.acm.org/doi/abs/10.1145/3478384.3478397)  |
+| <a href="./sincos.htm"><img src="./sincos_300.jpg" /></a> | [Sine and cosine on a circle](./sincos.htm)   |
+| <a href="./cos_as_sum_of_exp.htm"><img src="./cos_as_sum_of_exp_300.jpg" /></a> | [Cos as the sum of phasors](./cos_as_sum_of_exp.htm) |
 | <a href="./sinus.htm"><img src="./sinus_300.jpg" /></a> | [Sine wave](./sinus.htm) / [Git](https://github.com/thierrydutoit/sine-wave)  |
 | <a href="./sum_of_sinus.htm"><img src="./sum_of_sinus_300.jpg" /></a> | [Sum of sinusoids](./sum_of_sinus.htm) / [Git](https://github.com/thierrydutoit/sum_of_sinus)  |
 | <a href="./damped_sinus.htm"><img src="./damped_sinus_300.jpg" /></a> | [Damped sine wave](./damped_sinus.htm) / [Git](https://github.com/thierrydutoit/damped_sinus)  |
