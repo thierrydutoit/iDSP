@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cosine as Sum of Complex Conjugates</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]]
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    :root {
+      --streamlit-red: #ff4b4b;
+      --text-color: #262730;
+      --secondary-text: #555;
+      --background: #ffffff;
+      --plot-background: #ffffff;
+      --border-color: #e6e6e6;
+      --font-family: "Source Sans 3", "Source Sans", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background: var(--background);
+      color: var(--text-color);
+    }
+
+    .app {
+      max-width: 736px;
+      margin: 0 auto;
+      padding: 2rem 1rem 2.5rem 1rem;
+    }
+
+    h1 {
+      text-align: left;
+      font-family: var(--font-family);
+      font-size: 2rem;
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0 0 0.5rem 0;
+      color: var(--text-color);
+    }
+
+    .subtitle {
+      text-align: left;
+      font-family: var(--font-family);
+      font-size: 0.95rem;
+      line-height: 1.4;
+      max-width: 680px;
+      margin: 0 0 1.2rem 0;
+      color: var(--secondary-text);
+    }
+
+    .controls {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .slider-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 1.55rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .slider-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-family);
+      font-size: 0.9rem;
+      color: var(--text-color);
+    }
+
+    .slider-header label {
+      font-weight: 600;
+    }
+
+    .slider-current-value {
+      font-weight: 600;
+      color: var(--streamlit-red);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--streamlit-red);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .slider-limits {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-family);
+      font-size: 0.8rem;
+      color: #808495;
+      margin-top: 0.1rem;
+    }
+
+    .plots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.7rem;
+      align-items: start;
+      margin-bottom: 0.7rem;
+    }
+
+    .plot {
+      background: var(--plot-background);
+      border: 1px solid var(--border-color);
+      border-radius: 0.45rem;
+      padding: 0.2rem;
+      min-width: 0;
+    }
+
+    #circlePlot,
+    #sumPlot {
+      height: 420px;
+    }
+
+    #cosPlot {
+      height: 280px;
+    }
+
+    .comment-box {
+      margin-top: 1.2rem;
+      font-family: var(--font-family);
+    }
+
+    .comment-box details {
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+    }
+
+    .comment-box summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .comment-box summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .comment-box summary::after {
+      content: "⌄";
+      font-size: 1.1rem;
+      color: #808495;
+      transition: transform 0.2s ease;
+    }
+
+    .comment-box details[open] summary::after {
+      transform: rotate(180deg);
+    }
+
+    .comment-content {
+      border-top: 1px solid var(--border-color);
+      padding: 0.85rem 1rem 1rem 1rem;
+      background: #fafafa;
+    }
+
+    .comment-content p {
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: var(--secondary-text);
+    }
+
+    @media (max-width: 700px) {
+      .app {
+        padding: 1.5rem 0.75rem 2rem 0.75rem;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+
+      .subtitle {
+        font-size: 0.9rem;
+      }
+
+      .plots-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #circlePlot,
+      #sumPlot {
+        height: 380px;
+      }
+
+      #cosPlot {
+        height: 260px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+  <h1>Cosine as a Sum of Complex Conjugates</h1>
+
+  <p class="subtitle">
+    A real cosine can be seen as the sum of two opposite rotating complex comjugate vectors:
+    \( \frac{1}{2}e^{j2\pi ft} \) and \( \frac{1}{2}e^{-j2\pi ft} \).
+  </p>
+  <p class="subtitle">
+    Try it by yourself — in this example, \( f = 1\,\text{Hz} \).
+  </p>
+
+  <div class="controls">
+    <div class="slider-wrapper">
+      <div class="slider-header">
+        <label for="timeSlider">Time \(t\)</label>
+        <div class="slider-current-value" id="sliderCurrentValue">0.150 s</div>
+      </div>
+
+      <input
+        type="range"
+        id="timeSlider"
+        min="0"
+        max="1"
+        value="0.15"
+        step="0.001"
+      />
+
+      <div class="slider-limits">
+        <span>0 s</span>
+        <span>1 s</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="plots-grid">
+    <div class="plot" id="circlePlot"></div>
+    <div class="plot" id="sumPlot"></div>
+  </div>
+
+  <div class="plot" id="cosPlot"></div>
+
+  <div class="comment-box">
+    <details>
+      <summary>Comments</summary>
+
+      <div class="comment-content">
+        <p>
+          As you can see, 
+          \( \cos(2\pi ft) = \frac{1}{2}e^{j2\pi ft} + \frac{1}{2}e^{-j2\pi ft} \).
+          The imaginary parts cancel, while the real parts add together. 
+        </p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+  const slider = document.getElementById("timeSlider");
+  const sliderCurrentValue = document.getElementById("sliderCurrentValue");
+
+  const fontFamily = "Source Sans 3, Source Sans, sans-serif";
+
+  const positiveColor = "blue";
+  const negativeColor = "green";
+  const sumColor = "orange";
+  const angleColor = "#ff4b4b";
+
+  const f = 1;
+
+  const plotConfig = {
+    responsive: true,
+    displayModeBar: false
+  };
+
+  const plotFont = {
+    family: fontFamily,
+    color: "#262730",
+    size: 10
+  };
+
+  const timeVals = [];
+  const cosVals = [];
+
+  for (let i = 0; i <= 1000; i++) {
+    const t = i / 1000;
+    timeVals.push(t);
+    cosVals.push(Math.cos(2 * Math.PI * f * t));
+  }
+
+  function makeCircle(radius = 1, n = 300) {
+    const x = [];
+    const y = [];
+
+    for (let i = 0; i <= n; i++) {
+      const a = 2 * Math.PI * i / n;
+      x.push(radius * Math.cos(a));
+      y.push(radius * Math.sin(a));
+    }
+
+    return { x, y };
+  }
+
+  function vectorTrace(x0, y0, x1, y1, color, width = 3) {
+    return {
+      x: [x0, x1],
+      y: [y0, y1],
+      mode: "lines",
+      showlegend: false,
+      line: {
+        color: color,
+        width: width
+      },
+      hoverinfo: "skip"
+    };
+  }
+
+  function arrowHeadTrace(x0, y0, x1, y1, color, width = 2.5) {
+    const angle = Math.atan2(y1 - y0, x1 - x0);
+    const headLength = 0.08;
+    const headAngle = Math.PI / 7;
+
+    const xA = x1 - headLength * Math.cos(angle - headAngle);
+    const yA = y1 - headLength * Math.sin(angle - headAngle);
+    const xB = x1 - headLength * Math.cos(angle + headAngle);
+    const yB = y1 - headLength * Math.sin(angle + headAngle);
+
+    return {
+      x: [xA, x1, xB],
+      y: [yA, y1, yB],
+      mode: "lines",
+      showlegend: false,
+      line: {
+        color: color,
+        width: width
+      },
+      hoverinfo: "skip"
+    };
+  }
+
+  function textLabelTrace(x, y, text, color) {
+    return {
+      x: [x],
+      y: [y],
+      mode: "text",
+      text: [text],
+      showlegend: false,
+      textposition: "middle center",
+      textfont: {
+        family: fontFamily,
+        size: 11,
+        color: color
+      },
+      hoverinfo: "skip"
+    };
+  }
+
+  function angleArcTrace(angle) {
+    const arcRadius = 0.28;
+    const x = [];
+    const y = [];
+
+    const steps = 80;
+    for (let i = 0; i <= steps; i++) {
+      const a = angle * i / steps;
+      x.push(arcRadius * Math.cos(a));
+      y.push(arcRadius * Math.sin(a));
+    }
+
+    return {
+      x: x,
+      y: y,
+      mode: "lines",
+      showlegend: false,
+      line: {
+        color: angleColor,
+        width: 3
+      },
+      hoverinfo: "skip"
+    };
+  }
+
+  function angleLabelTrace(angle) {
+    const labelRadius = 0.43;
+    const a = angle / 2;
+
+    return textLabelTrace(
+      labelRadius * Math.cos(a),
+      labelRadius * Math.sin(a),
+      "2πft",
+      angleColor
+    );
+  }
+
+  function updatePlots(t) {
+    sliderCurrentValue.textContent = `${t.toFixed(3)} s`;
+
+    const omega = 2 * Math.PI * f;
+    const angle = omega * t;
+
+    const vPlus = {
+      re: 0.5 * Math.cos(angle),
+      im: 0.5 * Math.sin(angle)
+    };
+
+    const vMinus = {
+      re: 0.5 * Math.cos(-angle),
+      im: 0.5 * Math.sin(-angle)
+    };
+
+    const sum = {
+      re: vPlus.re + vMinus.re,
+      im: vPlus.im + vMinus.im
+    };
+
+    const cosCurrent = Math.cos(angle);
+
+    const unitCircle = makeCircle(1);
+    const halfCircle = makeCircle(0.5);
+
+    const circleData = [
+      {
+        x: unitCircle.x,
+        y: unitCircle.y,
+        mode: "lines",
+        showlegend: false,
+        line: {
+          color: "#262730",
+          width: 1.7
+        },
+        hoverinfo: "skip"
+      },
+
+      {
+        x: halfCircle.x,
+        y: halfCircle.y,
+        mode: "lines",
+        showlegend: false,
+        line: {
+          color: "#c9c9c9",
+          width: 1.2
+        },
+        hoverinfo: "skip"
+      },
+
+      angleArcTrace(angle),
+      angleLabelTrace(angle),
+
+      vectorTrace(0, 0, vPlus.re, vPlus.im, positiveColor, 3.5),
+      arrowHeadTrace(0, 0, vPlus.re, vPlus.im, positiveColor, 3),
+
+      vectorTrace(0, 0, vMinus.re, vMinus.im, negativeColor, 3.5),
+      arrowHeadTrace(0, 0, vMinus.re, vMinus.im, negativeColor, 3),
+
+      textLabelTrace(
+        vPlus.re * 1.35,
+        vPlus.im * 1.35,
+        "1/2 exp(+j2πft)",
+        positiveColor
+      ),
+
+      textLabelTrace(
+        vMinus.re * 1.35,
+        vMinus.im * 1.35,
+        "1/2 exp(-j2πft)",
+        negativeColor
+      )
+    ];
+
+    const circleLayout = {
+      title: {
+        text: "Complex Conjugate Vectors",
+        x: 0,
+        xanchor: "left",
+        font: {
+          family: fontFamily,
+          size: 14,
+          color: "#262730"
+        }
+      },
+      font: plotFont,
+      paper_bgcolor: "white",
+      plot_bgcolor: "white",
+      xaxis: {
+        range: [-1.25, 1.25],
+        zeroline: true,
+        scaleanchor: "y",
+        tickfont: { size: 9 }
+      },
+      yaxis: {
+        range: [-1.25, 1.25],
+        zeroline: true,
+        tickfont: { size: 9 }
+      },
+      showlegend: false,
+      margin: {
+        t: 40,
+        r: 8,
+        b: 30,
+        l: 32
+      }
+    };
+
+    Plotly.react("circlePlot", circleData, circleLayout, plotConfig);
+
+    const orangeLabelY = t < 0.5 ? sum.im - 0.14 : sum.im + 0.14;
+
+    const sumData = [
+      {
+        x: unitCircle.x,
+        y: unitCircle.y,
+        mode: "lines",
+        showlegend: false,
+        line: {
+          color: "#e0e0e0",
+          width: 1.2
+        },
+        hoverinfo: "skip"
+      },
+
+      {
+        x: halfCircle.x,
+        y: halfCircle.y,
+        mode: "lines",
+        showlegend: false,
+        line: {
+          color: "#c9c9c9",
+          width: 1.1
+        },
+        hoverinfo: "skip"
+      },
+
+      vectorTrace(0, 0, vPlus.re, vPlus.im, positiveColor, 3.5),
+      arrowHeadTrace(0, 0, vPlus.re, vPlus.im, positiveColor, 3),
+
+      vectorTrace(vPlus.re, vPlus.im, sum.re, sum.im, negativeColor, 3.5),
+      arrowHeadTrace(vPlus.re, vPlus.im, sum.re, sum.im, negativeColor, 3),
+
+      vectorTrace(0, 0, sum.re, sum.im, sumColor, 4.5),
+      arrowHeadTrace(0, 0, sum.re, sum.im, sumColor, 3.2),
+
+      textLabelTrace(
+        vPlus.re * 0.65,
+        vPlus.im * 0.65 + 0.08,
+        "1/2 exp(+j2πft)",
+        positiveColor
+      ),
+
+      textLabelTrace(
+        (vPlus.re + sum.re) / 2,
+        (vPlus.im + sum.im) / 2 - 0.10,
+        "1/2 exp(-j2πft)",
+        negativeColor
+      ),
+
+      textLabelTrace(
+        sum.re * 0.55,
+        orangeLabelY,
+        "sum = cos(2πft)",
+        sumColor
+      )
+    ];
+
+    const sumLayout = {
+      title: {
+        text: "Vector Sum",
+        x: 0,
+        xanchor: "left",
+        font: {
+          family: fontFamily,
+          size: 14,
+          color: "#262730"
+        }
+      },
+      font: plotFont,
+      paper_bgcolor: "white",
+      plot_bgcolor: "white",
+      xaxis: {
+        range: [-1.25, 1.25],
+        zeroline: true,
+        scaleanchor: "y",
+        tickfont: { size: 9 }
+      },
+      yaxis: {
+        range: [-1.25, 1.25],
+        zeroline: true,
+        tickfont: { size: 9 }
+      },
+      showlegend: false,
+      margin: {
+        t: 40,
+        r: 8,
+        b: 30,
+        l: 32
+      }
+    };
+
+    Plotly.react("sumPlot", sumData, sumLayout, plotConfig);
+
+    const cosData = [
+      {
+        x: timeVals,
+        y: cosVals,
+        mode: "lines",
+        name: "cos(2πft)",
+        line: {
+          color: sumColor,
+          width: 2.8
+        }
+      },
+      {
+        x: [t],
+        y: [cosCurrent],
+        mode: "markers",
+        name: "current sum",
+        showlegend: false,
+        marker: {
+          size: 16,
+          color: sumColor
+        }
+      }
+    ];
+
+    const cosLayout = {
+      title: {
+        text: "Resulting Sum: cos(2πft)",
+        x: 0,
+        xanchor: "left",
+        font: {
+          family: fontFamily,
+          size: 14,
+          color: "#262730"
+        }
+      },
+      font: plotFont,
+      paper_bgcolor: "white",
+      plot_bgcolor: "white",
+      xaxis: {
+        title: {
+          text: "Time t",
+          font: { size: 10 }
+        },
+        range: [0, 1],
+        tickfont: { size: 9 }
+      },
+      yaxis: {
+        title: {
+          text: "Amplitude",
+          font: { size: 10 }
+        },
+        range: [-1.2, 1.2],
+        tickfont: { size: 9 }
+      },
+      showlegend: false,
+      margin: {
+        t: 40,
+        r: 8,
+        b: 45,
+        l: 42
+      }
+    };
+
+    Plotly.react("cosPlot", cosData, cosLayout, plotConfig);
+  }
+
+  slider.addEventListener("input", (e) => {
+    updatePlots(Number(e.target.value));
+  });
+
+  updatePlots(Number(slider.value));
+</script>
+
+</body>
+</html>

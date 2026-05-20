@@ -224,7 +224,7 @@
   <h1>Unit Circle and Trigonometric Functions</h1>
 
   <p class="subtitle">
-    Sine and cosine have a simple geometric interpretation, as x and y values of a point on the unit circle. <BR>
+    Sine and cosine have a simple geometric interpretation, as x and y values of a point on the unit circle. <br>
     Try it by yourself.
   </p>
 
@@ -232,7 +232,7 @@
     <div class="slider-wrapper">
       <div class="slider-header">
         <label for="angleSlider">Angle θ</label>
-        <div class="slider-current-value" id="sliderCurrentValue">45°</div>
+        <div class="slider-current-value" id="sliderCurrentValue">30°</div>
       </div>
 
       <input
@@ -240,7 +240,7 @@
         id="angleSlider"
         min="0"
         max="360"
-        value="45"
+        value="30"
         step="1"
       />
 
@@ -343,123 +343,124 @@
         x: circleX,
         y: circleY,
         mode: "lines",
-        name: "Unit Circle",
         showlegend: false,
         line: {
           width: 2,
           color: "black"
-        }
+        },
+        hoverinfo: "skip"
       },
       {
         x: [0, x],
         y: [0, y],
         mode: "lines",
-        name: "Radius",
         showlegend: false,
         line: {
           width: 3,
           color: radiusColor
-        }
+        },
+        hoverinfo: "skip"
       },
       {
         x: [x],
         y: [y],
         mode: "markers",
-        name: "Point",
         showlegend: false,
         marker: {
           size: 12,
           color: radiusColor
-        }
+        },
+        hoverinfo: "skip"
       },
       {
         x: [0, x],
         y: [y, y],
         mode: "lines",
-        name: "cos θ",
+        showlegend: false,
         line: {
           dash: "dash",
           width: 2,
           color: cosColor
-        }
+        },
+        hoverinfo: "skip"
       },
       {
         x: [x, x],
         y: [0, y],
         mode: "lines",
-        name: "sin θ",
+        showlegend: false,
         line: {
           dash: "dash",
           width: 2,
           color: sinColor
-        }
+        },
+        hoverinfo: "skip"
       },
       {
         x: [x],
         y: [0],
         mode: "markers",
-        name: "cos point",
         showlegend: false,
         marker: {
           size: markerSize,
           color: cosColor
-        }
+        },
+        hoverinfo: "skip"
+      },
+      {
+        x: [x + (x >= 0 ? 0.13 : -0.13)],
+        y: [0],
+        mode: "text",
+        showlegend: false,
+        text: ["cos θ"],
+        textposition: x >= 0 ? "middle right" : "middle left",
+        textfont: {
+          family: fontFamily,
+          size: 11,
+          color: cosColor
+        },
+        hoverinfo: "skip"
       },
       {
         x: [0],
         y: [y],
         mode: "markers",
-        name: "sin point",
         showlegend: false,
         marker: {
           size: markerSize,
           color: sinColor
-        }
+        },
+        hoverinfo: "skip"
       },
-{
-  x: [x + (x >= 0 ? 0.13 : -0.13)],
-  y: [0],
-  mode: "text",
-  showlegend: false,
-  text: ["cos θ"],
-  textposition: x >= 0 ? "middle right" : "middle left",
-  textfont: {
-    family: fontFamily,
-    size: 11,
-    color: cosColor
-  },
-  hoverinfo: "skip"
-},
-{
-  x: [0],
-  y: [y + (y >= 0 ? 0.13 : -0.13)],
-  mode: "text",
-  showlegend: false,
-  text: ["sin θ"],
-  textposition: y >= 0 ? "top center" : "bottom center",
-  textfont: {
-    family: fontFamily,
-    size: 11,
-    color: sinColor
-  },
-  hoverinfo: "skip"
-},
+      {
+        x: [0],
+        y: [y + (y >= 0 ? 0.13 : -0.13)],
+        mode: "text",
+        showlegend: false,
+        text: ["sin θ"],
+        textposition: y >= 0 ? "top center" : "bottom center",
+        textfont: {
+          family: fontFamily,
+          size: 11,
+          color: sinColor
+        },
+        hoverinfo: "skip"
+      },
       {
         x: angleArcX,
         y: angleArcY,
         mode: "lines",
-        name: "Angle θ",
         showlegend: false,
         line: {
           width: 3,
           color: angleColor
-        }
+        },
+        hoverinfo: "skip"
       },
       {
         x: [angleLabelX],
         y: [angleLabelY],
         mode: "text",
-        name: "θ label",
         showlegend: false,
         text: ["θ"],
         textfont: {
@@ -467,7 +468,7 @@
           size: 16,
           color: angleColor
         },
-        showlegend: false
+        hoverinfo: "skip"
       }
     ];
 
@@ -498,20 +499,11 @@
         tickfont: { size: 9 },
         title: { font: { size: 10 } }
       },
-      showlegend: true,
-      legend: {
-        orientation: "h",
-        x: 0,
-        y: -0.25,
-        font: {
-          family: fontFamily,
-          size: 9
-        }
-      },
+      showlegend: false,
       margin: {
         t: 40,
         r: 8,
-        b: 62,
+        b: 30,
         l: 32
       }
     };
@@ -523,43 +515,59 @@
         x: xVals,
         y: sinVals,
         mode: "lines",
-        name: "sin(θ)",
+        showlegend: false,
         line: {
           width: 2,
           color: sinColor
-        }
+        },
+        hoverinfo: "skip"
       },
       {
         x: [angleDeg],
         y: [y],
-        mode: "markers",
-        name: "sin point",
+        mode: "markers+text",
         showlegend: false,
+        text: ["sin θ"],
+        textposition: "middle right",
+        textfont: {
+          family: fontFamily,
+          size: 11,
+          color: sinColor
+        },
         marker: {
           size: markerSize,
           color: sinColor
-        }
+        },
+        hoverinfo: "skip"
       },
       {
         x: xVals,
         y: cosVals,
         mode: "lines",
-        name: "cos(θ)",
+        showlegend: false,
         line: {
           width: 2,
           color: cosColor
-        }
+        },
+        hoverinfo: "skip"
       },
       {
         x: [angleDeg],
         y: [x],
-        mode: "markers",
-        name: "cos point",
+        mode: "markers+text",
         showlegend: false,
+        text: ["cos θ"],
+        textposition: "middle right",
+        textfont: {
+          family: fontFamily,
+          size: 11,
+          color: cosColor
+        },
         marker: {
           size: markerSize,
           color: cosColor
-        }
+        },
+        hoverinfo: "skip"
       }
     ];
 
@@ -579,10 +587,10 @@
       plot_bgcolor: "white",
       xaxis: {
         title: {
-          text: "Angle (degrees)",
+          text: "θ [degrees]",
           font: { size: 10 }
         },
-        range: [0, 360],
+        range: [0, 390],
         tickfont: { size: 9 }
       },
       yaxis: {
@@ -593,20 +601,11 @@
         range: [-1.2, 1.2],
         tickfont: { size: 9 }
       },
-      showlegend: true,
-      legend: {
-        orientation: "h",
-        x: 0,
-        y: -0.32,
-        font: {
-          family: fontFamily,
-          size: 9
-        }
-      },
+      showlegend: false,
       margin: {
         t: 40,
         r: 8,
-        b: 70,
+        b: 45,
         l: 42
       }
     };
