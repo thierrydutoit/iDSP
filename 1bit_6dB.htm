@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Every quantization bit lost brings quantization noise 6 dBs up</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]]
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    :root {
+      --streamlit-red: #ff4b4b;
+      --text-color: #262730;
+      --secondary-text: #555;
+      --background: #ffffff;
+      --plot-background: #ffffff;
+      --border-color: #e6e6e6;
+      --font-family: "Source Sans 3", "Source Sans", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background: var(--background);
+      color: var(--text-color);
+    }
+
+    .app {
+      max-width: 736px;
+      margin: 0 auto;
+      padding: 2rem 1rem 2.5rem 1rem;
+    }
+
+    h1 {
+      text-align: left;
+      font-size: 2rem;
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0 0 0.5rem 0;
+      color: var(--text-color);
+    }
+
+    .subtitle {
+      text-align: left;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      max-width: 680px;
+      margin: 0 0 1.2rem 0;
+      color: var(--secondary-text);
+    }
+
+    .status {
+      font-size: 0.9rem;
+      color: var(--secondary-text);
+      margin-bottom: 0.5rem;
+    }
+
+    .file-input {
+      margin-bottom: 1rem;
+      font-family: var(--font-family);
+      font-size: 0.9rem;
+    }
+
+    .controls {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    .slider-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 1.55rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .slider-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.9rem;
+      color: var(--text-color);
+    }
+
+    .slider-header label {
+      font-weight: 600;
+    }
+
+    .slider-current-value {
+      font-weight: 600;
+      color: var(--streamlit-red);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--streamlit-red);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    input[type="file"] {
+      font-family: var(--font-family);
+      font-size: 0.9rem;
+    }
+
+    .slider-limits {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #808495;
+      margin-top: 0.1rem;
+    }
+
+    button {
+      background: var(--streamlit-red);
+      color: white;
+      border: none;
+      border-radius: 0.35rem;
+      padding: 0.45rem 0.8rem;
+      font-family: var(--font-family);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+
+    button:disabled {
+      background: #d0d0d0;
+      cursor: not-allowed;
+    }
+
+    .plot {
+      background: var(--plot-background);
+      border: 1px solid var(--border-color);
+      border-radius: 0.45rem;
+      padding: 0.2rem;
+      min-width: 0;
+      margin-bottom: 0.8rem;
+    }
+
+    #waveformPlot {
+      height: 300px;
+    }
+
+    #fftPlot {
+      height: 360px;
+    }
+
+    .comment-box {
+      margin-top: 1.2rem;
+      font-family: var(--font-family);
+    }
+
+    .comment-box details {
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      overflow: hidden;
+    }
+
+    .comment-box summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .comment-box summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .comment-box summary::after {
+      content: "⌄";
+      font-size: 1.1rem;
+      color: #808495;
+      transition: transform 0.2s ease;
+    }
+
+    .comment-box details[open] summary::after {
+      transform: rotate(180deg);
+    }
+
+    .comment-content {
+      border-top: 1px solid var(--border-color);
+      padding: 0.85rem 1rem 1rem 1rem;
+      background: #fafafa;
+    }
+
+    .comment-content p {
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: var(--secondary-text);
+    }
+
+    @media (max-width: 700px) {
+      .app {
+        padding: 1.5rem 0.75rem 2rem 0.75rem;
+      }
+
+      h1 {
+        font-size: 1.75rem;
+      }
+
+      .subtitle {
+        font-size: 0.9rem;
+      }
+
+      #waveformPlot {
+        height: 280px;
+      }
+
+      #fftPlot {
+        height: 330px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+  <h1>Quantization: 6 dB Noise Increase per Bit Lost</h1>
+
+  <p class="subtitle">
+    How does quantization impact sound quality? Try it by yourself.
+  </p>
+
+  <div class="status" id="statusText">
+    Select <strong>violin.wav</strong>:
+  </div>
+
+  <div class="file-input">
+    <input
+      type="file"
+      id="fileInput"
+      accept=".wav,audio/wav,audio/wave,audio/x-wav"
+    />
+  </div>
+
+  <div class="controls">
+    <div class="slider-wrapper">
+      <div class="slider-header">
+        <label for="bitsSlider">Number of bits:</label>
+        <div class="slider-current-value" id="bitsValue">16 bits</div>
+      </div>
+
+      <input
+        type="range"
+        id="bitsSlider"
+        min="1"
+        max="16"
+        value="16"
+        step="1"
+        disabled
+      />
+
+      <div class="slider-limits">
+        <span>1 bit</span>
+        <span>16 bits</span>
+      </div>
+    </div>
+
+    <button id="playButton" disabled>Play current signal</button>
+  </div>
+
+  <div class="plot" id="waveformPlot"></div>
+  <div class="plot" id="fftPlot"></div>
+
+  <div class="comment-box">
+    <details>
+      <summary>Comments</summary>
+
+      <div class="comment-content">
+        <p>
+          If \(x(n)\) is the original discrete signal, and \(x_q(n)\) is its quantized version,
+          the error \(e(n)=x(n)-x_q(n)\) appears as white noise. 
+        </p>
+        <p>
+          In this example, \(x(n)\) is a musical signal quantized on 16 bits, which is considered as noise-free. 
+          By changing the number of bits, one can see (and hear!) the noise level coming \(6\,\mathrm{dB}\) up for every lost bit.
+        </p>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+  const statusText = document.getElementById("statusText");
+  const fileInput = document.getElementById("fileInput");
+  const bitsSlider = document.getElementById("bitsSlider");
+  const bitsValue = document.getElementById("bitsValue");
+  const playButton = document.getElementById("playButton");
+
+  const fontFamily = "Source Sans 3, Source Sans, sans-serif";
+
+  const originalColor = "blue";
+  const quantizedColor = "green";
+  const errorColor = "red";
+
+  const plotConfig = {
+    responsive: true,
+    displayModeBar: false
+  };
+
+  const plotFont = {
+    family: fontFamily,
+    color: "#262730",
+    size: 10
+  };
+
+  let audioContext = null;
+  let originalSignal = null;
+  let quantizedSignal = null;
+  let errorSignal = null;
+  let sampleRate = 48000;
+  let currentSource = null;
+
+  async function loadSelectedWav(file) {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+      const arrayBuffer = await file.arrayBuffer();
+      const decoded = await audioContext.decodeAudioData(arrayBuffer);
+
+      sampleRate = decoded.sampleRate;
+
+      const channel = decoded.getChannelData(0);
+      originalSignal = new Float32Array(channel.length);
+
+      for (let i = 0; i < channel.length; i++) {
+        originalSignal[i] = channel[i];
+      }
+
+      const duration = originalSignal.length / sampleRate;
+      statusText.innerHTML =
+        `Loaded <strong>${file.name}</strong> — ${originalSignal.length} samples, ${duration.toFixed(2)} s.`;
+      bitsSlider.disabled = false;
+      playButton.disabled = false;
+      bitsSlider.value = 16;
+      bitsValue.textContent = "16 bits";
+
+      updateApp(16, true);
+
+    } catch (error) {
+      statusText.textContent = "Could not decode the WAV file.";
+      console.error(error);
+    }
+  }
+
+  function quantizeSignal(signal, bits) {
+    const levels = Math.pow(2, bits);
+    const maxIndex = levels - 1;
+    const output = new Float32Array(signal.length);
+
+    for (let i = 0; i < signal.length; i++) {
+      const clipped = Math.max(-1, Math.min(1, signal[i]));
+      const normalized = (clipped + 1) / 2;
+      const quantizedIndex = Math.round(normalized * maxIndex);
+      const quantizedNormalized = quantizedIndex / maxIndex;
+      output[i] = 2 * quantizedNormalized - 1;
+    }
+
+    return output;
+  }
+
+  function computeErrorSignal(original, quantized) {
+    const output = new Float32Array(original.length);
+
+    for (let i = 0; i < original.length; i++) {
+      output[i] = original[i] - quantized[i];
+    }
+
+    return output;
+  }
+
+  function hanningWindow(size) {
+    const window = new Float32Array(size);
+
+    for (let n = 0; n < size; n++) {
+      window[n] = 0.5 - 0.5 * Math.cos((2 * Math.PI * n) / (size - 1));
+    }
+
+    return window;
+  }
+
+  function fftRadix2(real, imag) {
+    const n = real.length;
+
+    let j = 0;
+    for (let i = 1; i < n; i++) {
+      let bit = n >> 1;
+
+      while (j & bit) {
+        j ^= bit;
+        bit >>= 1;
+      }
+
+      j ^= bit;
+
+      if (i < j) {
+        const tempReal = real[i];
+        const tempImag = imag[i];
+
+        real[i] = real[j];
+        imag[i] = imag[j];
+
+        real[j] = tempReal;
+        imag[j] = tempImag;
+      }
+    }
+
+    for (let len = 2; len <= n; len <<= 1) {
+      const angle = -2 * Math.PI / len;
+      const wLenReal = Math.cos(angle);
+      const wLenImag = Math.sin(angle);
+
+      for (let i = 0; i < n; i += len) {
+        let wReal = 1;
+        let wImag = 0;
+
+        for (let k = 0; k < len / 2; k++) {
+          const evenReal = real[i + k];
+          const evenImag = imag[i + k];
+
+          const oddReal =
+            real[i + k + len / 2] * wReal -
+            imag[i + k + len / 2] * wImag;
+
+          const oddImag =
+            real[i + k + len / 2] * wImag +
+            imag[i + k + len / 2] * wReal;
+
+          real[i + k] = evenReal + oddReal;
+          imag[i + k] = evenImag + oddImag;
+
+          real[i + k + len / 2] = evenReal - oddReal;
+          imag[i + k + len / 2] = evenImag - oddImag;
+
+          const nextWReal = wReal * wLenReal - wImag * wLenImag;
+          const nextWImag = wReal * wLenImag + wImag * wLenReal;
+
+          wReal = nextWReal;
+          wImag = nextWImag;
+        }
+      }
+    }
+  }
+
+  function computeFFT(signal) {
+    const fftSize = 8192;
+    const start = Math.max(0, Math.floor(signal.length * 0.37 - fftSize / 2));
+    const window = hanningWindow(fftSize);
+
+    const real = new Float32Array(fftSize);
+    const imag = new Float32Array(fftSize);
+
+    for (let n = 0; n < fftSize; n++) {
+      const index = start + n;
+      real[n] = index < signal.length ? signal[index] * window[n] : 0;
+      imag[n] = 0;
+    }
+
+    fftRadix2(real, imag);
+
+    const frequencies = [];
+    const magnitudes = [];
+    const maxFrequency = Math.min(20000, sampleRate / 2);
+    const binCount = Math.floor((maxFrequency / sampleRate) * fftSize);
+
+    for (let k = 0; k <= binCount; k++) {
+      const magnitude = Math.sqrt(real[k] * real[k] + imag[k] * imag[k]);
+      const db = 20 * Math.log10(magnitude + 1e-10);
+
+      frequencies.push(k * sampleRate / fftSize);
+      magnitudes.push(db);
+    }
+
+    return {
+      frequencies,
+      magnitudes
+    };
+  }
+
+  function updateWaveformPlot(original, quantized, error, bits) {
+    const zoomSamples = 128;
+    const center = Math.floor(original.length * 0.52);
+    const start = Math.max(0, Math.min(original.length - zoomSamples, center - Math.floor(zoomSamples / 2)));
+    const end = Math.min(original.length, start + zoomSamples);
+
+    const sampleIndex = [];
+    const originalY = [];
+    const quantizedY = [];
+    const errorY = [];
+
+    for (let i = start; i < end; i++) {
+      sampleIndex.push(i - start);
+      originalY.push(original[i]);
+      quantizedY.push(quantized[i]);
+      errorY.push(error[i]);
+    }
+
+    const data = [
+      {
+        x: sampleIndex,
+        y: originalY,
+        mode: "lines",
+        name: "Original signal",
+        line: {
+          color: originalColor,
+          width: 1.6
+        },
+        hoverinfo: "skip"
+      },
+      {
+        x: sampleIndex,
+        y: quantizedY,
+        mode: "lines",
+        name: "Quantized signal",
+        line: {
+          color: quantizedColor,
+          width: 1.6,
+          shape: "hv"
+        },
+        hoverinfo: "skip"
+      },
+      {
+        x: sampleIndex,
+        y: errorY,
+        mode: "lines",
+        name: "Quantization error",
+        line: {
+          color: errorColor,
+          width: 1.3
+        },
+        hoverinfo: "skip"
+      }
+    ];
+
+    const layout = {
+      title: {
+        text: `Waveform zoom — 128 samples — ${bits} bits`,
+        x: 0,
+        xanchor: "left",
+        font: {
+          family: fontFamily,
+          size: 14,
+          color: "#262730"
+        }
+      },
+      font: plotFont,
+      paper_bgcolor: "white",
+      plot_bgcolor: "white",
+      xaxis: {
+        title: {
+          text: "Sample index",
+          font: { size: 10 }
+        },
+        range: [0, zoomSamples - 1],
+        tickfont: { size: 9 }
+      },
+      yaxis: {
+        title: {
+          text: "Amplitude",
+          font: { size: 10 }
+        },
+        range: [-0.55, 0.55],
+        tickfont: { size: 9 }
+      },
+      showlegend: true,
+      legend: {
+        orientation: "h",
+        x: 0,
+        y: -0.28,
+        font: {
+          family: fontFamily,
+          size: 9
+        }
+      },
+      margin: {
+        t: 40,
+        r: 8,
+        b: 72,
+        l: 42
+      }
+    };
+
+    Plotly.react("waveformPlot", data, layout, plotConfig);
+  }
+
+  function updateFFTPlot(original, quantized, error, bits) {
+    const originalFFT = computeFFT(original);
+    const quantizedFFT = computeFFT(quantized);
+    const errorFFT = computeFFT(error);
+
+    const data = [
+      {
+        x: originalFFT.frequencies,
+        y: originalFFT.magnitudes,
+        mode: "lines",
+        name: "Original signal",
+        line: {
+          color: originalColor,
+          width: 1.5
+        },
+        hoverinfo: "skip"
+      },
+      {
+        x: quantizedFFT.frequencies,
+        y: quantizedFFT.magnitudes,
+        mode: "lines",
+        name: "Quantized signal",
+        line: {
+          color: quantizedColor,
+          width: 1.5
+        },
+        hoverinfo: "skip"
+      },
+      {
+        x: errorFFT.frequencies,
+        y: errorFFT.magnitudes,
+        mode: "lines",
+        name: "Quantization error",
+        line: {
+          color: errorColor,
+          width: 1.5
+        },
+        hoverinfo: "skip"
+      }
+    ];
+
+    const layout = {
+      title: {
+        text: `FFT — ${bits} bits`,
+        x: 0,
+        xanchor: "left",
+        font: {
+          family: fontFamily,
+          size: 14,
+          color: "#262730"
+        }
+      },
+      font: plotFont,
+      paper_bgcolor: "white",
+      plot_bgcolor: "white",
+      xaxis: {
+        title: {
+          text: "Frequency [Hz]",
+          font: { size: 10 }
+        },
+        range: [0, Math.min(20000, sampleRate / 2)],
+        tickfont: { size: 9 }
+      },
+      yaxis: {
+        title: {
+          text: "Magnitude [dB]",
+          font: { size: 10 }
+        },
+        range: [-120, 60],
+        tickfont: { size: 9 }
+      },
+      showlegend: true,
+      legend: {
+        orientation: "h",
+        x: 0,
+        y: -0.25,
+        font: {
+          family: fontFamily,
+          size: 9
+        }
+      },
+      margin: {
+        t: 40,
+        r: 8,
+        b: 70,
+        l: 48
+      }
+    };
+
+    Plotly.react("fftPlot", data, layout, plotConfig);
+  }
+
+  function createAudioBuffer(signal) {
+    const buffer = audioContext.createBuffer(1, signal.length, sampleRate);
+    const channel = buffer.getChannelData(0);
+
+    for (let i = 0; i < signal.length; i++) {
+      channel[i] = signal[i];
+    }
+
+    return buffer;
+  }
+
+  async function playSignal() {
+    if (!audioContext || !quantizedSignal) {
+      return;
+    }
+
+    if (audioContext.state === "suspended") {
+      await audioContext.resume();
+    }
+
+    if (currentSource) {
+      try {
+        currentSource.stop();
+      } catch (e) {}
+    }
+
+    const buffer = createAudioBuffer(quantizedSignal);
+    currentSource = audioContext.createBufferSource();
+    currentSource.buffer = buffer;
+    currentSource.connect(audioContext.destination);
+    currentSource.start();
+  }
+
+  function updateApp(bits, shouldPlay) {
+    if (!originalSignal) {
+      return;
+    }
+
+    bitsValue.textContent = `${bits} bit${bits > 1 ? "s" : ""}`;
+
+    quantizedSignal = quantizeSignal(originalSignal, bits);
+    errorSignal = computeErrorSignal(originalSignal, quantizedSignal);
+
+    updateWaveformPlot(originalSignal, quantizedSignal, errorSignal, bits);
+    updateFFTPlot(originalSignal, quantizedSignal, errorSignal, bits);
+
+    if (shouldPlay) {
+      playSignal();
+    }
+  }
+
+  fileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) {
+      return;
+    }
+
+    await loadSelectedWav(file);
+  });
+
+  bitsSlider.addEventListener("input", (e) => {
+    const bits = Number(e.target.value);
+    updateApp(bits, true);
+  });
+
+  bitsSlider.addEventListener("change", (e) => {
+    const bits = Number(e.target.value);
+    updateApp(bits, true);
+  });
+
+  playButton.addEventListener("click", () => {
+    playSignal();
+  });
+</script>
+
+</body>
+</html>
