@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Every quantization bit lost brings quantization noise 6 dBs up</title>
+  <title>Quantization: 6 dB Noise Increase per Bit Lost</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,13 +70,7 @@
     .status {
       font-size: 0.9rem;
       color: var(--secondary-text);
-      margin-bottom: 0.5rem;
-    }
-
-    .file-input {
       margin-bottom: 1rem;
-      font-family: var(--font-family);
-      font-size: 0.9rem;
     }
 
     .controls {
@@ -118,11 +112,6 @@
       accent-color: var(--streamlit-red);
       cursor: pointer;
       margin: 0;
-    }
-
-    input[type="file"] {
-      font-family: var(--font-family);
-      font-size: 0.9rem;
     }
 
     .slider-limits {
@@ -252,19 +241,13 @@
   <h1>Quantization: 6 dB Noise Increase per Bit Lost</h1>
 
   <p class="subtitle">
-    How does quantization impact sound quality? Try it by yourself.
+    This app loads a violin signal from the server, requantizes it from 1 to 16 bits,
+    displays a 1024-sample zoom of the original signal, quantized signal and quantization error,
+    and lets you hear the quantized signal whenever the number of bits is changed.
   </p>
 
   <div class="status" id="statusText">
-    Select <strong>violin.wav</strong>:
-  </div>
-
-  <div class="file-input">
-    <input
-      type="file"
-      id="fileInput"
-      accept=".wav,audio/wav,audio/wave,audio/x-wav"
-    />
+    Loading <strong>violin.wav</strong>...
   </div>
 
   <div class="controls">
@@ -303,11 +286,9 @@
       <div class="comment-content">
         <p>
           If \(x(n)\) is the original discrete signal, and \(x_q(n)\) is its quantized version,
-          the error \(e(n)=x(n)-x_q(n)\) appears as white noise. 
-        </p>
-        <p>
-          In this example, \(x(n)\) is a musical signal quantized on 16 bits, which is considered as noise-free. 
-          By changing the number of bits, one can see (and hear!) the noise level coming \(6\,\mathrm{dB}\) up for every lost bit.
+          the error \(e(n)=x(n)-x_q(n)\) is white noise. In this example, \(x(n)\) is a musical
+          signal quantized on 16 bits, which is considered as noise-free. By changing the number
+          of bits, one can see and hear the noise level coming \(6\,\mathrm{dB}\) up for every lost bit.
         </p>
       </div>
     </details>
@@ -315,8 +296,9 @@
 </div>
 
 <script>
+  const WAV_FILE = "violin.wav";
+
   const statusText = document.getElementById("statusText");
-  const fileInput = document.getElementById("fileInput");
   const bitsSlider = document.getElementById("bitsSlider");
   const bitsValue = document.getElementById("bitsValue");
   const playButton = document.getElementById("playButton");
@@ -344,12 +326,19 @@
   let errorSignal = null;
   let sampleRate = 48000;
   let currentSource = null;
+  let userHasInteracted = false;
 
-  async function loadSelectedWav(file) {
+  async function loadServerWav() {
     try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const response = await fetch(WAV_FILE);
 
-      const arrayBuffer = await file.arrayBuffer();
+      if (!response.ok) {
+        throw new Error(`Could not load ${WAV_FILE}`);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
       const decoded = await audioContext.decodeAudioData(arrayBuffer);
 
       sampleRate = decoded.sampleRate;
@@ -362,32 +351,58 @@
       }
 
       const duration = originalSignal.length / sampleRate;
+
       statusText.innerHTML =
-        `Loaded <strong>${file.name}</strong> — ${originalSignal.length} samples, ${duration.toFixed(2)} s.`;
+        `Loaded <strong>${WAV_FILE}</strong> — ${originalSignal.length} samples, ${duration.toFixed(2)} s.`;
+
       bitsSlider.disabled = false;
       playButton.disabled = false;
       bitsSlider.value = 16;
       bitsValue.textContent = "16 bits";
 
-      updateApp(16, true);
+      updateApp(16, false);
+
+      // Most browsers block autoplay until the user interacts with the page.
+      // The Play button and slider will work immediately after the first click/touch.
+      tryAutoplayAfterLoad();
 
     } catch (error) {
-      statusText.textContent = "Could not decode the WAV file.";
+      statusText.innerHTML =
+        `Could not load <strong>${WAV_FILE}</strong>. Make sure it is in the same folder as this HTML file and served over HTTP/HTTPS.`;
       console.error(error);
     }
   }
 
+  async function tryAutoplayAfterLoad() {
+    try {
+      await playSignal();
+    } catch (error) {
+      // Autoplay may be blocked by the browser. This is expected.
+      console.warn("Autoplay blocked until user interaction.", error);
+    }
+  }
+
   function quantizeSignal(signal, bits) {
-    const levels = Math.pow(2, bits);
-    const maxIndex = levels - 1;
     const output = new Float32Array(signal.length);
 
+    const lostBits = 16 - bits;
+    const step = Math.pow(2, lostBits);
+
     for (let i = 0; i < signal.length; i++) {
-      const clipped = Math.max(-1, Math.min(1, signal[i]));
-      const normalized = (clipped + 1) / 2;
-      const quantizedIndex = Math.round(normalized * maxIndex);
-      const quantizedNormalized = quantizedIndex / maxIndex;
-      output[i] = 2 * quantizedNormalized - 1;
+      let int16 = Math.round(signal[i] * 32768);
+      int16 = Math.max(-32768, Math.min(32767, int16));
+
+      let quantizedInt16;
+
+      if (lostBits === 0) {
+        quantizedInt16 = int16;
+      } else {
+        quantizedInt16 = Math.round(int16 / step) * step;
+      }
+
+      quantizedInt16 = Math.max(-32768, Math.min(32767, quantizedInt16));
+
+      output[i] = quantizedInt16 / 32768;
     }
 
     return output;
@@ -512,9 +527,12 @@
   }
 
   function updateWaveformPlot(original, quantized, error, bits) {
-    const zoomSamples = 128;
-    const center = Math.floor(original.length * 0.52);
-    const start = Math.max(0, Math.min(original.length - zoomSamples, center - Math.floor(zoomSamples / 2)));
+    const zoomSamples = 1024;
+    const center = Math.floor(original.length * 0.37);
+    const start = Math.max(
+      0,
+      Math.min(original.length - zoomSamples, center - Math.floor(zoomSamples / 2))
+    );
     const end = Math.min(original.length, start + zoomSamples);
 
     const sampleIndex = [];
@@ -568,7 +586,7 @@
 
     const layout = {
       title: {
-        text: `Waveform zoom — 128 samples — ${bits} bits`,
+        text: `Waveform zoom — 1024 samples — ${bits} bits`,
         x: 0,
         xanchor: "left",
         font: {
@@ -593,7 +611,7 @@
           text: "Amplitude",
           font: { size: 10 }
         },
-        range: [-0.55, 0.55],
+        range: [-1.05, 1.05],
         tickfont: { size: 9 }
       },
       showlegend: true,
@@ -760,15 +778,16 @@
     }
   }
 
-  fileInput.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
+  function markUserInteraction() {
+    userHasInteracted = true;
 
-    if (!file) {
-      return;
+    if (audioContext && audioContext.state === "suspended") {
+      audioContext.resume();
     }
+  }
 
-    await loadSelectedWav(file);
-  });
+  document.addEventListener("click", markUserInteraction, { once: true });
+  document.addEventListener("touchstart", markUserInteraction, { once: true });
 
   bitsSlider.addEventListener("input", (e) => {
     const bits = Number(e.target.value);
@@ -783,6 +802,8 @@
   playButton.addEventListener("click", () => {
     playSignal();
   });
+
+  loadServerWav();
 </script>
 
 </body>
