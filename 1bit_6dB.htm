@@ -279,10 +279,18 @@
       <div class="comment-content">
         <p>
           If \(x(n)\) is the original discrete signal, and \(x_q(n)\) is its quantized version,
-          the error \(e(n)=x(n)-x_q(n)\) is white noise. In this example, \(x(n)\) is a musical
-          signal quantized on 16 bits, which is considered as noise-free. By changing the number
-          of bits, one can see and hear the noise level coming \(6\,\mathrm{dB}\) up for every lost bit.
+          the error \(e(n)=x(n)-x_q(n)\) is white noise. 
         </p>
+        <p>
+          In this example, \(x(n)\) is a musical signal quantized on 16 bits, which is considered as noise-free. By changing the number
+          of bits, one can see and hear the noise level coming \(6\,\mathrm{dB}\) up for every lost bit.
+        </p><p>
+        </p>
+        <p>
+          Notice the quantized signal does not \(seem\) to change much until b<8. This is only due to the fact that the display area is itslef 
+          quantized on a fixed number of pixels.
+        </p>
+        
       </div>
     </details>
   </div>
@@ -555,7 +563,7 @@
         line: {
           color: quantizedColor,
           width: 1.6,
-          shape: "hv"
+//          shape: "hv"
         },
         hoverinfo: "skip"
       },
