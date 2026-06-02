@@ -241,14 +241,8 @@
   <h1>Quantization: 6 dB Noise Increase per Bit Lost</h1>
 
   <p class="subtitle">
-    This app loads a violin signal from the server, requantizes it from 1 to 16 bits,
-    displays a 1024-sample zoom of the original signal, quantized signal and quantization error,
-    and lets you hear the quantized signal whenever the number of bits is changed.
+    How does quantization impact sound quality? Try it by yourself.
   </p>
-
-  <div class="status" id="statusText">
-    Loading <strong>violin.wav</strong>...
-  </div>
 
   <div class="controls">
     <div class="slider-wrapper">
@@ -273,7 +267,6 @@
       </div>
     </div>
 
-    <button id="playButton" disabled>Play current signal</button>
   </div>
 
   <div class="plot" id="waveformPlot"></div>
@@ -296,12 +289,11 @@
 </div>
 
 <script>
-  const WAV_FILE = "violin.wav";
+  const WAV_FILE = "https://thierrydutoit.github.io/iDSP/violin.wav";
 
   const statusText = document.getElementById("statusText");
   const bitsSlider = document.getElementById("bitsSlider");
   const bitsValue = document.getElementById("bitsValue");
-  const playButton = document.getElementById("playButton");
 
   const fontFamily = "Source Sans 3, Source Sans, sans-serif";
 
@@ -352,15 +344,11 @@
 
       const duration = originalSignal.length / sampleRate;
 
-      statusText.innerHTML =
-        `Loaded <strong>${WAV_FILE}</strong> — ${originalSignal.length} samples, ${duration.toFixed(2)} s.`;
-
       bitsSlider.disabled = false;
-      playButton.disabled = false;
       bitsSlider.value = 16;
       bitsValue.textContent = "16 bits";
 
-      updateApp(16, false);
+      updateApp(16, true);
 
       // Most browsers block autoplay until the user interacts with the page.
       // The Play button and slider will work immediately after the first click/touch.
@@ -493,7 +481,7 @@
 
   function computeFFT(signal) {
     const fftSize = 8192;
-    const start = Math.max(0, Math.floor(signal.length * 0.37 - fftSize / 2));
+    const start = Math.max(0, Math.floor(signal.length * 0.54 - fftSize / 2));
     const window = hanningWindow(fftSize);
 
     const real = new Float32Array(fftSize);
@@ -527,8 +515,8 @@
   }
 
   function updateWaveformPlot(original, quantized, error, bits) {
-    const zoomSamples = 1024;
-    const center = Math.floor(original.length * 0.37);
+    const zoomSamples =64;
+    const center = Math.floor(original.length * 0.54);
     const start = Math.max(
       0,
       Math.min(original.length - zoomSamples, center - Math.floor(zoomSamples / 2))
@@ -586,7 +574,7 @@
 
     const layout = {
       title: {
-        text: `Waveform zoom — 1024 samples — ${bits} bits`,
+        text: `Waveform zoom — 64 samples — ${bits} bits`,
         x: 0,
         xanchor: "left",
         font: {
@@ -611,7 +599,7 @@
           text: "Amplitude",
           font: { size: 10 }
         },
-        range: [-1.05, 1.05],
+        range: [-0.25, 0.25],
         tickfont: { size: 9 }
       },
       showlegend: true,
@@ -797,10 +785,6 @@
   bitsSlider.addEventListener("change", (e) => {
     const bits = Number(e.target.value);
     updateApp(bits, true);
-  });
-
-  playButton.addEventListener("click", () => {
-    playSignal();
   });
 
   loadServerWav();
