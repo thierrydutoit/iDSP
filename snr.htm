@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Signal-to-Noise Ratio (audio/image)</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    svg: {
+      fontCache: 'global'
+    },
+    startup: {
+      typeset: true
+    }
+  };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+  :root {
+    --text: rgb(49, 51, 63);
+    --muted: rgb(90, 93, 108);
+    --accent: rgb(255, 75, 75);
+    --track: rgba(49, 51, 63, 0.18);
+    --thumb-size: 1rem;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: "Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: var(--text);
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 2rem 1rem 3rem 1rem;
+    line-height: 1.5;
+    font-size: 1rem;
+    background: white;
+  }
+
+  h1 {
+    margin: 0 0 0.75rem 0;
+    font-weight: 700;
+    font-size: 2.2rem;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin: 0 0 1rem 0;
+    font-size: 1.05rem;
+  }
+
+  .mode-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1rem 0 1rem 0;
+    font-weight: 600;
+  }
+
+  .mode-switch {
+    position: relative;
+    display: inline-block;
+    width: 3.2rem;
+    height: 1.65rem;
+  }
+
+  .mode-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .mode-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: var(--track);
+    border-radius: 999px;
+    transition: 0.2s;
+  }
+
+  .mode-slider:before {
+    position: absolute;
+    content: "";
+    height: 1.25rem;
+    width: 1.25rem;
+    left: 0.2rem;
+    bottom: 0.2rem;
+    background-color: white;
+    border: 2px solid var(--accent);
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+
+  .mode-switch input:checked + .mode-slider {
+    background-color: rgba(255, 75, 75, 0.35);
+  }
+
+  .mode-switch input:checked + .mode-slider:before {
+    transform: translateX(1.55rem);
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin: 1rem 0 1.8rem 0;
+  }
+
+  .control {
+    min-width: 0;
+  }
+
+  .labelrow {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.18rem;
+    min-height: 1.2rem;
+  }
+
+  .labelrow label {
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .slider-wrap {
+    position: relative;
+    padding-top: 0.68rem;
+    padding-bottom: 0.42rem;
+  }
+
+  .slider-value-bubble {
+    position: absolute;
+    top: -0.02rem;
+    left: var(--pct);
+    transform: translateX(-50%);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.84rem;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .slider-limits {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.02rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--muted);
+    font-size: 0.74rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    --pct: 50%;
+  }
+
+  input[type="range"]:focus {
+    outline: none;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 0.34rem;
+    border-radius: 999px;
+    background:
+      linear-gradient(to right,
+        var(--accent) 0%,
+        var(--accent) var(--pct),
+        var(--track) var(--pct),
+        var(--track) 100%);
+  }
+
+  input[type="range"]::-moz-range-track {
+    height: 0.34rem;
+    border-radius: 999px;
+    background: var(--track);
+  }
+
+  input[type="range"]::-moz-range-progress {
+    height: 0.34rem;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--accent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    margin-top: -5px;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--accent);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    cursor: pointer;
+  }
+
+  .plot-card {
+    margin-top: 0.5rem;
+  }
+
+  .plot-title {
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    min-height: 1.9rem;
+  }
+
+  #signalPlot {
+    width: 100%;
+    height: 330px;
+    margin: 0.2rem 0 0.9rem 0;
+  }
+
+  #imageCanvas {
+    display: none;
+    max-width: 100%;
+    height: auto;
+    margin: 0.2rem auto 0.9rem auto;
+  }
+
+  .audio-block {
+    margin: 1rem 0 1.15rem 0;
+  }
+
+  .audio-label {
+    margin: 0 0 0.35rem 0;
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  audio {
+    width: 100%;
+    display: block;
+  }
+
+  #status {
+    margin: 0.15rem 0 0.65rem 0;
+    font-size: 0.96rem;
+    color: var(--muted);
+  }
+
+  .errorbox {
+    display: none;
+    margin: 1rem 0;
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 75, 75, 0.08);
+    color: rgb(120, 20, 20);
+    font-size: 0.95rem;
+  }
+
+  details {
+    margin-top: 1.4rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+  }
+
+  .mathblock {
+    margin: 0.75rem 0;
+  }
+  </style>
+</head>
+
+<body>
+  <h1>Signal-to-Noise Ratio (audio/image)</h1>
+
+  <p>
+    How noisy is a signal with $40$, $30$, $20$, $10$, $0$, $-10$ or $-20$ dB SNR?
+    Try it by yourself.
+  </p>
+
+  <div class="mode-row">
+    <span>Audio</span>
+    <label class="mode-switch">
+      <input id="modeToggle" type="checkbox" />
+      <span class="mode-slider"></span>
+    </label>
+    <span>Image</span>
+  </div>
+
+  <div id="errorbox" class="errorbox"></div>
+
+  <div id="status">Loading WAV file...</div>
+
+  <div class="controls">
+    <div class="control">
+      <div class="labelrow">
+        <label for="snrSlider">SNR [dB]</label>
+      </div>
+
+      <div class="slider-wrap">
+        <div class="slider-value-bubble" id="snrValueBubble">40</div>
+
+        <input id="snrSlider" type="range" min="-20" max="40" step="1" value="40" />
+
+        <div class="slider-limits">
+          <span>-20</span>
+          <span>40</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="plot-card">
+    <div id="signalPlot"></div>
+    <canvas id="imageCanvas"></canvas>
+  </div>
+
+  <details>
+    <summary>Open for comments</summary>
+
+    <p>
+      SNR is defined as the ratio of the power of a signal to that of the additional noise:
+    </p>
+
+    <div class="mathblock">
+    $$
+    \mathrm{SNR} = \frac{\sigma_x^2}{\sigma_n^2}
+    $$
+    </div>
+
+    <p>or, in decibels:</p>
+
+    <div class="mathblock">
+    $$
+    \mathrm{SNR\ [dB]} = 10\log_{10}\left(\frac{\sigma_x^2}{\sigma_n^2}\right)
+    $$
+    </div>
+
+    <p>
+      The imposed SNR is obtained by measuring the power of the input signal and adding noise
+      with unit variance, scaled to achieve the chosen SNR.
+    </p>
+
+    <div class="mathblock">
+    $$
+    \sigma_n = \sqrt{\frac{\sigma_x^2}{\mathrm{SNR}}}
+    $$
+    </div>
+
+    <p>
+      Noise becomes quickly visible and audible as the SNR decreases.
+    </p>
+  </details>
+
+  <script>
+  const WAV_FILE = "https://thierrydutoit.github.io/iDSP/PAR8.WAV";
+  const IMAGE_FILE = "https://thierrydutoit.github.io/iDSP/lena.jpg";
+
+  const modeToggle = document.getElementById("modeToggle");
+  const snrSlider = document.getElementById("snrSlider");
+  const snrValueBubble = document.getElementById("snrValueBubble");
+  const statusEl = document.getElementById("status");
+  const errorBox = document.getElementById("errorbox");
+  const signalPlot = document.getElementById("signalPlot");
+  const imageCanvas = document.getElementById("imageCanvas");
+  const imageCtx = imageCanvas.getContext("2d");
+
+  let audioCtx = null;
+  let sourceNode = null;
+
+  let sampleRate = 8000;
+  let signal = null;
+  let noise = null;
+  let noisySignal = null;
+
+  let imageSignal = null;
+  let imageNoise = null;
+  let imageWidth = 0;
+  let imageHeight = 0;
+
+  function showError(message) {
+    errorBox.style.display = "block";
+    errorBox.textContent = message;
+  }
+
+  function getMode() {
+    return modeToggle.checked ? "image" : "audio";
+  }
+
+  function getAudioContext() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function variance(x) {
+    let mean = 0;
+
+    for (let i = 0; i < x.length; i++) {
+      mean += x[i];
+    }
+
+    mean /= x.length;
+    mean=0;
+
+    let v = 0;
+
+    for (let i = 0; i < x.length; i++) {
+      const d = x[i] - mean;
+      v += d * d;
+    }
+
+    return v / x.length;
+  }
+
+  function makeGaussianNoise(length) {
+    const out = new Float32Array(length);
+
+    for (let i = 0; i < length; i += 2) {
+      const u1 = Math.max(Math.random(), 1e-12);
+      const u2 = Math.random();
+      const r = Math.sqrt(-2 * Math.log(u1));
+      const theta = 2 * Math.PI * u2;
+
+      out[i] = r * Math.cos(theta);
+
+      if (i + 1 < length) {
+        out[i + 1] = r * Math.sin(theta);
+      }
+    }
+
+    const std = Math.sqrt(variance(out));
+
+    for (let i = 0; i < out.length; i++) {
+      out[i] /= std;
+    }
+
+    return out;
+  }
+
+  function updateSliderDisplay() {
+    const min = Number(snrSlider.min);
+    const max = Number(snrSlider.max);
+    const value = Number(snrSlider.value);
+    const pct = ((value - min) / (max - min)) * 100;
+
+    snrValueBubble.textContent = String(value);
+    snrValueBubble.style.setProperty("--pct", pct + "%");
+    snrSlider.style.setProperty("--pct", pct + "%");
+  }
+
+  function makeNoisySignal(snrDb) {
+    const signalPower = variance(signal);
+    const snrLinear = Math.pow(10, snrDb / 10);
+    const noiseGain = Math.sqrt(signalPower / snrLinear);
+
+    const out = new Float32Array(signal.length);
+
+    for (let i = 0; i < signal.length; i++) {
+      out[i] = signal[i] + noiseGain * noise[i];
+    }
+
+    return out;
+  }
+
+  function plotSignal(samples, snrDb) {
+    const maxPoints = 5000;
+    const step = Math.max(1, Math.floor(samples.length / maxPoints));
+
+    const x = [];
+    const y = [];
+
+    for (let i = 0; i < samples.length; i += step) {
+      x.push(i / sampleRate);
+      y.push(samples[i]);
+    }
+
+    Plotly.react(
+      "signalPlot",
+      [{
+        x: x,
+        y: y,
+        type: "scatter",
+        mode: "lines",
+        line: { width: 1 },
+        hoverinfo: "skip"
+      }],
+      {
+        margin: { l: 42, r: 15, t: 8, b: 36 },
+        xaxis: {
+          title: "Time [s]",
+          zeroline: false
+        },
+        yaxis: {
+          title: "",
+          zeroline: false
+        },
+        annotations: [{
+          xref: "paper",
+          yref: "paper",
+          x: 0.50,
+          y: 0.93,
+          text: "SNR [dB]=" + snrDb,
+          showarrow: false,
+          font: { size: 22 }
+        }]
+      },
+      {
+        responsive: true,
+        displayModeBar: false
+      }
+    );
+  }
+
+  function renderNoisyImage(snrDb) {
+    if (!imageSignal) {
+      return;
+    }
+
+    const signalPower = variance(imageSignal);
+    const snrLinear = Math.pow(10, snrDb / 10);
+    const noiseGain = Math.sqrt(signalPower / snrLinear);
+
+    const imageData = imageCtx.createImageData(imageWidth, imageHeight);
+    const data = imageData.data;
+
+    for (let i = 0; i < imageSignal.length; i++) {
+      let value = imageSignal[i] + noiseGain * imageNoise[i];
+
+      if (value < 0) {
+        value = 0;
+      }
+
+      if (value > 1) {
+        value = 1;
+      }
+
+      const pixel = Math.round(value * 255);
+      const j = 4 * i;
+
+      data[j] = pixel;
+      data[j + 1] = pixel;
+      data[j + 2] = pixel;
+      data[j + 3] = 255;
+    }
+
+    imageCtx.putImageData(imageData, 0, 0);
+
+    imageCtx.font = "22px sans-serif";
+    imageCtx.fillStyle = "black";
+    imageCtx.fillText("SNR [dB]=" + snrDb, imageWidth * 0.38, 28);
+  }
+
+  async function playNoisySignal() {
+    if (getMode() !== "audio") {
+      return;
+    }
+
+    if (!noisySignal) {
+      return;
+    }
+
+    const ctx = getAudioContext();
+
+    try {
+      await ctx.resume();
+    } catch (err) {
+      return;
+    }
+
+    if (ctx.state !== "running") {
+      return;
+    }
+
+    if (sourceNode) {
+      try {
+        sourceNode.stop();
+      } catch (err) {
+      }
+
+      try {
+        sourceNode.disconnect();
+      } catch (err) {
+      }
+
+      sourceNode = null;
+    }
+
+    const buffer = ctx.createBuffer(1, noisySignal.length, sampleRate);
+    buffer.copyToChannel(noisySignal, 0);
+
+    sourceNode = ctx.createBufferSource();
+    sourceNode.buffer = buffer;
+    sourceNode.connect(ctx.destination);
+    sourceNode.start();
+  }
+
+  function updateApp(playSound) {
+    updateSliderDisplay();
+
+    const snrDb = Number(snrSlider.value);
+
+    if (getMode() === "audio") {
+      signalPlot.style.display = "block";
+      imageCanvas.style.display = "none";
+
+      if (!signal) {
+        return;
+      }
+
+      noisySignal = makeNoisySignal(snrDb);
+      plotSignal(noisySignal, snrDb);
+
+      if (playSound) {
+        playNoisySignal();
+      }
+    } else {
+      signalPlot.style.display = "none";
+      imageCanvas.style.display = "block";
+      renderNoisyImage(snrDb);
+    }
+  }
+
+  async function loadWavFile() {
+    try {
+      statusEl.textContent = "Loading WAV file...";
+
+      const response = await fetch(WAV_FILE);
+
+      if (!response.ok) {
+        throw new Error("Could not load WAV file: HTTP " + response.status);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+      const ctx = getAudioContext();
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+
+      sampleRate = audioBuffer.sampleRate;
+      signal = new Float32Array(audioBuffer.getChannelData(0));
+      noise = makeGaussianNoise(signal.length);
+
+      statusEl.textContent = "";
+
+      updateApp(true);
+    } catch (err) {
+      showError(err.message || String(err));
+    }
+  }
+
+  async function loadImageFile() {
+    return new Promise(function (resolve, reject) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+
+      img.onload = function () {
+        imageWidth = img.naturalWidth;
+        imageHeight = img.naturalHeight;
+
+        imageCanvas.width = imageWidth;
+        imageCanvas.height = imageHeight;
+
+        imageCtx.drawImage(img, 0, 0);
+
+        const imageData = imageCtx.getImageData(0, 0, imageWidth, imageHeight);
+        const data = imageData.data;
+
+        imageSignal = new Float32Array(imageWidth * imageHeight);
+
+        for (let i = 0; i < imageSignal.length; i++) {
+          const j = 4 * i;
+
+          const r = data[j];
+          const g = data[j + 1];
+          const b = data[j + 2];
+
+          imageSignal[i] = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        }
+
+        imageNoise = makeGaussianNoise(imageSignal.length);
+
+        updateApp(false);
+        resolve();
+      };
+
+      img.onerror = function () {
+        reject(new Error("Could not load image file."));
+      };
+
+      img.src = IMAGE_FILE;
+    });
+  }
+
+  snrSlider.addEventListener("input", function () {
+    updateApp(true);
+  });
+
+
+  updateSliderDisplay();
+  loadImageFile();
+  loadWavFile();
+  </script>
+</body>
+</html>
