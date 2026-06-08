@@ -5,8 +5,8 @@ This page gathers *reactive* material for developing *intuition* in *Digital Sig
 Teaching indeed is a Communication Theory problem (and also of course a matter of presence, performance, humour, feeling etc.). How to best transfer information to students through the limited capacity of the speech and visual channels? A possible answer is: by using interactive, reactive images, which bring some sort of “biofeedback loop” and quickly make abstract concepts more accessible.
 
 The material exposed here is organized into a list of figures which are usually proposed statically in textbooks, leaving considerable mental work on the student side to go from figure to concept. For each figure, we make our best to propose pointers to: 
-1. **Reactive tools**, which are the heart if the project. They are webapps which require no specific installation to run. Tools augment the figure with reactive components which involve students in the understanding of the concept. Tools are open source.
-2. **Videos**, which show how tools can be used to activate the figure. They are ideally snapshots of the tools, without spoken comments so as to let professors comment by themselves. Videos are Creative Commons.
+1. **Reactive tools**, which are the heart if the project. They are webapps which require no specific installation to run. Tools augment the figure with reactive components which involve students in the understanding of the concept. At best, tools show reactive figures with minimal preliminary comments. Explanations come later, in a pop-up "comments" box. Tools are open source.
+2. **Videos**, which show how tools can be used to activate the figure. 
 3. **Code**, available for students with technical background to check how concepts are implemented and possibly build on this implementation. At best, code comes from the tools themselves (in which computational code should be isolated from graphical code)
 4. **Papers**, when available, for a deeper understanding.
 
@@ -14,7 +14,8 @@ This material is taken from third parties when available (with their own license
 
 If you want to contribute, or make suggestions or comments, [drop us a line](mailto://thierry.dutoit@umons.ac.be).
 
-Streamlit has been used for the design of most iDSP apps, and then transformed into html5/javascript code by AI. If you want to create an iDSP app using the python StreamLit library, see this [How-To guide](https://github.com/thierrydutoit/iDSP/blob/gh-pages/iDSP%20-%20HowTo.pdf).
+Streamlit has been used for the design of most initial iDSP apps, and then transformed into html5/javascript code by AI. The latest apps have been designed directly in html5/javascript using AI, while keeping the look and feel of streamlit apps. 
+If you want to create an iDSP app using the python StreamLit Library, or using AI, see this [How-To guide](https://github.com/thierrydutoit/iDSP/blob/gh-pages/iDSP%20-%20HowTo.pdf).
 
 ---
 
