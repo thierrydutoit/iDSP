@@ -331,16 +331,8 @@
   <div id="timePlot" class="plot"></div>
   <div id="freqPlot" class="plot"></div>
 
-  <div class="audio-row">
-    <div class="audio-card">
-      <h3>Original signal</h3>
-      <audio id="audioOriginal" controls></audio>
-    </div>
-    <div class="audio-card">
-      <h3>Downsampled signal</h3>
-      <audio id="audioDownsampled" controls></audio>
-    </div>
-  </div>
+  <audio id="audioOriginal" preload="auto" style="display:none"></audio>
+  <audio id="audioDownsampled" preload="auto" style="display:none"></audio>
 
   <details>
     <summary>Open for comments</summary>
@@ -540,7 +532,7 @@
     let prevOriginalUrl = null;
     let prevDownsampledUrl = null;
 
-    function updateApp() {
+    function updateApp(playDownsampled = false) {
       try {
         const factor = Math.max(1, Number(els.factor.value) || 1);
         const applyFilter = els.applyFilter.checked;
@@ -594,7 +586,7 @@
             y: Array.from(sig_proc.slice(0, show_time)),
             type: "scatter",
             mode: "lines",
-            line: { width: 2 },
+            line: { width: 2, color: "green" },
             name: "Filtered (pre-downsample)",
             opacity: 0.9
           }] : []),
@@ -603,8 +595,8 @@
             y: Array.from(sig_ds.slice(0, show_ds)),
             type: "scatter",
             mode: "lines+markers",
-            marker: { size: 5 },
-            line: { width: 2 },
+            marker: { size: 5, color: "orange" },
+            line: { width: 2, color: "orange" },
             name: `Downsampled ×${factor}`,
             opacity: 0.9
           }
@@ -658,7 +650,7 @@
             y: specD.db,
             type: "scatter",
             mode: "lines",
-            line: { width: 2 },
+            line: { width: 2, color: "orange" },
             name: `Downsampled ×${factor} (dB)`,
             opacity: 0.9
           }
@@ -705,6 +697,12 @@
         els.audioOriginal.src = prevOriginalUrl;
         els.audioDownsampled.src = prevDownsampledUrl;
 
+        if (playDownsampled) {
+          els.audioDownsampled.pause();
+          els.audioDownsampled.currentTime = 0;
+          els.audioDownsampled.play().catch(() => {});
+        }
+
         const ny_orig = fs / 2;
         const ny_new = fs_ds / 2;
 
@@ -736,7 +734,9 @@
     function init() {
       try {
         setSliderUI(els.factor, els.factorVal);
-        els.factor.addEventListener("input", updateApp);
+        els.factor.addEventListener("input", function () {
+          updateApp(true);
+        });
         els.applyFilter.addEventListener("change", updateApp);
         updateApp();
       } catch (err) {
