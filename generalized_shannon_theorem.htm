@@ -271,23 +271,6 @@
     <div id="timePlot" class="plot"></div>
   </div>
 
-  <div class="audio-row">
-    <div class="audio-block">
-      <p class="audio-label">Original signal</p>
-      <audio id="originalAudio" controls></audio>
-    </div>
-
-    <div class="audio-block">
-      <p class="audio-label">Sampled signal</p>
-      <audio id="sampledAudio" controls></audio>
-    </div>
-
-    <div class="audio-block">
-      <p class="audio-label">Band-pass reconstruction</p>
-      <audio id="reconstructedAudio" controls></audio>
-    </div>
-  </div>
-
   <details>
     <summary>Open for comments</summary>
 
@@ -325,7 +308,8 @@
     <p>
       with $k$ integer but not 0. As a matter of fact, for $k$ odd, values of $F_s$ in these
       intervals put the Nyquist frequency inside a spectral image; for $k$ even, they put the
-      zero frequency inside a spectral image. In both cases, this causes aliasing.<br><br>
+      zero frequency inside a spectral image. 
+      In both cases, this causes visible aud audible aliasing in the band-pass filtered reconstructed signal (shown in orange and played).<br><br>
       In our example, this clearly leads to excluding $F_s$ from:
     </p>
 
@@ -351,9 +335,7 @@
     const els = {
       samplingSlider: document.getElementById("samplingSlider"),
       samplingVal: document.getElementById("samplingVal"),
-      originalAudio: document.getElementById("originalAudio"),
-      sampledAudio: document.getElementById("sampledAudio"),
-      reconstructedAudio: document.getElementById("reconstructedAudio"),
+      bandpassedAudio: new Audio(),
       errorbox: document.getElementById("errorbox")
     };
 
@@ -765,7 +747,18 @@
       el.dataset.prevUrl = url;
     }
 
-    function updateApp() {
+    function playBandpassedSignal(samples, fs) {
+      els.bandpassedAudio.pause();
+      updateAudio(els.bandpassedAudio, samples, fs);
+      els.bandpassedAudio.currentTime = 0;
+
+      const playPromise = els.bandpassedAudio.play();
+      if (playPromise && playPromise.catch) {
+        playPromise.catch(() => {});
+      }
+    }
+
+    function updateApp(playBandpassed = false) {
       try {
         els.errorbox.style.display = "none";
 
@@ -819,9 +812,9 @@
           reconstructedSignalShortArr
         );
 
-        updateAudio(els.originalAudio, signal, pseudoSamplingRate);
-        updateAudio(els.sampledAudio, sampledSignal, samplingRate);
-        updateAudio(els.reconstructedAudio, reconstructedSignal, pseudoSamplingRate);
+        if (playBandpassed) {
+          playBandpassedSignal(reconstructedSignal, pseudoSamplingRate);
+        }
 
         if (window.MathJax && window.MathJax.typesetPromise) {
           window.MathJax.typesetPromise().catch(err => showError("MathJax error: " + err.message));
@@ -833,7 +826,7 @@
 
     function init() {
       try {
-        els.samplingSlider.addEventListener("input", updateApp);
+        els.samplingSlider.addEventListener("input", () => updateApp(true));
         updateApp();
       } catch (err) {
         showError("Error: " + err.message);
