@@ -31,7 +31,7 @@ Streamlit has been used for the design of most iDSP apps, and then transformed i
 | <a href="./circular_convolution.htm"><img src="./circular_convolution_300.jpg" /></a>  | [Circular convolution](./circular_convolution.htm) / [Git](https://github.com/thierrydutoit/circular_convolution)  |
 | <a href="./power_periodic.htm"><img src="./power_periodic_300.jpg" /></a>  | [Power of a periodic signal](./power_periodic.htm) / [Git](https://github.com/thierrydutoit/power_periodic)  |
 | <a href="./power_periodic_discrete.htm"><img src="./power_periodic_discrete_300.jpg" /></a>  | [Power of a discrete periodic signal](./power_periodic_discrete.htm) |
-| <a href="./snr.htm"><img src="./snr_audio_300.jpg" /></a>  | [Signal-to-Noise ratio (audio)](./snr.htm) |
+| <a href="./snr.htm"><img src="./snr_audio_300.jpg" /></a>  | [Signal-to-Noise ratio](./snr.htm) |
 | <a href="https://idmil.github.io/DigitalAudioWorkbench/quantization/"><img src="./quantization_300.jpg" /></a> | [Quantization and dithering](https://idmil.github.io/DigitalAudioWorkbench/quantization/) / [Video](https://www.youtube.com/watch?v=E5aPP7KB5F4) / [Git](https://github.com/idmil/dawb) / [Paper](https://dl.acm.org/doi/abs/10.1145/3478384.3478397) |
 | <a href="./1bit_6dB.htm"><img src="./1bit_6dB_300.jpg" /></a>  | [Quantization noise](./1bit_6dB.htm) |
 | <a href="./downsampling.htm"><img src="./downsampling_300.jpg" /></a>  | [Downsampling](./downsampling.htm) / [Git](https://github.com/thierrydutoit/downsampling)  |
