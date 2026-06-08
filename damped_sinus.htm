@@ -259,10 +259,7 @@
     <div id="signalPlot"></div>
   </div>
 
-  <div class="audio-block">
-    <p class="audio-label">Damped sine wave</p>
-    <audio id="signalAudio" controls></audio>
-  </div>
+  <audio id="signalAudio" preload="auto" style="display:none"></audio>
 
   <details>
     <summary>Open for comments</summary>
@@ -430,7 +427,7 @@
       el.dataset.prevUrl = url;
     }
 
-    function updateApp() {
+    function updateApp(playSound = false) {
       setSliderUI(els.tauSlider, els.tauVal, 2);
 
       const tau = Number(els.tauSlider.value);
@@ -438,6 +435,12 @@
 
       renderSignalPlot(t, signal, tau);
       updateAudio(els.signalAudio, signal, fe);
+
+      if (playSound) {
+        els.signalAudio.pause();
+        els.signalAudio.currentTime = 0;
+        els.signalAudio.play().catch(() => {});
+      }
 
       if (window.MathJax && window.MathJax.typesetPromise) {
         window.MathJax.typesetPromise([els.signalPlotTitle]).catch(err => showError("MathJax error: " + err.message));
@@ -450,7 +453,9 @@
           await window.MathJax.startup.promise;
         }
 
-        els.tauSlider.addEventListener("input", updateApp);
+        els.tauSlider.addEventListener("input", function () {
+          updateApp(true);
+        });
         updateApp();
       } catch (err) {
         showError("Error: " + err.message);
