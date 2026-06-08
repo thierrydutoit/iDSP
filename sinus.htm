@@ -296,10 +296,7 @@
     <div id="signalPlot"></div>
   </div>
 
-  <div class="audio-block">
-    <p class="audio-label">Sine wave</p>
-    <audio id="signalAudio" controls></audio>
-  </div>
+  <audio id="signalAudio" preload="auto" style="display:none"></audio>
 
   <details>
     <summary>Open for comments</summary>
@@ -470,7 +467,7 @@
       el.dataset.prevUrl = url;
     }
 
-    function updateApp() {
+    function updateApp(playSignal = false) {
       setSliderUI(els.aSlider, els.aVal, 1);
       setSliderUI(els.fSlider, els.fVal, 0);
       setSliderUI(els.phiSlider, els.phiVal, 2);
@@ -484,6 +481,12 @@
       renderSignalPlot(t, signal);
       updateAudio(els.signalAudio, signal, fe);
 
+      if (playSignal) {
+        els.signalAudio.pause();
+        els.signalAudio.currentTime = 0;
+        els.signalAudio.play().catch(() => {});
+      }
+
       if (window.MathJax && window.MathJax.typesetPromise) {
         window.MathJax.typesetPromise([els.signalPlotTitle]).catch(err => showError("MathJax error: " + err.message));
       }
@@ -496,7 +499,9 @@
         }
 
         [els.aSlider, els.fSlider, els.phiSlider].forEach(el => {
-          el.addEventListener("input", updateApp);
+          el.addEventListener("input", function () {
+            updateApp(true);
+          });
         });
 
         updateApp();
