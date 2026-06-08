@@ -332,7 +332,7 @@
       <div class="slider-wrap">
         <div class="slider-value-bubble" id="snrValueBubble">40</div>
 
-        <input id="snrSlider" type="range" min="-20" max="40" step="10" value="40" />
+        <input id="snrSlider" type="range" min="-20" max="40" step="1" value="40" />
 
         <div class="slider-limits">
           <span>-20</span>
@@ -727,17 +727,6 @@
     updateApp(true);
   });
 
-  modeToggle.addEventListener("change", function () {
-    updateApp(false);
-  });
-
-  document.addEventListener("pointerdown", function () {
-    playNoisySignal();
-  });
-
-  document.addEventListener("keydown", function () {
-    playNoisySignal();
-  });
 
   updateSliderDisplay();
   loadImageFile();
