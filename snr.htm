@@ -727,6 +727,10 @@
     updateApp(true);
   });
 
+  modeToggle.addEventListener("change", function () {
+    updateApp(false);
+  });
+
 
   updateSliderDisplay();
   loadImageFile();
