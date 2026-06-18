@@ -26,6 +26,7 @@ If you want to create an iDSP app using the python StreamLit Library, or using A
 | <a href="./cos_as_sum_of_exp.htm"><img src="./cos_as_sum_of_exp_300.jpg" /></a> | [Cos as the sum of phasors](./cos_as_sum_of_exp.htm) |
 | <a href="./sinus.htm"><img src="./sinus_300.jpg" /></a> | [Sine wave](./sinus.htm) / [Git](https://github.com/thierrydutoit/sine-wave)  |
 | <a href="./sum_of_sinus.htm"><img src="./sum_of_sinus_300.jpg" /></a> | [Sum of sinusoids](./sum_of_sinus.htm) / [Git](https://github.com/thierrydutoit/sum_of_sinus)  |
+| <a href="./bode_geometric.htm"><img src="./bode_geometric_300.jpg" /></a> | [Bode Plots (Analog)](./bode_geometric.htm) |
 | <a href="./damped_sinus.htm"><img src="./damped_sinus_300.jpg" /></a> | [Damped sine wave](./damped_sinus.htm) / [Git](https://github.com/thierrydutoit/damped_sinus)  |
 | <a href="./dirac.htm"><img src="./dirac_300.jpg" /></a>  | [Measuring time content](./dirac.htm) / [Git](https://github.com/thierrydutoit/dirac-as-a-limit)  |
 | <a href="./scalar_product_periodic.htm"><img src="./scalar-product-periodic-300.jpg" /></a>  | [Measuring frequency content](./scalar_product_periodic.htm) / [Git](https://github.com/thierrydutoit/scalar_product_periodic)  |
