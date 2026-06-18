@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bode Plot – Geometric Interpretation</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #262730;
+      --muted: #6b7280;
+      --accent: #ff4b4b;
+      --blue: #1f77b4;
+      --red: #d62728;
+      --green: #2ca02c;
+      --purple: #7f3fbf;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 2.5rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .controls {
+      margin: 1rem 0 1.2rem;
+      padding: 0.2rem 0 0.2rem;
+      position: relative;
+    }
+
+    .control label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding-top: 1.6rem;
+      padding-bottom: 1.4rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      margin: 0;
+    }
+
+    .slider-minmax {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .slider-bubble {
+      position: absolute;
+      top: 0;
+      transform: translateX(-50%);
+      background: transparent;
+      color: var(--text);
+      font-size: 0.92rem;
+      white-space: nowrap;
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .plot-card {
+      background: transparent;
+      padding: 0;
+      border: none;
+      box-shadow: none;
+    }
+
+    .plot-title {
+      padding: 0 0 0.35rem 0.1rem;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .chart {
+      width: 100%;
+      height: 520px;
+      background: transparent;
+    }
+
+    details.notes {
+      margin-top: 1rem;
+    }
+
+    details.notes summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 0.2rem 0;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    details.notes summary::-webkit-details-marker { display: none; }
+
+    details.notes summary::after {
+      content: '▾';
+      margin-left: 0.5rem;
+      color: var(--muted);
+    }
+
+    details.notes[open] summary::after { content: '▴'; }
+
+    .details-body {
+      padding: 0.4rem 0 0;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .chart { height: 460px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bode Plot – Geometric Interpretation</h1>
+    <div class="lead">
+      How are Bode plots related to the position of zeros and poles of a linear system?
+    </div>
+    <div class="lead">
+      Try it by yourself, for $H(s)=\dfrac{s^2+0.4s+100}{(s+1)(s^2+0.5s+25)}$
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <div class="slider-wrap">
+          <div class="slider-bubble" id="omegaBubble"></div>
+          <input id="omegaSlider" type="range" min="0" max="1000" step="1" value="500" />
+          <div class="slider-minmax">
+            <span id="omegaMinLabel"></span>
+            <span id="omegaMaxLabel"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="plot-card">
+        <div class="plot-title">Zero-pole plot</div>
+        <div id="pzPlot" class="chart"></div>
+      </div>
+
+      <div class="plot-card">
+        <div class="plot-title">Bode magnitude and phase</div>
+        <div id="bodePlot" class="chart"></div>
+      </div>
+    </div>
+
+    <details class="notes">
+      <summary>Comments</summary>
+      <div class="details-body" id="notes"></div>
+    </details>
+  </div>
+
+  <script>
+    const omegaMin = 1;
+    const omegaMax = 30;
+    const bodeSamples = 600;
+
+    const dampingNum = 0.4;
+    const dampingDen = 0.5;
+
+    const zeros = (() => {
+      const a = 1;
+      const b = dampingNum;
+      const c = 100;
+      const disc = b * b - 4 * a * c;
+      const imag = Math.sqrt(-disc) / (2 * a);
+      const real = -b / (2 * a);
+      return [
+        { re: real, im: imag, label: 'z₁' },
+        { re: real, im: -imag, label: 'z₂' }
+      ];
+    })();
+
+    const poles = (() => {
+      const a = 1;
+      const b = dampingDen;
+      const c = 25;
+      const disc = b * b - 4 * a * c;
+      const imag = Math.sqrt(-disc) / (2 * a);
+      const real = -b / (2 * a);
+      return [
+        { re: -1, im: 0, label: 'p₁' },
+        { re: real, im: imag, label: 'p₂' },
+        { re: real, im: -imag, label: 'p₃' }
+      ];
+    })();
+
+    const omegaSlider = document.getElementById('omegaSlider');
+    const omegaBubble = document.getElementById('omegaBubble');
+    const omegaMinLabel = document.getElementById('omegaMinLabel');
+    const omegaMaxLabel = document.getElementById('omegaMaxLabel');
+    const notes = document.getElementById('notes');
+
+    omegaMinLabel.textContent = omegaMin.toString();
+    omegaMaxLabel.textContent = omegaMax.toString();
+
+    function logspace(a, b, n) {
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        const t = i / (n - 1);
+        out.push(Math.pow(10, a + t * (b - a)));
+      }
+      return out;
+    }
+
+    function sliderToOmega(v) {
+      const t = v / 1000;
+      const logMin = Math.log10(omegaMin);
+      const logMax = Math.log10(omegaMax);
+      return Math.pow(10, logMin + t * (logMax - logMin));
+    }
+
+    function updateSliderBubble(omega) {
+      const min = parseFloat(omegaSlider.min);
+      const max = parseFloat(omegaSlider.max);
+      const val = parseFloat(omegaSlider.value);
+      const percent = (val - min) / (max - min);
+      omegaBubble.style.left = `${percent * 100}%`;
+      omegaBubble.textContent = `ω = ${omega.toFixed(3)}`;
+    }
+
+    function cmul(ar, ai, br, bi) {
+      return [ar * br - ai * bi, ar * bi + ai * br];
+    }
+
+    function cdiv(ar, ai, br, bi) {
+      const den = br * br + bi * bi;
+      return [
+        (ar * br + ai * bi) / den,
+        (ai * br - ar * bi) / den
+      ];
+    }
+
+    function transferAtOmega(omega) {
+      let Hre = 1;
+      let Him = 0;
+
+      for (const z of zeros) {
+        [Hre, Him] = cmul(Hre, Him, -z.re, omega - z.im);
+      }
+      for (const p of poles) {
+        [Hre, Him] = cdiv(Hre, Him, -p.re, omega - p.im);
+      }
+
+      const mag = Math.sqrt(Hre * Hre + Him * Him);
+      const phase = Math.atan2(Him, Hre) * 180 / Math.PI;
+      return { Hre, Him, mag, phase };
+    }
+
+    function vectorInfo(point, omega) {
+      const dx = -point.re;
+      const dy = omega - point.im;
+      const mag = Math.sqrt(dx * dx + dy * dy);
+      const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      return { dx, dy, mag, ang };
+    }
+
+    function bodeArrays() {
+      const omegas = logspace(Math.log10(omegaMin), Math.log10(omegaMax), bodeSamples);
+      const mags = [];
+      const phases = [];
+      for (const w of omegas) {
+        const H = transferAtOmega(w);
+        mags.push(20 * Math.log10(H.mag));
+        phases.push(H.phase);
+      }
+      return { omegas, mags, phases };
+    }
+
+    const bode = bodeArrays();
+
+    function renderNotes(omega, H, zeroInfos, poleInfos) {
+      const numProd = zeroInfos.map((z, i) => `N_${i + 1}`).join('\\,');
+      const denProd = poleInfos.map((p, i) => `D_${i + 1}`).join('\\,');
+      const alphaTerms = zeroInfos.map((z, i) => `\\alpha_${i + 1}`).join(' + ');
+      const betaTerms = poleInfos.map((p, i) => `\\beta_${i + 1}`).join(' + ');
+
+      const zeroLines = zeroInfos.map((z, i) =>
+        `<li>${zeros[i].label}: distance = ${z.mag.toFixed(3)}, angle = ${z.ang.toFixed(2)}°</li>`
+      ).join('');
+
+      const poleLines = poleInfos.map((p, i) =>
+        `<li>${poles[i].label}: distance = ${p.mag.toFixed(3)}, angle = ${p.ang.toFixed(2)}°</li>`
+      ).join('');
+
+      notes.innerHTML = String.raw`
+        <p>The transfer function of the system is:</p>
+        <p>$$H(p)=\frac{s^2+0.4s+100}{(s+1)(s^2+0.5s+25)}$$</p>
+
+        <p>At the current pulsation, its (complex) frequency response is given by:</p>
+        <p>$$H(j\omega)=\frac{(j\omega-z_1)(j\omega-z_2)}{(j\omega-p_1)(j\omega-p_2)(j\omega-p_3)}$$</p>
+
+        <p>The modulus and argument of this value are given by:</p>
+        <p>$$|H(j\omega)|=\frac{${numProd}}{${denProd}}$$</p>
+        <p>$$\arg\!\big(H(j\omega)\big)=${alphaTerms}-(${betaTerms})$$</p>
+
+        <p>
+          Magnitude is therefore obtained as the product of distances \(N_i\) from the zeros to \(j\omega\),
+          divided by the product of distances \(D_i\) from the poles to \(j\omega\).
+          Phase is obtained as the sum of the zero angles \(\alpha_i\) minus the sum of the pole angles \(\beta_i\).
+        </p>
+
+        <p><strong>Current pulsation:</strong> \(\omega = ${omega.toFixed(3)}\,\mathrm{rad/s}\)</p>
+        <p><strong>Magnitude:</strong> \(20\log_{10}|H(j\omega)| = ${(20 * Math.log10(H.mag)).toFixed(2)}\,\mathrm{dB}\)</p>
+        <p><strong>Phase:</strong> \(\arg(H(j\omega)) = ${H.phase.toFixed(2)}^\circ\)</p>
+
+        <p>
+          Its zeros are at
+          \(p=-0.2 \pm j\sqrt{99.96}\),
+          and its poles are at
+          \(p=-1\) and \(p=-0.25\pm j\sqrt{24.9375}\).
+        </p>
+
+        <p><strong>Zero contributions</strong></p>
+        <ul>${zeroLines}</ul>
+
+        <p><strong>Pole contributions</strong></p>
+        <ul>${poleLines}</ul>
+
+      `;
+    }
+
+    function render() {
+      const omega = sliderToOmega(parseInt(omegaSlider.value, 10));
+      updateSliderBubble(omega);
+
+      const H = transferAtOmega(omega);
+      const zeroInfos = zeros.map(z => vectorInfo(z, omega));
+      const poleInfos = poles.map(p => vectorInfo(p, omega));
+
+      renderNotes(omega, H, zeroInfos, poleInfos);
+
+      const pzData = [];
+
+      pzData.push({
+        x: zeros.map(z => z.re),
+        y: zeros.map(z => z.im),
+        mode: 'markers+text',
+        text: zeros.map(z => z.label),
+        textposition: 'top center',
+        marker: {
+          size: 16,
+          color: 'white',
+          line: { color: '#1f77b4', width: 2 }
+        },
+        name: 'Zeros',
+        hovertemplate: 'Zero %{text}<extra></extra>'
+      });
+
+      pzData.push({
+        x: poles.map(p => p.re),
+        y: poles.map(p => p.im),
+        mode: 'markers+text',
+        text: poles.map(p => p.label),
+        textposition: 'top center',
+        marker: {
+          size: 15,
+          color: '#d62728',
+          symbol: 'x-thin-open',
+          line: { width: 2 }
+        },
+        name: 'Poles',
+        hovertemplate: 'Pole %{text}<extra></extra>'
+      });
+
+      pzData.push({
+        x: [0],
+        y: [omega],
+        mode: 'markers+text',
+        text: ['jω'],
+        textposition: 'middle left',
+        marker: { size: 10, color: 'black' },
+        name: 'Current jω',
+        hovertemplate: 'jω<extra></extra>'
+      });
+
+      zeros.forEach((z, i) => {
+        pzData.push({
+          x: [z.re, 0],
+          y: [z.im, omega],
+          mode: 'lines',
+          line: { color: '#1f77b4', width: 3 },
+          name: i === 0 ? 'Zero vectors' : undefined,
+          showlegend: i === 0,
+          hoverinfo: 'skip'
+        });
+      });
+
+      poles.forEach((p, i) => {
+        pzData.push({
+          x: [p.re, 0],
+          y: [p.im, omega],
+          mode: 'lines',
+          line: { color: '#d62728', width: 3, dash: 'dot' },
+          name: i === 0 ? 'Pole vectors' : undefined,
+          showlegend: i === 0,
+          hoverinfo: 'skip'
+        });
+      });
+
+      const angleAnnotations = [];
+      zeros.forEach((z, i) => {
+        angleAnnotations.push({
+          x: z.re + (0 - z.re) * 0.38,
+          y: z.im + (omega - z.im) * 0.38,
+          text: `N${i + 1}`,
+          showarrow: false,
+          font: { color: '#1f77b4', size: 13 }
+        });
+      });
+
+      poles.forEach((p, i) => {
+        angleAnnotations.push({
+          x: p.re + (0 - p.re) * 0.38,
+          y: p.im + (omega - p.im) * 0.38,
+          text: `D${i + 1}`,
+          showarrow: false,
+          font: { color: '#d62728', size: 13 }
+        });
+      });
+
+      Plotly.react(
+        'pzPlot',
+        pzData,
+        {
+          margin: { l: 60, r: 20, t: 10, b: 50 },
+          xaxis: {
+            title: 'Re',
+            range: [-1.25, 0.25],
+            zeroline: true,
+            showgrid: true,
+            gridcolor: 'rgba(0,0,0,0.08)'
+          },
+          yaxis: {
+            title: 'Im',
+            range: [-11, 30],
+            zeroline: true,
+            showgrid: true,
+            gridcolor: 'rgba(0,0,0,0.08)'
+          },
+          legend: { x: 1, xanchor: 'right', y: 1 },
+          paper_bgcolor: 'white',
+          plot_bgcolor: 'white',
+          annotations: angleAnnotations,
+          shapes: [
+            {
+              type: 'line',
+              x0: 0, x1: 0,
+              y0: 0, y1: omega,
+              line: { color: 'black', width: 2 }
+            }
+          ]
+        },
+        { responsive: true, displayModeBar: false }
+      );
+
+      Plotly.react(
+        'bodePlot',
+        [
+          {
+            x: bode.omegas,
+            y: bode.mags,
+            mode: 'lines',
+            line: { color: '#2ca02c', width: 3 },
+            name: 'Magnitude [dB]',
+            xaxis: 'x',
+            yaxis: 'y'
+          },
+          {
+            x: [omega],
+            y: [20 * Math.log10(H.mag)],
+            mode: 'markers',
+            marker: { color: '#2ca02c', size: 10 },
+            name: 'Current magnitude',
+            xaxis: 'x',
+            yaxis: 'y'
+          },
+          {
+            x: bode.omegas,
+            y: bode.phases,
+            mode: 'lines',
+            line: { color: '#7f3fbf', width: 3 },
+            name: 'Phase [deg]',
+            xaxis: 'x2',
+            yaxis: 'y2'
+          },
+          {
+            x: [omega],
+            y: [H.phase],
+            mode: 'markers',
+            marker: { color: '#7f3fbf', size: 10 },
+            name: 'Current phase',
+            xaxis: 'x2',
+            yaxis: 'y2'
+          }
+        ],
+        {
+          margin: { l: 60, r: 20, t: 20, b: 50 },
+          grid: {
+            rows: 2,
+            columns: 1,
+            pattern: 'independent',
+            roworder: 'top to bottom'
+          },
+          xaxis: {
+            type: 'log',
+            title: 'ω [rad/s]',
+            range: [Math.log10(1), Math.log10(30)],
+            showgrid: true,
+            gridcolor: 'rgba(0,0,0,0.08)'
+          },
+          yaxis: {
+            title: 'Magnitude [dB]',
+            showgrid: true,
+            gridcolor: 'rgba(0,0,0,0.08)'
+          },
+          xaxis2: {
+            type: 'log',
+            title: 'ω [rad/s]',
+            range: [Math.log10(1), Math.log10(30)],
+            showgrid: true,
+            gridcolor: 'rgba(0,0,0,0.08)'
+          },
+          yaxis2: {
+            title: 'Phase [deg]',
+            showgrid: true,
+            gridcolor: 'rgba(0,0,0,0.08)'
+          },
+          legend: { x: 1, xanchor: 'right', y: 1 },
+          paper_bgcolor: 'white',
+          plot_bgcolor: 'white',
+          shapes: [
+            {
+              type: 'line',
+              x0: omega,
+              x1: omega,
+              y0: 0,
+              y1: 1,
+              xref: 'x',
+              yref: 'paper',
+              line: { color: 'rgba(0,0,0,0.35)', dash: 'dot', width: 1.4 }
+            }
+          ]
+        },
+        { responsive: true, displayModeBar: false }
+      );
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([document.body]).catch(() => {});
+      }
+    }
+
+    omegaSlider.addEventListener('input', render);
+    window.addEventListener('resize', () => {
+      const omega = sliderToOmega(parseInt(omegaSlider.value, 10));
+      updateSliderBubble(omega);
+    });
+    render();
+  </script>
+</body>
+</html>
