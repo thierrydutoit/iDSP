@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discrete-Time Bode Plot – Geometric Interpretation</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #262730;
+      --muted: #6b7280;
+      --accent: #ff4b4b;
+      --blue: #1f77b4;
+      --red: #d62728;
+      --green: #2ca02c;
+      --purple: #7f3fbf;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 2.5rem;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+      letter-spacing: -0.02em;
+    }
+    .lead {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .controls {
+      margin: 1rem 0 1.2rem;
+      padding: 0.2rem 0 0.2rem;
+      position: relative;
+    }
+    .control label {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+    }
+    .slider-wrap {
+      position: relative;
+      padding-top: 1.6rem;
+      padding-bottom: 1.4rem;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      margin: 0;
+    }
+    .slider-minmax {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 0.35rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .slider-bubble {
+      position: absolute;
+      top: 0;
+      transform: translateX(-50%);
+      background: transparent;
+      color: var(--text);
+      font-size: 0.92rem;
+      white-space: nowrap;
+      pointer-events: none;
+      font-weight: 500;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      align-items: start;
+    }
+    .plot-card {
+      background: transparent;
+      padding: 0;
+      border: none;
+      box-shadow: none;
+    }
+    .plot-title {
+      padding: 0 0 0.35rem 0.1rem;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .chart {
+      width: 100%;
+      height: 520px;
+      background: transparent;
+    }
+    details.notes {
+      margin-top: 1rem;
+    }
+    details.notes summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 0.2rem 0;
+      font-weight: 600;
+      user-select: none;
+    }
+    details.notes summary::-webkit-details-marker { display: none; }
+    details.notes summary::after {
+      content: '▾';
+      margin-left: 0.5rem;
+      color: var(--muted);
+    }
+    details.notes[open] summary::after { content: '▴'; }
+    .details-body {
+      padding: 0.4rem 0 0;
+      line-height: 1.6;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .chart { height: 460px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Discrete-Time Bode Plot – Geometric Interpretation</h1>
+
+    <div class="lead">
+      How are frequency responses related to the positions of zeros and poles of a discrete-time linear system?
+    </div>
+    <div class="lead">
+      Try it by yourself, for
+      $$
+      H(z)=\frac{0.05517241-0.01050903z^{-1}-0.01138478z^{-2}+0.05429666z^{-3}}
+      {1-2.62889984z^{-1}+2.51395731z^{-2}-0.86316366z^{-3}}
+      $$
+      The current frequency point is \(z=e^{j\phi}\) on the <strong>unit circle</strong>.
+    </div>
+
+    <div class="controls">
+      <div class="control">
+        <div class="slider-wrap">
+          <div class="slider-bubble" id="phiBubble"></div>
+          <input id="phiSlider" type="range" min="0" max="1000" step="1" value="500" />
+          <div class="slider-minmax">
+            <span id="phiMinLabel"></span>
+            <span id="phiMaxLabel"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="plot-card">
+        <div class="plot-title">Zero-pole plot on the z-plane</div>
+        <div id="pzPlot" class="chart"></div>
+      </div>
+
+      <div class="plot-card">
+        <div class="plot-title">Magnitude and phase versus \(\phi\)</div>
+        <div id="bodePlot" class="chart"></div>
+      </div>
+    </div>
+
+    <details class="notes">
+      <summary>Comments</summary>
+      <div class="details-body" id="notes"></div>
+    </details>
+  </div>
+
+  <script>
+    const phiMin = 0;
+    const phiMax = Math.PI;
+    const bodeSamples = 700;
+
+    const b = [0.05517241, -0.01050903, -0.01138478, 0.05429666];
+    const a = [1.0, -2.62889984, 2.51395731, -0.86316366];
+
+    const phiSlider = document.getElementById('phiSlider');
+    const phiBubble = document.getElementById('phiBubble');
+    const phiMinLabel = document.getElementById('phiMinLabel');
+    const phiMaxLabel = document.getElementById('phiMaxLabel');
+    const notes = document.getElementById('notes');
+
+    phiMinLabel.textContent = '0';
+    phiMaxLabel.textContent = 'π';
+
+    function linspace(a, b, n) {
+      const out = [];
+      for (let i = 0; i < n; i++) out.push(a + (b - a) * i / (n - 1));
+      return out;
+    }
+
+    function sliderToPhi(v) {
+      return phiMin + (phiMax - phiMin) * (v / 1000);
+    }
+
+    function updateSliderBubble(phi) {
+      const min = parseFloat(phiSlider.min);
+      const max = parseFloat(phiSlider.max);
+      const val = parseFloat(phiSlider.value);
+      const percent = (val - min) / (max - min);
+      phiBubble.style.left = `${percent * 100}%`;
+      phiBubble.textContent = `φ = ${phi.toFixed(3)}`;
+    }
+
+    function evalPolyAt(zre, zim, coeffs) {
+      let re = 0, im = 0;
+      for (let k = 0; k < coeffs.length; k++) {
+        const angle = -k * Math.atan2(zim, zre);
+        const r = Math.sqrt(zre * zre + zim * zim);
+        const mag = Math.pow(r, -k);
+        const tr = mag * Math.cos(angle);
+        const ti = mag * Math.sin(angle);
+        re += coeffs[k] * tr;
+        im += coeffs[k] * ti;
+      }
+      return { re, im };
+    }
+
+    function transferAtPhi(phi) {
+      const zre = Math.cos(phi);
+      const zim = Math.sin(phi);
+
+      const num = evalPolyAt(zre, zim, b);
+      const den = evalPolyAt(zre, zim, a);
+
+      const denMag2 = den.re * den.re + den.im * den.im;
+      const Hre = (num.re * den.re + num.im * den.im) / denMag2;
+      const Him = (num.im * den.re - num.re * den.im) / denMag2;
+
+      const mag = Math.sqrt(Hre * Hre + Him * Him);
+      const phase = Math.atan2(Him, Hre) * 180 / Math.PI;
+      return { Hre, Him, mag, phase, zre, zim };
+    }
+
+    function polyEval(coeffs, z) {
+      let out = { re: coeffs[0], im: 0 };
+      for (let i = 1; i < coeffs.length; i++) {
+        const newRe = out.re * z.re - out.im * z.im + coeffs[i];
+        const newIm = out.re * z.im + out.im * z.re;
+        out = { re: newRe, im: newIm };
+      }
+      return out;
+    }
+
+    function csub(x, y) { return { re: x.re - y.re, im: x.im - y.im }; }
+    function cmul(x, y) { return { re: x.re * y.re - x.im * y.im, im: x.re * y.im + x.im * y.re }; }
+    function cdiv(x, y) {
+      const d = y.re * y.re + y.im * y.im;
+      return { re: (x.re * y.re + x.im * y.im) / d, im: (x.im * y.re - x.re * y.im) / d };
+    }
+    function cabs(x) { return Math.hypot(x.re, x.im); }
+
+    function findRoots(coeffs) {
+      const n = coeffs.length - 1;
+      let roots = [];
+      const radius = 0.5;
+      for (let k = 0; k < n; k++) {
+        const th = 2 * Math.PI * k / n;
+        roots.push({ re: radius * Math.cos(th), im: radius * Math.sin(th) });
+      }
+
+      for (let iter = 0; iter < 120; iter++) {
+        let maxDelta = 0;
+        const next = [];
+        for (let i = 0; i < n; i++) {
+          let denom = { re: 1, im: 0 };
+          for (let j = 0; j < n; j++) {
+            if (i !== j) denom = cmul(denom, csub(roots[i], roots[j]));
+          }
+          const p = polyEval(coeffs, roots[i]);
+          const delta = cdiv(p, denom);
+          const newRoot = csub(roots[i], delta);
+          maxDelta = Math.max(maxDelta, cabs(delta));
+          next.push(newRoot);
+        }
+        roots = next;
+        if (maxDelta < 1e-12) break;
+      }
+      return roots;
+    }
+
+    const zeroRoots = findRoots([b[0], b[1], b[2], b[3]]).map((r, i) => ({
+      re: r.re, im: r.im, label: `z${i + 1}`
+    }));
+
+    const poleRoots = findRoots([a[0], a[1], a[2], a[3]]).map((r, i) => ({
+      re: r.re, im: r.im, label: `p${i + 1}`
+    }));
+
+    function vectorInfo(point, zre, zim) {
+      const dx = zre - point.re;
+      const dy = zim - point.im;
+      const mag = Math.sqrt(dx * dx + dy * dy);
+      const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      return { dx, dy, mag, ang };
+    }
+
+    function bodeArrays() {
+      const phis = linspace(phiMin, phiMax, bodeSamples);
+      const mags = [];
+      const phases = [];
+      for (const w of phis) {
+        const H = transferAtPhi(w);
+        mags.push(20 * Math.log10(H.mag));
+        phases.push(H.phase);
+      }
+      return { phis, mags, phases };
+    }
+
+    const bode = bodeArrays();
+
+    function phiTickText(vals) {
+      return vals.map(v => {
+        if (Math.abs(v) < 1e-9) return '0';
+        if (Math.abs(v - Math.PI/2) < 1e-3) return 'π/2';
+        if (Math.abs(v - Math.PI) < 1e-3) return 'π';
+        return v.toFixed(2);
+      });
+    }
+
+    function fmtComplex(r) {
+      const re = r.re.toFixed(6);
+      const im = Math.abs(r.im).toFixed(6);
+      const sign = r.im >= 0 ? '+' : '-';
+      return `${re} ${sign} j${im}`;
+    }
+
+    function renderNotes(phi, H, zeroInfos, poleInfos) {
+      const numProd = zeroInfos.map((z, i) => `N_${i + 1}`).join('\\,');
+      const denProd = poleInfos.map((p, i) => `D_${i + 1}`).join('\\,');
+      const alphaTerms = zeroInfos.map((z, i) => `\\alpha_${i + 1}`).join(' + ');
+      const betaTerms = poleInfos.map((p, i) => `\\beta_${i + 1}`).join(' + ');
+
+      const zeroLines = zeroInfos.map((z, i) =>
+        `<li>${zeroRoots[i].label}: distance = ${z.mag.toFixed(6)}, angle = ${z.ang.toFixed(2)}°</li>`
+      ).join('');
+
+      const poleLines = poleInfos.map((p, i) =>
+        `<li>${poleRoots[i].label}: distance = ${p.mag.toFixed(6)}, angle = ${p.ang.toFixed(2)}°</li>`
+      ).join('');
+
+      notes.innerHTML = String.raw`
+        <p>The transfer function of the discrete-time system is:</p>
+        <p>$$
+        H(z)=\frac{0.05517241-0.01050903z^{-1}-0.01138478z^{-2}+0.05429666z^{-3}}
+        {1-2.62889984z^{-1}+2.51395731z^{-2}-0.86316366z^{-3}}
+        $$</p>
+
+        <p>On the unit circle, the frequency response is obtained for \(z=e^{j\phi}\):</p>
+        <p>$$H(e^{j\phi})=\frac{(e^{j\phi}-z_1)(e^{j\phi}-z_2)(e^{j\phi}-z_3)}
+        {(e^{j\phi}-p_1)(e^{j\phi}-p_2)(e^{j\phi}-p_3)}$$</p>
+
+        <p>Its modulus and argument are therefore:</p>
+        <p>$$|H(e^{j\phi})|=\frac{${numProd}}{${denProd}}$$</p>
+        <p>$$\arg\!\big(H(e^{j\phi})\big)=${alphaTerms}-(${betaTerms})$$</p>
+
+        <p>
+          Magnitude is thus obtained as the product of distances \(N_i\) from the zeros to \(e^{j\phi}\),
+          divided by the product of distances \(D_i\) from the poles to \(e^{j\phi}\).
+          Phase is obtained as the sum of the arguments \(\alpha_i\) of the \(N_i\) vectors minus the sum of the arguments \(\beta_i\) of the \(D_i\) vectors.
+        </p>
+        <p>
+          For the system examined here, the magnitude of the frequency response: 
+          <ul>
+             <li>Starts from \(20\log_{10}|H(1)| \approx 20\log_{10}4 = 12\) dB, 
+             <li>Shows a peak when \(e^{j\phi}\) gets close to a pole (since the corresponding \(D_i\) reaches a minimum), i.e. for \(\phi \approx\ \pi/6\) rad 
+             <li>Shows a dip when \(e^{j\phi}\) gets close to a zero (since the corresponding \(N_i\) reaches a minimum), i.e. for \(\phi \approx\ \pi/3\) rad 
+	     <li>Tends to \(20\log_{10}|H(-1)| = -\infty\) dB (not shown on the plot)
+          </ul>        
+        </p>
+
+        <p><strong>Current pulsation:</strong> \(\phi = ${phi.toFixed(3)}\,\mathrm{rad/sample}\)</p>
+        <p><strong>Current point:</strong> \(e^{j\phi}= ${H.zre.toFixed(6)} + j${H.zim.toFixed(6)}\)</p>
+        <p><strong>Magnitude:</strong> \(20\log_{10}|H(e^{j\phi})| = ${(20 * Math.log10(H.mag)).toFixed(2)}\,\mathrm{dB}\)</p>
+        <p><strong>Phase:</strong> \(\arg(H(e^{j\phi})) = ${H.phase.toFixed(2)}^\circ\)</p>
+
+        <p><strong>Zero contributions</strong></p>
+        <ul>${zeroLines}</ul>
+
+        <p><strong>Pole contributions</strong></p>
+        <ul>${poleLines}</ul>
+      `;
+    }
+
+    function render() {
+      const phi = sliderToPhi(parseInt(phiSlider.value, 10));
+      updateSliderBubble(phi);
+
+      const H = transferAtPhi(phi);
+      const zeroInfos = zeroRoots.map(z => vectorInfo(z, H.zre, H.zim));
+      const poleInfos = poleRoots.map(p => vectorInfo(p, H.zre, H.zim));
+
+      renderNotes(phi, H, zeroInfos, poleInfos);
+
+      const theta = linspace(0, 2 * Math.PI, 400);
+      const ucx = theta.map(t => Math.cos(t));
+      const ucy = theta.map(t => Math.sin(t));
+
+      const pzData = [
+        {
+          x: ucx,
+          y: ucy,
+          mode: 'lines',
+          line: { color: 'black', width: 2 },
+          name: 'Unit circle',
+          hoverinfo: 'skip'
+        },
+        {
+          x: zeroRoots.map(z => z.re),
+          y: zeroRoots.map(z => z.im),
+          mode: 'markers+text',
+          text: zeroRoots.map(z => z.label),
+          textposition: 'top center',
+          marker: {
+            size: 16,
+            color: 'white',
+            line: { color: '#1f77b4', width: 2 }
+          },
+          name: 'Zeros',
+          hovertemplate: 'Zero %{text}<extra></extra>'
+        },
+        {
+          x: poleRoots.map(p => p.re),
+          y: poleRoots.map(p => p.im),
+          mode: 'markers+text',
+          text: poleRoots.map(p => p.label),
+          textposition: 'top center',
+          marker: {
+            size: 15,
+            color: '#d62728',
+            symbol: 'x-thin-open',
+            line: { width: 2 }
+          },
+          name: 'Poles',
+          hovertemplate: 'Pole %{text}<extra></extra>'
+        },
+        {
+          x: [H.zre],
+          y: [H.zim],
+          mode: 'markers+text',
+          text: ['e^{jφ}'],
+          textposition: 'middle right',
+          marker: { size: 10, color: 'black' },
+          name: 'Current e^{jφ}',
+          hovertemplate: 'e^{jφ}<extra></extra>'
+        }
+      ];
+
+      zeroRoots.forEach((z, i) => {
+        pzData.push({
+          x: [z.re, H.zre],
+          y: [z.im, H.zim],
+          mode: 'lines',
+          line: { color: '#1f77b4', width: 3 },
+          name: i === 0 ? 'Zero vectors' : undefined,
+          showlegend: i === 0,
+          hoverinfo: 'skip'
+        });
+      });
+
+      poleRoots.forEach((p, i) => {
+        pzData.push({
+          x: [p.re, H.zre],
+          y: [p.im, H.zim],
+          mode: 'lines',
+          line: { color: '#d62728', width: 3, dash: 'dot' },
+          name: i === 0 ? 'Pole vectors' : undefined,
+          showlegend: i === 0,
+          hoverinfo: 'skip'
+        });
+      });
+
+      const angleAnnotations = [];
+      zeroRoots.forEach((z, i) => {
+        angleAnnotations.push({
+          x: z.re + (H.zre - z.re) * 0.38,
+          y: z.im + (H.zim - z.im) * 0.38,
+          text: `N${i + 1}`,
+          showarrow: false,
+          font: { color: '#1f77b4', size: 13 }
+        });
+      });
+
+      poleRoots.forEach((p, i) => {
+        angleAnnotations.push({
+          x: p.re + (H.zre - p.re) * 0.38,
+          y: p.im + (H.zim - p.im) * 0.38,
+          text: `D${i + 1}`,
+          showarrow: false,
+          font: { color: '#d62728', size: 13 }
+        });
+      });
+
+      Plotly.react('pzPlot', pzData, {
+        margin: { l: 60, r: 20, t: 10, b: 50 },
+        xaxis: {
+          title: 'Re',
+          range: [-1.2, 1.2],
+          zeroline: true,
+          showgrid: true,
+          gridcolor: 'rgba(0,0,0,0.08)'
+        },
+        yaxis: {
+          title: 'Im',
+          range: [-1.2, 1.2],
+          zeroline: true,
+          showgrid: true,
+          gridcolor: 'rgba(0,0,0,0.08)',
+          scaleanchor: 'x',
+          scaleratio: 1
+        },
+        legend: { x: 0, xanchor: 'left', y: 1 },
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white',
+        annotations: angleAnnotations
+      }, { responsive: true, displayModeBar: false });
+
+      const tickVals = [0, Math.PI / 2, Math.PI];
+      const tickText = phiTickText(tickVals);
+
+      Plotly.react('bodePlot', [
+        {
+          x: bode.phis,
+          y: bode.mags,
+          mode: 'lines',
+          line: { color: '#2ca02c', width: 3 },
+          name: 'Magnitude [dB]',
+          xaxis: 'x',
+          yaxis: 'y'
+        },
+        {
+          x: [phi],
+          y: [20 * Math.log10(H.mag)],
+          mode: 'markers',
+          marker: { color: '#2ca02c', size: 10 },
+          name: 'Current magnitude',
+          xaxis: 'x',
+          yaxis: 'y'
+        },
+        {
+          x: bode.phis,
+          y: bode.phases,
+          mode: 'lines',
+          line: { color: '#7f3fbf', width: 3 },
+          name: 'Phase [deg]',
+          xaxis: 'x2',
+          yaxis: 'y2'
+        },
+        {
+          x: [phi],
+          y: [H.phase],
+          mode: 'markers',
+          marker: { color: '#7f3fbf', size: 10 },
+          name: 'Current phase',
+          xaxis: 'x2',
+          yaxis: 'y2'
+        }
+      ], {
+        margin: { l: 60, r: 20, t: 20, b: 50 },
+        grid: { rows: 2, columns: 1, pattern: 'independent', roworder: 'top to bottom' },
+        xaxis: {
+          title: 'φ [rad/sample]',
+          range: [0, Math.PI],
+          tickmode: 'array',
+          tickvals: tickVals,
+          ticktext: tickText,
+          showgrid: true,
+          gridcolor: 'rgba(0,0,0,0.08)'
+        },
+        yaxis: {
+          title: 'Magnitude [dB]',
+          range: [-60,30],
+          showgrid: true,
+          gridcolor: 'rgba(0,0,0,0.08)'
+        },
+        xaxis2: {
+          title: 'φ [rad/sample]',
+          range: [0, Math.PI],
+          tickmode: 'array',
+          tickvals: tickVals,
+          ticktext: tickText,
+          showgrid: true,
+          gridcolor: 'rgba(0,0,0,0.08)'
+        },
+        yaxis2: {
+          title: 'Phase [deg]',
+          showgrid: true,
+          gridcolor: 'rgba(0,0,0,0.08)'
+        },
+        legend: { x: 1, xanchor: 'right', y: 1 },
+        paper_bgcolor: 'white',
+        plot_bgcolor: 'white',
+        shapes: [
+          {
+            type: 'line',
+            x0: phi,
+            x1: phi,
+            y0: 0,
+            y1: 1,
+            xref: 'x',
+            yref: 'paper',
+            line: { color: 'rgba(0,0,0,0.35)', dash: 'dot', width: 1.4 }
+          }
+        ]
+      }, { responsive: true, displayModeBar: false });
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([document.body]).catch(() => {});
+      }
+    }
+
+    phiSlider.addEventListener('input', render);
+    window.addEventListener('resize', () => {
+      const phi = sliderToPhi(parseInt(phiSlider.value, 10));
+      updateSliderBubble(phi);
+    });
+    render();
+  </script>
+</body>
+</html>

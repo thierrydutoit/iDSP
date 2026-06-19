@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bode Plot – Geometric Interpretation</title>
+  <title>Continuous-Time Bode Plot – Geometric Interpretation</title>
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
   <script>
     window.MathJax = {
@@ -161,19 +161,19 @@
 </head>
 <body>
   <div class="container">
-    <h1>Bode Plot – Geometric Interpretation</h1>
+    <h1>Continuous-Time Bode Plot – Geometric Interpretation</h1>
     <div class="lead">
-      How are Bode plots related to the position of zeros and poles of a linear system?
+      How is the frequency response of a continuous-time linear system related to the position of its zeros and poles?
     </div>
     <div class="lead">
-      Try it by yourself, for $H(s)=\dfrac{s^2+0.4s+100}{(s+1)(s^2+0.5s+25)}$
+      Try it by yourself, for $H(s)=\dfrac{s^2+0.2s+100}{(s+1)(s^2+0.5s+25)}$
     </div>
 
     <div class="controls">
       <div class="control">
         <div class="slider-wrap">
           <div class="slider-bubble" id="omegaBubble"></div>
-          <input id="omegaSlider" type="range" min="0" max="1000" step="1" value="500" />
+          <input id="omegaSlider" type="range" min="0" max="1000" step="1" value="100" />
           <div class="slider-minmax">
             <span id="omegaMinLabel"></span>
             <span id="omegaMaxLabel"></span>
@@ -201,11 +201,11 @@
   </div>
 
   <script>
-    const omegaMin = 1;
-    const omegaMax = 30;
+    const omegaMin = 0.5;
+    const omegaMax = 50;
     const bodeSamples = 600;
 
-    const dampingNum = 0.4;
+    const dampingNum = 0.2;
     const dampingDen = 0.5;
 
     const zeros = (() => {
@@ -335,31 +335,34 @@
 
       notes.innerHTML = String.raw`
         <p>The transfer function of the system is:</p>
-        <p>$$H(p)=\frac{s^2+0.4s+100}{(s+1)(s^2+0.5s+25)}$$</p>
+        <p>$$H(p)=\frac{s^2+0.2s+100}{(s+1)(s^2+0.5s+25)}$$</p>
 
         <p>At the current pulsation, its (complex) frequency response is given by:</p>
         <p>$$H(j\omega)=\frac{(j\omega-z_1)(j\omega-z_2)}{(j\omega-p_1)(j\omega-p_2)(j\omega-p_3)}$$</p>
+        <p> with \(z_{1,2}=-0.2 \pm j\sqrt{99.96}\), \(p_1=-1\) and \(p_{2,3}=-0.25\pm j\sqrt{24.9375}\).</p>
 
         <p>The modulus and argument of this value are given by:</p>
         <p>$$|H(j\omega)|=\frac{${numProd}}{${denProd}}$$</p>
         <p>$$\arg\!\big(H(j\omega)\big)=${alphaTerms}-(${betaTerms})$$</p>
-
         <p>
           Magnitude is therefore obtained as the product of distances \(N_i\) from the zeros to \(j\omega\),
           divided by the product of distances \(D_i\) from the poles to \(j\omega\).
-          Phase is obtained as the sum of the zero angles \(\alpha_i\) minus the sum of the pole angles \(\beta_i\).
+          Phase is obtained as the sum of the arguments \(\alpha_i\) of the \(N_i\) vectors minus the sum of the arguments \(\beta_i\) of the \(D_i\) vectors.
+        </p>
+        <p>
+          For the system examined here, the magnitude of the frequency response: 
+          <ul>
+             <li>Starts from \(20\log_{10}|H(0)| = 20\log_{10}4 = 12\) dB, 
+             <li>Shows a peak when \(j\omega\) gets close to a pole (since the corresponding \(D_i\) reaches a minimum), i.e. for \(\omega \approx\) 5 rad/s 
+             <li>Shows a dip when \(j\omega\) gets close to a zero (since the corresponding \(N_i\) reaches a minimum), , i.e. for \(\omega \approx\) =10 rad/s
+	     <li>Tends to \(20\log_{10}|H(\infty)| = -\infty\) dB, with a slope of -20 dB per decade
+                 since we have 3 poles and 2 zeros (and the \(N_i\) of the 2 zeros is balanced by the \(D_i\) of 2 poles).
+          </ul>        
         </p>
 
         <p><strong>Current pulsation:</strong> \(\omega = ${omega.toFixed(3)}\,\mathrm{rad/s}\)</p>
         <p><strong>Magnitude:</strong> \(20\log_{10}|H(j\omega)| = ${(20 * Math.log10(H.mag)).toFixed(2)}\,\mathrm{dB}\)</p>
         <p><strong>Phase:</strong> \(\arg(H(j\omega)) = ${H.phase.toFixed(2)}^\circ\)</p>
-
-        <p>
-          Its zeros are at
-          \(p=-0.2 \pm j\sqrt{99.96}\),
-          and its poles are at
-          \(p=-1\) and \(p=-0.25\pm j\sqrt{24.9375}\).
-        </p>
 
         <p><strong>Zero contributions</strong></p>
         <ul>${zeroLines}</ul>
@@ -483,7 +486,7 @@
           },
           yaxis: {
             title: 'Im',
-            range: [-11, 30],
+            range: [-11, 50],
             zeroline: true,
             showgrid: true,
             gridcolor: 'rgba(0,0,0,0.08)'
@@ -555,7 +558,7 @@
           xaxis: {
             type: 'log',
             title: 'ω [rad/s]',
-            range: [Math.log10(1), Math.log10(30)],
+            range: [Math.log10(0.5), Math.log10(50)],
             showgrid: true,
             gridcolor: 'rgba(0,0,0,0.08)'
           },
@@ -567,7 +570,7 @@
           xaxis2: {
             type: 'log',
             title: 'ω [rad/s]',
-            range: [Math.log10(1), Math.log10(30)],
+            range: [Math.log10(0.5), Math.log10(50)],
             showgrid: true,
             gridcolor: 'rgba(0,0,0,0.08)'
           },
