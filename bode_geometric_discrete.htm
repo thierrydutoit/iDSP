@@ -313,19 +313,57 @@
       return { dx, dy, mag, ang };
     }
 
+    function unwrapPhaseDegrees(phases) {
+      const unwrapped = [phases[0]];
+
+      for (let i = 1; i < phases.length; i++) {
+        let delta = phases[i] - phases[i - 1];
+
+        if (delta > 180) {
+          delta -= 360;
+        } else if (delta < -180) {
+          delta += 360;
+        }
+
+        unwrapped.push(unwrapped[i - 1] + delta);
+      }
+
+      return unwrapped;
+    }
+
     function bodeArrays() {
       const phis = linspace(phiMin, phiMax, bodeSamples);
       const mags = [];
-      const phases = [];
+      const wrappedPhases = [];
+
       for (const w of phis) {
         const H = transferAtPhi(w);
         mags.push(20 * Math.log10(H.mag));
-        phases.push(H.phase);
+        wrappedPhases.push(H.phase);
       }
+
+      const phases = unwrapPhaseDegrees(wrappedPhases);
+
       return { phis, mags, phases };
     }
 
     const bode = bodeArrays();
+
+    function unwrappedPhaseAtPhi(phi) {
+      let bestIndex = 0;
+      let bestDistance = Infinity;
+
+      for (let i = 0; i < bode.phis.length; i++) {
+        const distance = Math.abs(bode.phis[i] - phi);
+
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestIndex = i;
+        }
+      }
+
+      return bode.phases[bestIndex];
+    }
 
     function phiTickText(vals) {
       return vals.map(v => {
@@ -566,7 +604,7 @@
         },
         {
           x: [phi],
-          y: [H.phase],
+          y: [unwrappedPhaseAtPhi(phi)],
           mode: 'markers',
           marker: { color: '#7f3fbf', size: 10 },
           name: 'Current phase',

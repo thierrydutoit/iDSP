@@ -305,19 +305,57 @@
       return { dx, dy, mag, ang };
     }
 
+    function unwrapPhaseDegrees(phases) {
+      const unwrapped = [phases[0]];
+
+      for (let i = 1; i < phases.length; i++) {
+        let delta = phases[i] - phases[i - 1];
+
+        if (delta > 180) {
+          delta -= 360;
+        } else if (delta < -180) {
+          delta += 360;
+        }
+
+        unwrapped.push(unwrapped[i - 1] + delta);
+      }
+
+      return unwrapped;
+    }
+
     function bodeArrays() {
       const omegas = logspace(Math.log10(omegaMin), Math.log10(omegaMax), bodeSamples);
       const mags = [];
-      const phases = [];
+      const wrappedPhases = [];
+
       for (const w of omegas) {
         const H = transferAtOmega(w);
         mags.push(20 * Math.log10(H.mag));
-        phases.push(H.phase);
+        wrappedPhases.push(H.phase);
       }
+
+      const phases = unwrapPhaseDegrees(wrappedPhases);
+
       return { omegas, mags, phases };
     }
 
     const bode = bodeArrays();
+
+    function unwrappedPhaseAtOmega(omega) {
+      let bestIndex = 0;
+      let bestDistance = Infinity;
+
+      for (let i = 0; i < bode.omegas.length; i++) {
+        const distance = Math.abs(Math.log10(bode.omegas[i]) - Math.log10(omega));
+
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestIndex = i;
+        }
+      }
+
+      return bode.phases[bestIndex];
+    }
 
     function renderNotes(omega, H, zeroInfos, poleInfos) {
       const numProd = zeroInfos.map((z, i) => `N_${i + 1}`).join('\\,');
@@ -539,7 +577,7 @@
           },
           {
             x: [omega],
-            y: [H.phase],
+            y: [unwrappedPhaseAtOmega(omega)],
             mode: 'markers',
             marker: { color: '#7f3fbf', size: 10 },
             name: 'Current phase',
