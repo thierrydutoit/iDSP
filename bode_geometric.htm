@@ -120,6 +120,67 @@
       font-weight: 600;
     }
 
+    .plot-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0 0 0.35rem 0.1rem;
+    }
+
+    .plot-header .plot-title {
+      padding: 0;
+    }
+
+    .iso-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .iso-toggle input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .switch-track {
+      position: relative;
+      display: inline-block;
+      width: 2.2rem;
+      height: 1.18rem;
+      border-radius: 999px;
+      background: #d1d5db;
+      transition: background 0.2s ease;
+    }
+
+    .switch-track::before {
+      content: '';
+      position: absolute;
+      width: 0.86rem;
+      height: 0.86rem;
+      left: 0.16rem;
+      top: 0.16rem;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+      transition: transform 0.2s ease;
+    }
+
+    .iso-toggle input:checked + .switch-track {
+      background: var(--accent);
+    }
+
+    .iso-toggle input:checked + .switch-track::before {
+      transform: translateX(1.02rem);
+    }
+
     .chart {
       width: 100%;
       height: 520px;
@@ -166,7 +227,7 @@
       How is the frequency response of a continuous-time linear system related to the position of its zeros and poles?
     </div>
     <div class="lead">
-      Try it by yourself, for $H(s)=\dfrac{s^2+0.2s+100}{(s+1)(s^2+0.5s+25)}$
+      Try it by yourself, for <p> $$H(s)=\dfrac{s^2+0.2s+100}{(s+1)(s^2+0.5s+25)}$$ </p>
     </div>
 
     <div class="controls">
@@ -184,7 +245,14 @@
 
     <div class="grid">
       <div class="plot-card">
-        <div class="plot-title">Zero-pole plot</div>
+        <div class="plot-header">
+          <div class="plot-title">Zero-pole plot</div>
+          <label class="iso-toggle" for="isoToggle">
+            <span>Iso : <span id="isoState">off</span></span>
+            <input id="isoToggle" type="checkbox" />
+            <span class="switch-track" aria-hidden="true"></span>
+          </label>
+        </div>
         <div id="pzPlot" class="chart"></div>
       </div>
 
@@ -239,7 +307,14 @@
     const omegaBubble = document.getElementById('omegaBubble');
     const omegaMinLabel = document.getElementById('omegaMinLabel');
     const omegaMaxLabel = document.getElementById('omegaMaxLabel');
+    const isoToggle = document.getElementById('isoToggle');
+    const isoState = document.getElementById('isoState');
     const notes = document.getElementById('notes');
+
+    const pzDefaultXRange = [-1.25, 0.25];
+    const pzDefaultYRange = [-11, 50];
+    const pzIsoXRange = [-20, 5];
+    const pzIsoYRange = [-11, 15];
 
     omegaMinLabel.textContent = omegaMin.toString();
     omegaMaxLabel.textContent = omegaMax.toString();
@@ -267,6 +342,18 @@
       const percent = (val - min) / (max - min);
       omegaBubble.style.left = `${percent * 100}%`;
       omegaBubble.textContent = `ω = ${omega.toFixed(3)}`;
+    }
+
+    function pzIsometricXRange() {
+      const pzPlot = document.getElementById('pzPlot');
+      const fullLayout = pzPlot._fullLayout;
+      const margin = { l: 60, r: 20, t: 10, b: 50 };
+      const plotWidth = fullLayout?.xaxis?._length || Math.max(pzPlot.clientWidth - margin.l - margin.r, 1);
+      const plotHeight = fullLayout?.yaxis?._length || Math.max(pzPlot.clientHeight - margin.t - margin.b, 1);
+      const ySpan = pzDefaultYRange[1] - pzDefaultYRange[0];
+      const xSpan = ySpan * plotWidth / plotHeight;
+      const xCenter = (pzDefaultXRange[0] + pzDefaultXRange[1]) / 2;
+      return [xCenter - xSpan / 2, xCenter + xSpan / 2];
     }
 
     function cmul(ar, ai, br, bi) {
@@ -510,26 +597,40 @@
         });
       });
 
+      const isIso = isoToggle.checked;
+      isoState.textContent = isIso ? 'on' : 'off';
+
+      const pzXAxis = {
+        title: 'Re',
+        range: isIso ? pzIsoXRange : pzDefaultXRange,
+        zeroline: true,
+        showgrid: true,
+        gridcolor: 'rgba(0,0,0,0.08)'
+      };
+
+      const pzYAxis = {
+        title: 'Im',
+        range: isIso ? pzIsoYRange : pzDefaultYRange,
+        zeroline: true,
+        showgrid: true,
+        gridcolor: 'rgba(0,0,0,0.08)'
+      };
+
+      if (isIso) {
+        pzXAxis.constrain = 'domain';
+        pzYAxis.scaleanchor = 'x';
+        pzYAxis.scaleratio = 1;
+        pzYAxis.constrain = 'domain';
+      }
+
       Plotly.react(
         'pzPlot',
         pzData,
         {
           margin: { l: 60, r: 20, t: 10, b: 50 },
-          xaxis: {
-            title: 'Re',
-            range: [-1.25, 0.25],
-            zeroline: true,
-            showgrid: true,
-            gridcolor: 'rgba(0,0,0,0.08)'
-          },
-          yaxis: {
-            title: 'Im',
-            range: [-11, 50],
-            zeroline: true,
-            showgrid: true,
-            gridcolor: 'rgba(0,0,0,0.08)'
-          },
-          legend: { x: 1, xanchor: 'right', y: 1 },
+          xaxis: pzXAxis,
+          yaxis: pzYAxis,
+          legend: { x: 0, xanchor: 'left', y: 1 },
           paper_bgcolor: 'white',
           plot_bgcolor: 'white',
           annotations: angleAnnotations,
@@ -642,9 +743,13 @@
     }
 
     omegaSlider.addEventListener('input', render);
+    isoToggle.addEventListener('change', render);
     window.addEventListener('resize', () => {
       const omega = sliderToOmega(parseInt(omegaSlider.value, 10));
       updateSliderBubble(omega);
+      if (isoToggle.checked) {
+        render();
+      }
     });
     render();
   </script>
