@@ -38,6 +38,7 @@ If you want to create an iDSP app using the python StreamLit Library, or using A
 | <a href="https://idmil.github.io/DigitalAudioWorkbench/quantization/"><img src="./quantization_300.jpg" /></a> | [Quantization and dithering](https://idmil.github.io/DigitalAudioWorkbench/quantization/) / [Video](https://www.youtube.com/watch?v=E5aPP7KB5F4) / [Git](https://github.com/idmil/dawb) / [Paper](https://dl.acm.org/doi/abs/10.1145/3478384.3478397) |
 | <a href="./1bit_6dB.htm"><img src="./1bit_6dB_300.jpg" /></a>  | [Quantization noise](./1bit_6dB.htm) |
 | <a href="./downsampling.htm"><img src="./downsampling_300.jpg" /></a>  | [Downsampling](./downsampling.htm) / [Git](https://github.com/thierrydutoit/downsampling)  |
+| <a href="./phase_distortion.htm"><img src="./phase_distortion_300.jpg" /></a>  | [Phase distortion](./phase_distortion.htm) |
 | <a href="./generalized_shannon_theorem.htm"><img src="./generalized_shannon_theorem_300.jpg" /></a>  | [Generalized Shannon Theorem](./generalized_shannon_theorem.htm) / [Git](https://github.com/thierrydutoit/generalized-shannon-theorem)  |
 | <a href="./ber_to_text.htm"><img src="./ber_to_text_300.jpg" /></a>  | [Binary Transmission Error Simulator](./ber_to_text.htm) / [Git](https://github.com/thierrydutoit/bit_error_rate_on_text)  |
 | <a href="https://dood.al/pinktrombone/"><img src="./pink_trombone_300.jpg" /> | [Phonetic acoustics](https://dood.al/pinktrombone/) / [Video](https://www.youtube.com/watch?v=7LGnozlwU1o	) / [Git](https://github.com/IMAGINARY/pink-trombone/blob/master/index.html)   |
