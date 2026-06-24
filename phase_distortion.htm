@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Recursive (IIR) vs Symmetric non resursive (FIR) Filtering</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]]
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #000000;
+      --accent: #ff4b4b;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+    }
+
+    .app {
+      max-width: 736px;
+      margin: 0 auto;
+      padding: 2rem 1rem 2.5rem;
+    }
+
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: 2rem;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      font-weight: 700;
+      color: #000000;
+    }
+
+    .subtitle {
+      margin: 0 0 1.2rem;
+      color: #000000;
+      font-size: 0.98rem;
+      line-height: 1.45;
+      max-width: 736px;
+    }
+
+    .panel {
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      margin-bottom: 1rem;
+      background: transparent;
+      color: #000000;
+    }
+
+    .control-row {
+      margin-bottom: 1rem;
+    }
+
+    .control-header {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 0.8rem;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #000000;
+    }
+
+    .slider-wrap {
+      position: relative;
+      width: 100%;
+      padding-top: 0.2rem;
+    }
+
+    .slider-value-bubble {
+      position: absolute;
+      top: -0.82rem;
+      left: 0;
+      transform: translateX(-50%);
+      color: #000000;
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      margin: 0.15rem 0 0;
+    }
+
+    .slider-limits {
+      display: flex;
+      justify-content: space-between;
+      color: #000000;
+      font-size: 0.82rem;
+      margin-top: 0.15rem;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.4rem;
+      color: #000000;
+    }
+
+    .toggle-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #000000;
+    }
+
+    .mode-name {
+      color: #000000;
+      font-weight: 700;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 54px;
+      height: 30px;
+      flex: 0 0 auto;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #d1d5db;
+      transition: 0.2s;
+      border-radius: 999px;
+    }
+
+    .switch-slider::before {
+      position: absolute;
+      content: "";
+      height: 24px;
+      width: 24px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.2s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+
+    .switch input:checked + .switch-slider {
+      background-color: var(--accent);
+    }
+
+    .switch input:checked + .switch-slider::before {
+      transform: translateX(24px);
+    }
+
+    .explain {
+      font-size: 0.9rem;
+      color: #000000;
+      line-height: 1.4;
+      margin-top: 0.4rem;
+    }
+
+    .plot {
+      border: none;
+      border-radius: 0;
+      padding: 0;
+      margin-bottom: 0.9rem;
+      background: transparent;
+    }
+
+    #timePlot {
+      height: 360px;
+    }
+
+    #freqPlot {
+      height: 430px;
+    }
+
+    details {
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      margin-top: 1rem;
+      overflow: visible;
+      color: #000000;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 0;
+      font-weight: 600;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #000000;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "⌄";
+      color: #000000;
+      font-size: 1.1rem;
+      transition: transform 0.2s ease;
+    }
+
+    details[open] summary::after {
+      transform: rotate(180deg);
+    }
+
+    .details-body {
+      border-top: none;
+      background: transparent;
+      padding: 0.4rem 0 0;
+      color: #000000;
+      font-size: 0.93rem;
+      line-height: 1.5;
+    }
+
+    .details-body p {
+      margin-top: 0;
+    }
+
+    @media (max-width: 700px) {
+      .app {
+        padding: 1.5rem 0.75rem 2rem;
+      }
+
+      h1 {
+        font-size: 1.65rem;
+      }
+
+      #timePlot {
+        height: 340px;
+      }
+
+      #freqPlot {
+        height: 390px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <h1>Shape distortion in IIR vs Symmetric FIR Filters</h1>
+
+    <p class="subtitle">
+      How do IIR and FIR filtering create phase distortion (hence, shape modification for harmonic signals)? Try it by yourlsef.
+    </p>
+
+    <div class="panel">
+      <div class="control-row">
+        <div class="control-header">
+          <span>F0 [Hz]</span>
+        </div>
+
+        <div class="slider-wrap">
+          <div class="slider-value-bubble" id="freqBubble"></div>
+
+          <input
+            id="freqSlider"
+            type="range"
+            min="500"
+            max="1200"
+            step="10"
+            value="500"
+          />
+        </div>
+
+        <div class="slider-limits">
+          <span>\(500\,\mathrm{Hz}\)</span>
+          <span>\(1200\,\mathrm{Hz}\)</span>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <label class="switch" title="Toggle filter type">
+          <input id="filterToggle" type="checkbox">
+          <span class="switch-slider"></span>
+        </label>
+
+        <div class="toggle-label">
+          Filter type:
+          <span class="mode-name" id="modeName"></span>
+        </div>
+      </div>
+
+      <div class="explain" id="modeExplanation"></div>
+    </div>
+
+    <div class="plot" id="timePlot"></div>
+    <div class="plot" id="freqPlot"></div>
+
+    <details>
+      <summary>Comments</summary>
+      <div class="details-body">
+        <p>
+          The input signal is
+          \[
+          x[n]=\sin(\phi_0 n)+0.8\sin(2\phi_0 n),
+          \]
+          with
+          \[
+          \phi_0=\frac{2\pi F_0}{F_s}.
+          \]
+        </p>
+
+        <p>
+          The time plot shows five periods of input and output signals, whatever the frequency selected by the slider, so as to make comparisons easier.
+        </p>
+        <p>
+          We have implemented two discrete low-pass filters, with with identical passband up to 2000 Hz, and at least 40dB of attenuation at 2240 Hz, for a sampling frequency 
+          of \(F_s=24\,\mathrm{kHz}\). 
+        </p>
+        <p>
+          The elliptic recursive (IIR) filter has nonlinear phase. The symmetric non-recursive (FIR) filter is
+          longer and even sharper than the IIR filter, but it keeps linear phase. As a result, the phase contribution of the FIR filter to the harmonic is always 
+          twice that on the fundamental, 
+          which results in a simple time delay of the whole input waveform. In contrast, the phase contribution of the IIR filter on both components results in shape 
+          distortion.
+          This is especially visible when \(F_0 \approx 1000 Hz\), i.e., when the harmonic gets close to the edge of the passband.
+        </p>
+        <p>
+          Symmetric FIR filters are therefore typically used as decimation and interpolation filters, so as to avoid signal shape distortion. 
+          The price to pay for linear phase is the order of the FIR filters (here, 400) compared to that of IIR filters (here, 8).
+        </p>
+
+      </div>
+    </details>
+  </div>
+
+  <script>
+    const freqSlider = document.getElementById("freqSlider");
+    const freqBubble = document.getElementById("freqBubble");
+    const filterToggle = document.getElementById("filterToggle");
+    const modeName = document.getElementById("modeName");
+    const modeExplanation = document.getElementById("modeExplanation");
+
+    const fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
+    const fs = 24000;
+    const nyquist = fs / 2;
+    const minDisplayedFrequency = 500;
+    const maxDisplayedFrequency = 2400;
+
+    const N = 2400;
+
+    const passBandEdge = Math.PI / 6;
+    const stopBandStart = 2 * Math.PI * 2240 / fs;
+
+    const passBandEdgeHz = passBandEdge / Math.PI * nyquist;
+    const stopBandStartHz = stopBandStart / Math.PI * nyquist;
+
+    const firLength = 401;
+    const firOrder = firLength - 1;
+    const firDelay = (firLength - 1) / 2;
+    const firBeta = 5.653;
+    const firTargetEdgeGain = Math.pow(10, -0.5 / 20);
+
+    const iirOrder = 8;
+
+    let tunedFirCutoff = passBandEdge;
+
+    const plotConfig = {
+      responsive: true,
+      displayModeBar: false
+    };
+
+    const plotFont = {
+      family: fontFamily,
+      size: 11,
+      color: "#000000"
+    };
+
+    function designEllipticLowpass() {
+      const b = [
+        0.0008138268632221761,
+        -0.0031829754022748183,
+        0.006737894474880755,
+        -0.009556292448125893,
+        0.010647909571945268,
+        -0.009556292448125893,
+        0.006737894474880755,
+        -0.003182975402274819,
+        0.0008138268632221763
+      ];
+
+      const a = [
+        1.0,
+        -6.809808348871347,
+        20.855464431773058,
+        -37.43563731052121,
+        43.01758219028678,
+        -32.37578092000536,
+        15.577462047160447,
+        -4.380194026581205,
+        0.5512009187028981
+      ];
+
+      return { b, a };
+    }
+
+    function besselI0(x) {
+      let sum = 1;
+      let term = 1;
+
+      for (let k = 1; k < 40; k++) {
+        term *= (x * x) / (4 * k * k);
+        sum += term;
+      }
+
+      return sum;
+    }
+
+    function kaiserWindow(n, L, beta) {
+      const alpha = (L - 1) / 2;
+      const t = (n - alpha) / alpha;
+      return besselI0(beta * Math.sqrt(Math.max(0, 1 - t * t))) / besselI0(beta);
+    }
+
+    function makeRawFir(cutoff) {
+      const h = new Float64Array(firLength);
+      const M = firDelay;
+
+      for (let n = 0; n < firLength; n++) {
+        const k = n - M;
+
+        let ideal;
+
+        if (Math.abs(k) < 1e-12) {
+          ideal = cutoff / Math.PI;
+        } else {
+          ideal = Math.sin(cutoff * k) / (Math.PI * k);
+        }
+
+        h[n] = ideal * kaiserWindow(n, firLength, firBeta);
+      }
+
+      const dcGain = Array.from(h).reduce((acc, v) => acc + v, 0);
+
+      for (let n = 0; n < h.length; n++) {
+        h[n] /= dcGain;
+      }
+
+      return Array.from(h);
+    }
+
+    function complexResponseAt(coeffB, coeffA, phi) {
+      let numRe = 0;
+      let numIm = 0;
+
+      for (let k = 0; k < coeffB.length; k++) {
+        numRe += coeffB[k] * Math.cos(-k * phi);
+        numIm += coeffB[k] * Math.sin(-k * phi);
+      }
+
+      let denRe = 0;
+      let denIm = 0;
+
+      for (let k = 0; k < coeffA.length; k++) {
+        denRe += coeffA[k] * Math.cos(-k * phi);
+        denIm += coeffA[k] * Math.sin(-k * phi);
+      }
+
+      const denMag2 = denRe * denRe + denIm * denIm;
+
+      const re = (numRe * denRe + numIm * denIm) / denMag2;
+      const im = (numIm * denRe - numRe * denIm) / denMag2;
+
+      return {
+        re,
+        im,
+        mag: Math.hypot(re, im),
+        phase: Math.atan2(im, re)
+      };
+    }
+
+    function designSymmetricFirLowpass() {
+      let lo = passBandEdge;
+      let hi = stopBandStart;
+
+      for (let iter = 0; iter < 36; iter++) {
+        const mid = (lo + hi) / 2;
+        const candidate = makeRawFir(mid);
+        const H = complexResponseAt(candidate, [1], passBandEdge);
+
+        if (H.mag < firTargetEdgeGain) {
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+      }
+
+      tunedFirCutoff = (lo + hi) / 2;
+      return makeRawFir(tunedFirCutoff);
+    }
+
+    const iir = designEllipticLowpass();
+    const iirB = iir.b;
+    const iirA = iir.a;
+
+    const firB = designSymmetricFirLowpass();
+    const firA = [1];
+
+    function makeInputSignal(f0) {
+      const x = new Float64Array(N);
+      const phi0 = 2 * Math.PI * f0 / fs;
+
+      for (let n = 0; n < N; n++) {
+        x[n] =
+          Math.sin(phi0 * n) +
+          0.8 * Math.sin(2 * phi0 * n);
+      }
+
+      return x;
+    }
+
+    function filterSignal(x, b, a) {
+      const y = new Float64Array(x.length);
+
+      for (let n = 0; n < x.length; n++) {
+        let acc = 0;
+
+        for (let k = 0; k < b.length; k++) {
+          if (n - k >= 0) {
+            acc += b[k] * x[n - k];
+          }
+        }
+
+        for (let k = 1; k < a.length; k++) {
+          if (n - k >= 0) {
+            acc -= a[k] * y[n - k];
+          }
+        }
+
+        y[n] = acc / a[0];
+      }
+
+      return y;
+    }
+
+    function unwrapPhase(phases) {
+      const out = [phases[0]];
+
+      for (let i = 1; i < phases.length; i++) {
+        let delta = phases[i] - phases[i - 1];
+
+        if (delta > Math.PI) {
+          delta -= 2 * Math.PI;
+        } else if (delta < -Math.PI) {
+          delta += 2 * Math.PI;
+        }
+
+        out.push(out[i - 1] + delta);
+      }
+
+      return out;
+    }
+
+    function frequencyResponseArrays(isFir) {
+      const M = 700;
+      const freqs = [];
+      const mags = [];
+      const wrappedPhases = [];
+
+      const b = isFir ? firB : iirB;
+      const a = isFir ? firA : iirA;
+
+      for (let i = 0; i < M; i++) {
+        const f =
+          minDisplayedFrequency +
+          (maxDisplayedFrequency - minDisplayedFrequency) * i / (M - 1);
+
+        const phi = 2 * Math.PI * f / fs;
+        const H = complexResponseAt(b, a, phi);
+
+        freqs.push(f);
+        mags.push(20 * Math.log10(H.mag + 1e-12));
+        wrappedPhases.push(H.phase);
+      }
+
+      const phases = unwrapPhase(wrappedPhases).map(p => p * 180 / Math.PI);
+
+      return { freqs, mags, phases };
+    }
+
+    function phaseMarkerAtFrequency(f, response) {
+      let bestIndex = 0;
+      let bestDistance = Infinity;
+
+      for (let i = 0; i < response.freqs.length; i++) {
+        const d = Math.abs(response.freqs[i] - f);
+
+        if (d < bestDistance) {
+          bestDistance = d;
+          bestIndex = i;
+        }
+      }
+
+      return response.phases[bestIndex];
+    }
+
+    function updateSliderBubble() {
+      const min = Number(freqSlider.min);
+      const max = Number(freqSlider.max);
+      const value = Number(freqSlider.value);
+      const percent = (value - min) / (max - min) * 100;
+
+      freqBubble.style.left = `${percent}%`;
+      freqBubble.textContent = value.toFixed(0);
+    }
+
+    function renderTimePlot(x, y, f0, isFir) {
+      const n = Array.from({ length: N }, (_, i) => i);
+      const tMs = n.map(i => 1000 * i / fs);
+
+      const periodMs = 1000 / f0;
+      const startMs = 25;
+      const stopMs = startMs + 5 * periodMs;
+
+      const titleText = isFir
+        ? `<b>Time domain — non recurive symmetric FIR low-pass, order ${firOrder}</b>`
+        : `<b>Time domain — recursive elliptic IIR low-pass, order ${iirOrder}</b>`;
+
+      Plotly.react(
+        "timePlot",
+        [
+          {
+            x: tMs,
+            y: Array.from(x),
+            mode: "lines",
+            name: "input",
+            line: { color: "#1f77b4", width: 2.1 },
+            hoverinfo: "skip"
+          },
+          {
+            x: tMs,
+            y: Array.from(y),
+            mode: "lines",
+            name: "output",
+            line: { color: "#ff7f0e", width: 2.1 },
+            hoverinfo: "skip"
+          }
+        ],
+        {
+          title: {
+            text: titleText,
+            x: 0,
+            xanchor: "left",
+            font: { family: fontFamily, size: 15, color: "#000000" }
+          },
+          font: plotFont,
+          paper_bgcolor: "white",
+          plot_bgcolor: "white",
+          margin: { l: 48, r: 15, t: 45, b: 68 },
+          xaxis: {
+            title: "Time [ms]",
+            range: [startMs, stopMs],
+            showgrid: true,
+            gridcolor: "rgba(0,0,0,0.08)"
+          },
+          yaxis: {
+            title: "Amplitude",
+            autorange: true,
+            showgrid: true,
+            gridcolor: "rgba(0,0,0,0.08)"
+          },
+          legend: {
+            orientation: "v",
+            x: 0.02,
+            y: 0.98,
+            xanchor: "left",
+            yanchor: "top",
+            bgcolor: "rgba(255,255,255,0.85)",
+            bordercolor: "rgba(0,0,0,0.25)",
+            borderwidth: 1,
+            font: { family: fontFamily, size: 10, color: "#000000" }
+          }
+        },
+        plotConfig
+      );
+    }
+
+    function renderFrequencyPlot(f0, isFir) {
+      const response = frequencyResponseArrays(isFir);
+
+      const coeffB = isFir ? firB : iirB;
+      const coeffA = isFir ? firA : iirA;
+
+      const f2 = Math.min(nyquist, 2 * f0);
+
+      const phi0 = 2 * Math.PI * f0 / fs;
+      const phi2 = 2 * Math.PI * f2 / fs;
+
+      const H0 = complexResponseAt(coeffB, coeffA, phi0);
+      const H2 = complexResponseAt(coeffB, coeffA, phi2);
+
+      const phase0 = phaseMarkerAtFrequency(f0, response);
+      const phase2 = phaseMarkerAtFrequency(f2, response);
+
+      Plotly.react(
+        "freqPlot",
+        [
+          {
+            x: response.freqs,
+            y: response.mags,
+            mode: "lines",
+            name: "|H(f)|",
+            line: { color: "#2ca02c", width: 2.8 },
+            xaxis: "x",
+            yaxis: "y",
+            hoverinfo: "skip"
+          },
+          {
+            x: [f0],
+            y: [20 * Math.log10(H0.mag + 1e-12)],
+            mode: "markers",
+            name: "|H(F₀)|",
+            marker: { color: "#2ca02c", size: 10 },
+            xaxis: "x",
+            yaxis: "y",
+            hoverinfo: "skip"
+          },
+          {
+            x: [f2],
+            y: [20 * Math.log10(H2.mag + 1e-12)],
+            mode: "markers",
+            name: "|H(2F₀)|",
+            marker: { color: "#d62728", size: 9 },
+            xaxis: "x",
+            yaxis: "y",
+            hoverinfo: "skip"
+          },
+          {
+            x: response.freqs,
+            y: response.phases,
+            mode: "lines",
+            name: "∠H(f)",
+            line: { color: "#7f3fbf", width: 2.8 },
+            xaxis: "x2",
+            yaxis: "y2",
+            hoverinfo: "skip"
+          },
+          {
+            x: [f0],
+            y: [phase0],
+            mode: "markers",
+            name: "∠H(F₀)",
+            marker: { color: "#7f3fbf", size: 10 },
+            xaxis: "x2",
+            yaxis: "y2",
+            hoverinfo: "skip"
+          },
+          {
+            x: [f2],
+            y: [phase2],
+            mode: "markers",
+            name: "∠H(2F₀)",
+            marker: { color: "#d62728", size: 9 },
+            xaxis: "x2",
+            yaxis: "y2",
+            hoverinfo: "skip"
+          }
+        ],
+        {
+          title: {
+            text: isFir
+              ? "<b>Frequency response — non-recursive symmetric FIR low-pass </b>"
+              : "<b>Frequency response — recursive elliptic IIR low-pass</b>",
+            x: 0,
+            xanchor: "left",
+            font: { family: fontFamily, size: 15, color: "#000000" }
+          },
+          font: plotFont,
+          paper_bgcolor: "white",
+          plot_bgcolor: "white",
+          margin: { l: 54, r: 15, t: 48, b: 72 },
+          grid: {
+            rows: 2,
+            columns: 1,
+            pattern: "independent",
+            roworder: "top to bottom"
+          },
+          xaxis: {
+            title: "Frequency [Hz]",
+            range: [minDisplayedFrequency, maxDisplayedFrequency],
+            showgrid: true,
+            gridcolor: "rgba(0,0,0,0.08)"
+          },
+          yaxis: {
+            title: "Magnitude [dB]",
+            range: [-80, 5],
+            showgrid: true,
+            gridcolor: "rgba(0,0,0,0.08)"
+          },
+          xaxis2: {
+            title: "Frequency [Hz]",
+            range: [minDisplayedFrequency, maxDisplayedFrequency],
+            showgrid: true,
+            gridcolor: "rgba(0,0,0,0.08)"
+          },
+          yaxis2: {
+            title: "Phase [deg]",
+            showgrid: true,
+            gridcolor: "rgba(0,0,0,0.08)"
+          },
+          showlegend: false,
+          shapes: [
+            {
+              type: "line",
+              x0: passBandEdgeHz,
+              x1: passBandEdgeHz,
+              y0: 0,
+              y1: 1,
+              xref: "x",
+              yref: "paper",
+              line: { color: "rgba(0,0,0,0.45)", width: 1.4, dash: "dash" }
+            },
+            {
+              type: "line",
+              x0: stopBandStartHz,
+              x1: stopBandStartHz,
+              y0: 0,
+              y1: 1,
+              xref: "x",
+              yref: "paper",
+              line: { color: "rgba(0,0,0,0.45)", width: 1.4, dash: "dash" }
+            },
+            {
+              type: "line",
+              x0: minDisplayedFrequency,
+              x1: maxDisplayedFrequency,
+              y0: -40,
+              y1: -40,
+              xref: "x",
+              yref: "y",
+              line: { color: "rgba(0,0,0,0.45)", width: 1.2, dash: "dot" }
+            },
+            {
+              type: "line",
+              x0: f0,
+              x1: f0,
+              y0: 0,
+              y1: 1,
+              xref: "x",
+              yref: "paper",
+              line: { color: "rgba(0,0,0,0.42)", width: 1.3, dash: "dot" }
+            },
+            {
+              type: "line",
+              x0: f2,
+              x1: f2,
+              y0: 0,
+              y1: 1,
+              xref: "x",
+              yref: "paper",
+              line: { color: "rgba(0,0,0,0.35)", width: 1.3, dash: "dot" }
+            }
+          ],
+          annotations: [
+            {
+              x: stopBandStartHz,
+              y: 0.82,
+              xref: "x",
+              yref: "paper",
+              text: "2240 Hz",
+              showarrow: true,
+              arrowhead: 2,
+              ax: 42,
+              ay: -28,
+              font: { size: 11, color: "#000000", family: fontFamily }
+            },
+            {
+              x: f0,
+              y: 0.62,
+              xref: "x",
+              yref: "paper",
+              text: "F₀",
+              showarrow: true,
+              arrowhead: 2,
+              ax: 34,
+              ay: -24,
+              font: { size: 11, color: "#000000", family: fontFamily }
+            },
+            {
+              x: f2,
+              y: 0.45,
+              xref: "x",
+              yref: "paper",
+              text: "2F₀",
+              showarrow: true,
+              arrowhead: 2,
+              ax: 34,
+              ay: -24,
+              font: { size: 11, color: "#000000", family: fontFamily }
+            }
+          ]
+        },
+        plotConfig
+      );
+    }
+
+    function render() {
+      const f0 = Number(freqSlider.value);
+      const isFir = filterToggle.checked;
+
+      updateSliderBubble();
+
+      if (isFir) {
+        modeName.textContent = "symmetric nonrecursive FIR";
+        modeExplanation.innerHTML =
+          ``;
+      } else {
+        modeName.textContent = "recursive elliptic IIR";
+        modeExplanation.innerHTML =
+          ``;
+      }
+
+      const x = makeInputSignal(f0);
+
+      const coeffB = isFir ? firB : iirB;
+      const coeffA = isFir ? firA : iirA;
+      const y = filterSignal(x, coeffB, coeffA);
+
+      renderTimePlot(x, y, f0, isFir);
+      renderFrequencyPlot(f0, isFir);
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([document.body]).catch(() => {});
+      }
+    }
+
+    freqSlider.addEventListener("input", render);
+    filterToggle.addEventListener("change", render);
+    window.addEventListener("resize", render);
+
+    render();
+  </script>
+</body>
+</html>
