@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Amplitude Modulation</title>
+
+  <!-- Plotly.js for interactive plots -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+  <!-- MathJax for rendering math equations -->
+  <script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    svg: {
+      fontCache: 'global'
+    },
+    startup: {
+      typeset: true
+    }
+  };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+  :root {
+    /* Theme variables (Streamlit inspired, always light theme) */
+    --bg-main: #ffffff;
+    --bg-sidebar: #f0f2f6;
+    --text-main: #31333f;
+    --text-muted: #5a5d6c;
+    --border-color: #dec1c9;
+    --accent: #ff4b4b;
+    --track: rgba(49, 51, 63, 0.18);
+    --card-bg: #ffffff;
+    --card-border: #e6e9ef;
+    --expander-bg: #fafafa;
+    --thumb-size: 1rem;
+    --font-family: "Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-family);
+    color: var(--text-main);
+    background-color: var(--bg-main);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 55rem;
+    padding: 2rem 1.5rem 3rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1 {
+    margin: 0 0 0.5rem 0;
+    font-weight: 700;
+    font-size: 2.2rem;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    margin: 0 0 1.25rem 0;
+    font-size: 1.05rem;
+    line-height: 1.6;
+  }
+
+  /* Single row control panel - no border or gray background */
+  .control-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 1.5rem;
+    align-items: flex-end;
+    margin-bottom: 1.8rem;
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .control-row h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .control {
+    min-width: 0;
+  }
+
+  .labelrow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.25rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+
+  .slider-wrap {
+    position: relative;
+    padding-top: 0.65rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .slider-value-bubble {
+    position: absolute;
+    top: -0.05rem;
+    left: var(--pct);
+    transform: translateX(-50%);
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .slider-limits {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -0.05rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    margin: 0;
+    background: transparent;
+    appearance: none;
+    -webkit-appearance: none;
+    --pct: 50%;
+  }
+
+  input[type="range"]:focus {
+    outline: none;
+  }
+
+  /* Webkit Track styling */
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 0.35rem;
+    border-radius: 999px;
+    background:
+      linear-gradient(to right,
+        var(--accent) 0%,
+        var(--accent) var(--pct),
+        var(--track) var(--pct),
+        var(--track) 100%);
+  }
+
+  /* Firefox Track styling */
+  input[type="range"]::-moz-range-track {
+    height: 0.35rem;
+    border-radius: 999px;
+    background: var(--track);
+  }
+
+  input[type="range"]::-moz-range-progress {
+    height: 0.35rem;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+
+  /* Slider Thumbs */
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 50%;
+    background: var(--bg-main);
+    border: 2px solid var(--accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    margin-top: -5px;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: var(--thumb-size);
+    height: var(--thumb-size);
+    border-radius: 50%;
+    background: var(--bg-main);
+    border: 2px solid var(--accent);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+
+  /* Action buttons */
+  .btn {
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.3rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    margin-bottom: 0.45rem;
+  }
+
+  .btn:hover {
+    background-color: #e03e3e;
+  }
+
+  .btn:active {
+    transform: scale(0.98);
+  }
+
+  /* Plots styling */
+  .plot-card {
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    margin-bottom: 1.5rem;
+    box-shadow: none;
+  }
+
+  .plot-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .chart-container {
+    width: 100%;
+    height: 320px;
+  }
+
+  /* Streamlit Expander styled details */
+  details {
+    border: 1px solid var(--card-border);
+    border-radius: 0.5rem;
+    background-color: var(--expander-bg);
+    overflow: hidden;
+    margin-top: 1.5rem;
+  }
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 0.8rem 1.2rem;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  summary::after {
+    content: "＋";
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+
+  details[open] summary::after {
+    content: "－";
+  }
+
+  .expander-content {
+    padding: 1.2rem;
+    background-color: var(--bg-main);
+    border-top: 1px solid var(--card-border);
+    line-height: 1.6;
+    font-size: 0.98rem;
+  }
+
+  /* Standard equations (non-grayed) */
+  .equation-display {
+    text-align: center;
+    margin: 1.2rem 0;
+  }
+
+  /* Notification banner */
+  .notification {
+    display: none;
+    padding: 0.8rem 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    background-color: rgba(255, 75, 75, 0.08);
+    border: 1px solid rgba(255, 75, 75, 0.2);
+    color: #ff4b4b;
+  }
+
+  /* Responsive layout adjustments */
+  @media (max-width: 800px) {
+    .control-row {
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+      align-items: stretch;
+    }
+  }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Amplitude Modulation</h1>
+    <p>
+      Explore how multiplying a carrier signal $c(t)$ with a modulating signal $m(t)$ creates a modulated signal $s(t)$ with new frequencies. Use the controls below to set the carrier and modulating wave frequencies. Watch the envelope shape update in the time domain, inspect the sidebands in the frequency domain, and listen to the resulting modulated sound.
+    </p>
+
+    <!-- Error/Notification banner -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Single row control panel (no gray box) -->
+    <div class="control-row">
+      <!-- Carrier Frequency fc -->
+      <div class="control">
+        <div class="labelrow">
+          <label for="fcSlider">Carrier Frequency $f_c$ [Hz]</label>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-value-bubble" id="fcVal">400</div>
+          <input id="fcSlider" type="range" min="100" max="1200" step="10" value="400" />
+          <div class="slider-limits">
+            <span>100</span>
+            <span>1200</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modulating Frequency fm -->
+      <div class="control">
+        <div class="labelrow">
+          <label for="fmSlider">Modulating Freq $f_m$ [Hz]</label>
+        </div>
+        <div class="slider-wrap">
+          <div class="slider-value-bubble" id="fmVal">20.0</div>
+          <input id="fmSlider" type="range" min="0.5" max="150" step="0.5" value="20.0" />
+          <div class="slider-limits">
+            <span>0.5</span>
+            <span>150</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Play Button -->
+      <button id="playBtn" class="btn">
+        <span id="playIcon">▶</span> <span id="playText">Play Sound</span>
+      </button>
+    </div>
+
+    <!-- Time Domain Plot Card -->
+    <div class="plot-card">
+      <div class="plot-title">Time-Domain Waveforms</div>
+      <div id="timePlot" class="chart-container"></div>
+    </div>
+
+    <!-- Frequency Domain Plot Card -->
+    <div class="plot-card">
+      <div class="plot-title">Frequency-Domain Spectrum (Sidebands)</div>
+      <div id="freqPlot" class="chart-container"></div>
+    </div>
+
+    <!-- Collapsible Comments / Theory Section (Mimics st.expander) -->
+    <details>
+      <summary>Open for comments</summary>
+      <div class="expander-content" id="theoryContent">
+        <p>
+          Amplitude Modulation is a process based on the <strong>multiplication</strong> of two signals: a low-frequency modulator $m(t)$ and a high-frequency carrier $c(t)$.
+        </p>
+
+        <p>The modulated signal is mathematically defined as:</p>
+        <div class="equation-display">
+          $$s(t) = m(t) c(t) = \cos(2\pi f_m t) \sin(2\pi f_c t)$$
+        </div>
+
+        <p><strong>Frequency Sidebands</strong></p>
+        <p>
+          Using the trigonometric identity:
+          $$\sin(A)\cos(B) = \frac{1}{2}\left[\sin(A-B) + \sin(A+B)\right]$$
+        </p>
+        <p>
+          We can rewrite the modulated signal as:
+          $$s(t) = \frac{1}{2}\sin(2\pi (f_c - f_m)t) + \frac{1}{2}\sin(2\pi (f_c + f_m)t)$$
+        </p>
+        <p>
+          Thus, the output signal contains exactly two frequencies: the <strong>lower sideband</strong> $f_c - f_m$ and the <strong>upper sideband</strong> $f_c + f_m$ with half the amplitude. The carrier frequency $f_c$ itself is completely suppressed.
+        </p>
+
+        <p>
+          <strong>Auditory Effect:</strong> When $f_m$ is below 20 Hz, you hear a rhythmic pulsation in volume (tremolo). As $f_m$ enters the audio range, you hear a complex, metallic, and often dissonant double-tone consisting of the sidebands.
+        </p>
+      </div>
+    </details>
+  </div>
+
+  <script>
+  // Elements Object
+  const els = {
+    fcSlider: document.getElementById("fcSlider"),
+    fmSlider: document.getElementById("fmSlider"),
+    fcVal: document.getElementById("fcVal"),
+    fmVal: document.getElementById("fmVal"),
+    playBtn: document.getElementById("playBtn"),
+    playIcon: document.getElementById("playIcon"),
+    playText: document.getElementById("playText"),
+    notification: document.getElementById("notification"),
+    theoryContent: document.getElementById("theoryContent")
+  };
+
+  // Fixed Parameters
+  const m = 1.0;
+  const vol = 1.0;
+
+  // Web Audio Context Variables
+  let audioCtx = null;
+  let carrierOsc = null;
+  let modulatorOsc = null;
+  let modulatorGain = null;
+  let amGain = null;
+  let masterGain = null;
+  let isPlaying = false;
+
+  // Initialize Web Audio API nodes
+  function initAudio() {
+    if (audioCtx) return;
+
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      carrierOsc = audioCtx.createOscillator();
+      modulatorOsc = audioCtx.createOscillator();
+      modulatorGain = audioCtx.createGain();
+      amGain = audioCtx.createGain();
+      masterGain = audioCtx.createGain();
+
+      carrierOsc.type = "sine";
+      modulatorOsc.type = "sine";
+
+      carrierOsc.frequency.setValueAtTime(parseFloat(els.fcSlider.value), audioCtx.currentTime);
+      modulatorOsc.frequency.setValueAtTime(parseFloat(els.fmSlider.value), audioCtx.currentTime);
+      modulatorGain.gain.setValueAtTime(m, audioCtx.currentTime);
+
+      // standard Ring Modulation configuration: carrier gain set to 0.0,
+      // modulator output added directly to carrier gain parameter
+      modulatorOsc.connect(modulatorGain);
+      modulatorGain.connect(amGain.gain);
+
+      carrierOsc.connect(amGain);
+      amGain.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+
+      // Set base carrier gain value to 0.0 for Ring Modulation (DSB-SC)
+      amGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+
+      // Start oscillators
+      carrierOsc.start();
+      modulatorOsc.start();
+      
+      masterGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+      
+      updateAudioParameters();
+    } catch (err) {
+      showError("Could not initialize Web Audio API: " + err.message);
+    }
+  }
+
+  function showError(msg) {
+    if (msg) {
+      els.notification.style.display = "block";
+      els.notification.textContent = msg;
+    } else {
+      els.notification.style.display = "none";
+    }
+  }
+
+  // Update real-time audio node parameters based on sliders
+  function updateAudioParameters() {
+    if (!audioCtx) return;
+
+    const fc = parseFloat(els.fcSlider.value);
+    const fm = parseFloat(els.fmSlider.value);
+
+    // Smoothly transition frequencies
+    carrierOsc.frequency.setTargetAtTime(fc, audioCtx.currentTime, 0.01);
+    modulatorOsc.frequency.setTargetAtTime(fm, audioCtx.currentTime, 0.01);
+
+    // Set Master volume (safety scaled)
+    if (isPlaying) {
+      const safeGain = vol * 0.25;
+      masterGain.gain.setTargetAtTime(safeGain, audioCtx.currentTime, 0.01);
+    } else {
+      masterGain.gain.setTargetAtTime(0.0, audioCtx.currentTime, 0.01);
+    }
+  }
+
+  // Play/Pause sound toggle
+  async function togglePlay() {
+    if (!audioCtx) {
+      initAudio();
+    }
+
+    if (audioCtx.state === "suspended") {
+      await audioCtx.resume();
+    }
+
+    if (isPlaying) {
+      isPlaying = false;
+      els.playIcon.textContent = "▶";
+      els.playText.textContent = "Play Sound";
+      updateAudioParameters();
+    } else {
+      isPlaying = true;
+      els.playIcon.textContent = "⏸";
+      els.playText.textContent = "Pause Sound";
+      updateAudioParameters();
+    }
+  }
+
+  // Setup slider values and update visual CSS progress background percentages
+  function setSliderUI(el, bubbleEl, digits = 2) {
+    const min = Number(el.min ?? 0);
+    const max = Number(el.max ?? 100);
+    const val = Number(el.value);
+    const pct = ((val - min) * 100) / (max - min || 1);
+    el.style.setProperty("--pct", `${pct}%`);
+    bubbleEl.style.left = `${pct}%`;
+    bubbleEl.textContent = val.toFixed(digits);
+  }
+
+  // Plotly chart colors (Fixed Light theme)
+  const colors = {
+    bg: "#ffffff",
+    text: "#31333f",
+    grid: "#e6e9ef",
+    carrier: "#ff4b4b",
+    modulator: "#5a5d6c",
+    envelope: "#0077b6"
+  };
+
+  function renderPlots() {
+    const fc = parseFloat(els.fcSlider.value);
+    const fm = parseFloat(els.fmSlider.value);
+
+    // 1. Time Domain Plot Calculation
+    const duration = 0.05; // fixed to 50 ms
+    const N = 1200;
+    const t = [];
+    const s = []; // modulated wave
+    const envUp = []; // upper envelope
+    const envLow = []; // lower envelope
+
+    for (let i = 0; i < N; i++) {
+      const tt = (i / (N - 1)) * duration;
+      const mt = Math.cos(2 * Math.PI * fm * tt);
+      const ct = Math.sin(2 * Math.PI * fc * tt);
+      
+      const up = mt;
+      const low = -mt;
+      const sig = up * ct;
+      
+      t.push(tt);
+      s.push(sig);
+      envUp.push(up);
+      envLow.push(low);
+    }
+
+    const timeData = [
+      {
+        x: t.map(tt => tt * 1000), // convert to ms
+        y: s,
+        mode: "lines",
+        name: "Modulated signal s(t)",
+        line: { width: 1.8, color: colors.carrier }
+      },
+      {
+        x: t.map(tt => tt * 1000),
+        y: envUp,
+        mode: "lines",
+        name: "Modulating signal m(t)",
+        line: { width: 1.5, dash: "dash", color: colors.envelope }
+      },
+      {
+        x: t.map(tt => tt * 1000),
+        y: envLow,
+        mode: "lines",
+        showlegend: false,
+        line: { width: 1.5, dash: "dash", color: colors.envelope }
+      }
+    ];
+
+    const timeLayout = {
+      margin: { l: 45, r: 15, t: 15, b: 40 },
+      paper_bgcolor: colors.bg,
+      plot_bgcolor: colors.bg,
+      font: { color: colors.text, family: '"Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+      xaxis: {
+        title: "Time [ms]",
+        gridcolor: colors.grid,
+        zeroline: false,
+        range: [0, 50] // Fixed time axis range
+      },
+      yaxis: {
+        gridcolor: colors.grid,
+        zeroline: false,
+        range: [-1.6, 1.6]
+      },
+      legend: {
+        x: 0.95,
+        y: 0.95,
+        xanchor: "right",
+        yanchor: "top",
+        bgcolor: "rgba(255, 255, 255, 0.75)",
+        bordercolor: "rgba(0,0,0,0.1)",
+        borderwidth: 1
+      }
+    };
+
+    Plotly.react("timePlot", timeData, timeLayout, { responsive: true, displayModeBar: false });
+
+    // 2. Frequency Domain Plot Calculation
+    const sidebandAmp = 0.5; // since m=1, sideband amplitude is 0.5
+    const fL = fc - fm;
+    const fH = fc + fm;
+
+    const freqData = [
+      {
+        x: [fL, fL, null, fH, fH],
+        y: [0, sidebandAmp, null, 0, sidebandAmp],
+        mode: "lines",
+        name: "Modulated signal s(t)",
+        line: { width: 3, color: colors.carrier },
+        text: [
+          `$f_c - f_m$: ${fL.toFixed(1)} Hz<br>Amp: 0.50`,
+          `$f_c - f_m$: ${fL.toFixed(1)} Hz<br>Amp: 0.50`,
+          "",
+          `$f_c + f_m$: ${fH.toFixed(1)} Hz<br>Amp: 0.50`,
+          `$f_c + f_m$: ${fH.toFixed(1)} Hz<br>Amp: 0.50`
+        ],
+        hoverinfo: "text"
+      },
+      {
+        x: [fm, fm],
+        y: [0, 1.0],
+        mode: "lines",
+        name: "Modulating signal m(t)",
+        line: { width: 3, dash: "dash", color: colors.envelope },
+        text: [
+          `$f_m$: ${fm.toFixed(1)} Hz<br>Amp: 1.00`,
+          `$f_m$: ${fm.toFixed(1)} Hz<br>Amp: 1.00`
+        ],
+        hoverinfo: "text"
+      },
+      {
+        x: [fc, fc],
+        y: [0, 1.0],
+        mode: "lines",
+        name: "Carrier signal c(t)",
+        line: { width: 3, color: colors.modulator },
+        text: [
+          `$f_c$: ${fc.toFixed(1)} Hz<br>Amp: 1.00`,
+          `$f_c$: ${fc.toFixed(1)} Hz<br>Amp: 1.00`
+        ],
+        hoverinfo: "text"
+      }
+    ];
+
+    const freqLayout = {
+      margin: { l: 45, r: 15, t: 15, b: 40 },
+      paper_bgcolor: colors.bg,
+      plot_bgcolor: colors.bg,
+      font: { color: colors.text, family: '"Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' },
+      xaxis: {
+        title: "Frequency [Hz]",
+        gridcolor: colors.grid,
+        zeroline: false,
+        range: [0, 1500] // Fixed frequency axis range
+      },
+      yaxis: {
+        title: "Spectral Amplitude",
+        gridcolor: colors.grid,
+        zeroline: true,
+        range: [0, 1.25]
+      },
+      showlegend: true,
+      legend: {
+        x: 0.98,
+        y: 0.98,
+        xanchor: "right",
+        yanchor: "top",
+        bgcolor: "rgba(255, 255, 255, 0.75)",
+        borderwidth: 0
+      }
+    };
+
+    Plotly.react("freqPlot", freqData, freqLayout, { responsive: true, displayModeBar: false });
+  }
+
+  // Update entire application
+  function updateApp(playSoundUpdate = true) {
+    setSliderUI(els.fcSlider, els.fcVal, 0);
+    setSliderUI(els.fmSlider, els.fmVal, 1);
+
+    renderPlots();
+
+    if (playSoundUpdate) {
+      updateAudioParameters();
+    }
+  }
+
+  // Hook event listeners
+  function initEvents() {
+    [els.fcSlider, els.fmSlider].forEach(slider => {
+      slider.addEventListener("input", function () {
+        updateApp(true);
+      });
+    });
+
+    els.playBtn.addEventListener("click", togglePlay);
+  }
+
+  // Bootstrapping function
+  async function main() {
+    initEvents();
+    updateApp(false);
+    
+    // Auto-update MathJax formulas in expander
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([els.theoryContent]).catch(() => {});
+    }
+  }
+
+  window.addEventListener("DOMContentLoaded", main);
+  </script>
+</body>
+</html>
