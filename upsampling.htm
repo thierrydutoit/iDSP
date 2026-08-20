@@ -273,10 +273,10 @@
       </div>
       <div class="slider-wrap">
         <div class="slider-value-bubble" id="factorVal">2</div>
-        <input id="factor" type="range" min="1" max="16" step="1" value="1" />
+        <input id="factor" type="range" min="1" max="4" step="1" value="1" />
         <div class="slider-limits">
           <span>1</span>
-          <span>16</span>
+          <span>4</span>
         </div>
       </div>
     </div>
@@ -304,7 +304,7 @@
   </details>
 
   <script>
-    const fs = 8000;
+    const fs = 2000;
     const f0 = 150;
     const duty = 60;
     const duration = 0.5;
@@ -682,7 +682,7 @@
         const specUsScale = (!applyFilter && factor > 1) ? factor : 1;
         const specUs = rfftMag(sigUs.slice(0, NwinUs), fsUs, specUsScale);
 
-        const freqMax = 64000;
+        const freqMax = 8000;
         const originalColor = "#636EFA";
         const upsampledColor = "orange";
         const filteredColor = "green";
@@ -807,11 +807,11 @@
           <p><strong>What to observe</strong></p>
           <ul>
             <li>Upsampling by <strong>${factor}</strong> inserts <strong>${inserted}</strong> zero(s) between consecutive original samples.</li>
-            <li>Zero insertion does <strong>not</strong> create new information. It produces repeated <strong>spectral images</strong> across the wider frequency axis.</li>
+            <li>Zero insertion does <strong>not</strong> create new information. It only produces increases the Nyquist frequency, thereby incorporating <strong>spectral images</strong> inside the hearable signal.</li>
             <li>The faded curves beyond each signal's Nyquist frequency are the <strong>periodic replicas of that digital signal's spectrum</strong>.</li>
             <li>With the <strong>anti-imaging filter OFF</strong>, those images remain above the original Nyquist frequency (<strong>${nyOriginal.toFixed(0)} Hz</strong>), and the intermediate samples are zero.</li>
             <li>With the <strong>anti-imaging filter ON</strong>, the low-pass filter keeps the original baseband and suppresses the images while reconstructing intermediate sample values.</li>
-            <li>Every <strong>${factor}th</strong> output sample coincides with an original sample, except near the finite-filter boundaries.</li>
+            <li>Every <strong>${factor}th</strong> output sample coincides with an original sample.</li>
           </ul>
           <p>
             Unlike downsampling, upsampling does not create aliasing by itself. Its characteristic artifact is <strong>imaging</strong>; the anti-imaging filter removes those images.
