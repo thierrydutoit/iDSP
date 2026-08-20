@@ -42,6 +42,7 @@ If you want to create an iDSP app using the python StreamLit Library, or using A
 | <a href="./upsampling.htm"><img src="./upsampling_300.jpg" /></a>  | [Upsampling](./upsampling.htm)   |
 | <a href="./phase_distortion.htm"><img src="./phase_distortion_300.jpg" /></a>  | [Phase distortion](./phase_distortion.htm) |
 | <a href="./generalized_shannon_theorem.htm"><img src="./generalized_shannon_theorem_300.jpg" /></a>  | [Generalized Shannon Theorem](./generalized_shannon_theorem.htm) / [Git](https://github.com/thierrydutoit/generalized-shannon-theorem)  |
+| <a href="./gaussian2d.htm"><img src="./gaussian2d_300.jpg" /></a>  | [2D Gaussian](./gaussian2d.htm)   |
 | <a href="./ber_to_text.htm"><img src="./ber_to_text_300.jpg" /></a>  | [Binary Transmission Error Simulator](./ber_to_text.htm) / [Git](https://github.com/thierrydutoit/bit_error_rate_on_text)  |
 | <a href="https://dood.al/pinktrombone/"><img src="./pink_trombone_300.jpg" /> | [Phonetic acoustics](https://dood.al/pinktrombone/) / [Video](https://www.youtube.com/watch?v=7LGnozlwU1o	) / [Git](https://github.com/IMAGINARY/pink-trombone/blob/master/index.html)   |
 
