@@ -1,12 +1,12 @@
 <!DOCTYPE html>
+<!-- iDSP upsampling revised: anti-imaging naming, corrected FFT scaling, fixed 0-64 kHz spectrum -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Downsampling</title>
+  <title>Upsampling</title>
 
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
@@ -64,9 +64,7 @@
       align-items: start;
     }
 
-    .control {
-      min-width: 0;
-    }
+    .control { min-width: 0; }
 
     .labelrow {
       display: flex;
@@ -125,19 +123,16 @@
       --pct: 50%;
     }
 
-    input[type="range"]:focus {
-      outline: none;
-    }
+    input[type="range"]:focus { outline: none; }
 
     input[type="range"]::-webkit-slider-runnable-track {
       height: 0.34rem;
       border-radius: 999px;
-      background:
-        linear-gradient(to right,
-          var(--accent) 0%,
-          var(--accent) var(--pct),
-          var(--track) var(--pct),
-          var(--track) 100%);
+      background: linear-gradient(to right,
+        var(--accent) 0%,
+        var(--accent) var(--pct),
+        var(--track) var(--pct),
+        var(--track) 100%);
     }
 
     input[type="range"]::-moz-range-track {
@@ -175,9 +170,7 @@
       cursor: pointer;
     }
 
-    .checkbox-card {
-      padding-top: 0.1rem;
-    }
+    .checkbox-card { padding-top: 0.1rem; }
 
     .checkbox-wrap {
       display: flex;
@@ -216,9 +209,7 @@
       border-color: var(--accent);
     }
 
-    .checkbox-wrap input[type="checkbox"]:checked::before {
-      transform: scale(1);
-    }
+    .checkbox-wrap input[type="checkbox"]:checked::before { transform: scale(1); }
 
     .checkbox-wrap label {
       font-weight: 600;
@@ -231,30 +222,7 @@
       margin: 0.5rem 0 1rem 0;
     }
 
-    #timePlot {
-      height: 300px;
-    }
-
-    #freqPlot {
-      height: 300px;
-    }
-
-    .audio-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-top: 0.8rem;
-    }
-
-    .audio-card h3 {
-      margin: 0 0 0.35rem 0;
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    audio {
-      width: 100%;
-    }
+    #timePlot, #freqPlot { height: 300px; }
 
     details {
       margin-top: 1.35rem;
@@ -285,18 +253,14 @@
     }
 
     @media (max-width: 700px) {
-      .controls-row,
-      .audio-row {
-        grid-template-columns: 1fr;
-      }
+      .controls-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
-  <h1>⬇️ Downsampling</h1>
-
+  <h1>⬆️ Upsampling</h1>
   <p>
-    Why do we need to low-pass a discrete signal before downsampling it?
+    Why do we need to low-pass a discrete signal after upsampling it?
     Try it by yourself.
   </p>
 
@@ -305,7 +269,7 @@
   <div class="controls-row">
     <div class="control">
       <div class="labelrow">
-        <label for="factor">Downsampling factor ×</label>
+        <label for="factor">Upsampling factor ×</label>
       </div>
       <div class="slider-wrap">
         <div class="slider-value-bubble" id="factorVal">2</div>
@@ -319,7 +283,7 @@
 
     <div class="control checkbox-card">
       <div class="labelrow">
-        <label for="applyFilter">Anti-aliasing low-pass</label>
+        <label for="applyFilter">Anti-imaging filter</label>
       </div>
       <div class="checkbox-wrap">
         <input id="applyFilter" type="checkbox" unchecked />
@@ -332,7 +296,7 @@
   <div id="freqPlot" class="plot"></div>
 
   <audio id="audioOriginal" preload="auto" style="display:none"></audio>
-  <audio id="audioDownsampled" preload="auto" style="display:none"></audio>
+  <audio id="audioUpsampled" preload="auto" style="display:none"></audio>
 
   <details>
     <summary>Open for comments</summary>
@@ -350,7 +314,7 @@
       factorVal: document.getElementById("factorVal"),
       applyFilter: document.getElementById("applyFilter"),
       audioOriginal: document.getElementById("audioOriginal"),
-      audioDownsampled: document.getElementById("audioDownsampled"),
+      audioUpsampled: document.getElementById("audioUpsampled"),
       notes: document.getElementById("notes"),
       errorbox: document.getElementById("errorbox")
     };
@@ -358,6 +322,11 @@
     function showError(msg) {
       els.errorbox.style.display = "block";
       els.errorbox.textContent = msg;
+    }
+
+    function clearError() {
+      els.errorbox.style.display = "none";
+      els.errorbox.textContent = "";
     }
 
     function setSliderUI(el, bubbleEl) {
@@ -390,10 +359,45 @@
       return out;
     }
 
-    function squareWave(t, f0, dutyCycle) {
-      const T = 1 / f0;
+    function squareWave(t, freq, dutyCycle) {
+      const T = 1 / freq;
       const phase = ((t % T) + T) % T;
       return phase < (dutyCycle / 100) * T ? 1 : -1;
+    }
+
+    function sinc(x) {
+      if (Math.abs(x) < 1e-12) return 1;
+      return Math.sin(Math.PI * x) / (Math.PI * x);
+    }
+
+    function makeInterpolationFIR(factor, halfSymbols = 8) {
+      const half = Math.max(1, halfSymbols * factor);
+      const taps = 2 * half + 1;
+      const h = new Float64Array(taps);
+
+      for (let i = 0; i < taps; i++) {
+        const m = i - half;
+        const ideal = sinc(m / factor);
+        const win = 0.54 + 0.46 * Math.cos(Math.PI * m / half);
+        h[i] = ideal * win;
+      }
+
+      return { h, half };
+    }
+
+    function centeredConvolve(x, h, half) {
+      const y = new Float64Array(x.length);
+      for (let n = 0; n < x.length; n++) {
+        let sum = 0;
+        const k0 = Math.max(0, n - half);
+        const k1 = Math.min(x.length - 1, n + half);
+        for (let k = k0; k <= k1; k++) {
+          const hIndex = half + n - k;
+          sum += x[k] * h[hIndex];
+        }
+        y[n] = sum;
+      }
+      return y;
     }
 
     function hann(N) {
@@ -408,33 +412,80 @@
       return w;
     }
 
-    function rfftMag(x, fsLocal) {
-      const N = x.length;
-      if (N < 4) {
-        return { f: [0], db: [-120] };
+    function nextPow2(n) {
+      let p = 1;
+      while (p < n) p *= 2;
+      return p;
+    }
+
+    function fftInPlace(re, im) {
+      const n = re.length;
+
+      for (let i = 1, j = 0; i < n; i++) {
+        let bit = n >> 1;
+        for (; j & bit; bit >>= 1) j ^= bit;
+        j ^= bit;
+        if (i < j) {
+          let tmp = re[i]; re[i] = re[j]; re[j] = tmp;
+          tmp = im[i]; im[i] = im[j]; im[j] = tmp;
+        }
       }
 
-      const w = hann(N);
-      let cg = 0;
-      for (let i = 0; i < N; i++) cg += w[i];
-      cg /= N;
+      for (let len = 2; len <= n; len <<= 1) {
+        const ang = -2 * Math.PI / len;
+        const wlenRe = Math.cos(ang);
+        const wlenIm = Math.sin(ang);
 
-      const K = Math.floor(N / 2) + 1;
+        for (let i = 0; i < n; i += len) {
+          let wRe = 1;
+          let wIm = 0;
+          const half = len >> 1;
+
+          for (let j = 0; j < half; j++) {
+            const uRe = re[i + j];
+            const uIm = im[i + j];
+            const vRe0 = re[i + j + half];
+            const vIm0 = im[i + j + half];
+            const vRe = vRe0 * wRe - vIm0 * wIm;
+            const vIm = vRe0 * wIm + vIm0 * wRe;
+
+            re[i + j] = uRe + vRe;
+            im[i + j] = uIm + vIm;
+            re[i + j + half] = uRe - vRe;
+            im[i + j + half] = uIm - vIm;
+
+            const nextWRe = wRe * wlenRe - wIm * wlenIm;
+            wIm = wRe * wlenIm + wIm * wlenRe;
+            wRe = nextWRe;
+          }
+        }
+      }
+    }
+
+    function rfftMag(x, fsLocal, scaleComp = 1) {
+      const Nwin = x.length;
+      if (Nwin < 4) return { f: [0], db: [-120] };
+
+      const w = hann(Nwin);
+      let cg = 0;
+      for (let i = 0; i < Nwin; i++) cg += w[i];
+      cg /= Nwin;
+
+      const Nfft = nextPow2(Nwin);
+      const re = new Float64Array(Nfft);
+      const im = new Float64Array(Nfft);
+
+      for (let i = 0; i < Nwin; i++) re[i] = x[i] * w[i];
+      fftInPlace(re, im);
+
+      const K = Math.floor(Nfft / 2) + 1;
       const freqs = new Array(K);
       const mags = new Array(K);
 
       for (let k = 0; k < K; k++) {
-        let re = 0;
-        let im = 0;
-        for (let n = 0; n < N; n++) {
-          const xn = x[n] * w[n];
-          const ang = -2 * Math.PI * k * n / N;
-          re += xn * Math.cos(ang);
-          im += xn * Math.sin(ang);
-        }
-        const mag = (2 / N) * Math.hypot(re, im) / Math.max(cg, 1e-12);
+        const mag = scaleComp * (2 / Nwin) * Math.hypot(re[k], im[k]) / Math.max(cg, 1e-12);
         mags[k] = 20 * Math.log10(Math.max(mag, 1e-12));
-        freqs[k] = k * fsLocal / N;
+        freqs[k] = k * fsLocal / Nfft;
       }
 
       return { f: freqs, db: mags };
@@ -473,55 +524,14 @@
       return { f: imageF, db: imageDb };
     }
 
-    function convolve(x, h) {
-      const y = new Float64Array(x.length);
-      const M = h.length;
-      for (let n = 0; n < x.length; n++) {
-        let s = 0;
-        for (let k = 0; k < M; k++) {
-          const idx = n - k;
-          if (idx >= 0 && idx < x.length) s += h[k] * x[idx];
-        }
-        y[n] = s;
-      }
-      return y;
-    }
-
-    function lowpassFIR(cutoffHz, fsLocal, taps = 101) {
-      const h = new Float64Array(taps);
-      const fc = cutoffHz / fsLocal;
-      const M = taps - 1;
-
-      for (let n = 0; n < taps; n++) {
-        const m = n - M / 2;
-        let sinc;
-        if (Math.abs(m) < 1e-12) {
-          sinc = 2 * fc;
-        } else {
-          sinc = Math.sin(2 * Math.PI * fc * m) / (Math.PI * m);
-        }
-        const win = 0.54 - 0.46 * Math.cos((2 * Math.PI * n) / M);
-        h[n] = sinc * win;
-      }
-
-      let sum = 0;
-      for (let i = 0; i < taps; i++) sum += h[i];
-      for (let i = 0; i < taps; i++) h[i] /= sum;
-
-      return h;
-    }
-
-    function filtfiltApprox(x, h) {
-      const y1 = convolve(x, h);
-      const rev1 = Float64Array.from(y1).reverse();
-      const y2 = convolve(rev1, h);
-      return Float64Array.from(y2).reverse();
-    }
-
     function makeWavBlobUrl(samples, sampleRate) {
       const x = new Float32Array(samples.length);
+      let peak = 0;
+      for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]));
+      const gain = 0.9 / Math.max(peak, 1);
+
       for (let i = 0; i < samples.length; i++) {
-        x[i] = Math.max(-1, Math.min(1, samples[i]));
+        x[i] = Math.max(-1, Math.min(1, gain * samples[i]));
       }
 
       const numChannels = 1;
@@ -533,9 +543,7 @@
       const view = new DataView(buffer);
 
       function writeString(offset, s) {
-        for (let i = 0; i < s.length; i++) {
-          view.setUint8(offset + i, s.charCodeAt(i));
-        }
+        for (let i = 0; i < s.length; i++) view.setUint8(offset + i, s.charCodeAt(i));
       }
 
       writeString(0, "RIFF");
@@ -544,7 +552,7 @@
       writeString(12, "fmt ");
       view.setUint32(16, 16, true);
       view.setUint16(20, 1, true);
-      view.setUint16(22, 1, true);
+      view.setUint16(22, numChannels, true);
       view.setUint32(24, sampleRate, true);
       view.setUint32(28, byteRate, true);
       view.setUint16(32, blockAlign, true);
@@ -554,7 +562,7 @@
 
       let offset = 44;
       for (let i = 0; i < x.length; i++, offset += 2) {
-        const s = Math.max(-1, Math.min(1, x[i]));
+        const s = x[i];
         view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
       }
 
@@ -563,10 +571,12 @@
     }
 
     let prevOriginalUrl = null;
-    let prevDownsampledUrl = null;
+    let prevUpsampledUrl = null;
 
-    function updateApp(playDownsampled = false) {
+    function updateApp(playUpsampled = false) {
       try {
+        clearError();
+
         const factor = Math.max(1, Number(els.factor.value) || 1);
         const applyFilter = els.applyFilter.checked;
         els.factorVal.textContent = String(factor);
@@ -574,66 +584,73 @@
 
         const N = Math.round(duration * fs);
         const t = linspaceCount(N, i => i / fs);
-
         const sig = new Float64Array(N);
-        for (let i = 0; i < N; i++) {
-          sig[i] = squareWave(t[i], f0, duty);
-        }
+        for (let i = 0; i < N; i++) sig[i] = squareWave(t[i], f0, duty);
 
-        let fs_ds = Math.floor(fs / factor);
-        if (fs_ds < 1) fs_ds = 1;
+        const fsUs = fs * factor;
+        const sigZero = new Float64Array(N * factor);
+        for (let i = 0; i < N; i++) sigZero[i * factor] = sig[i];
 
-        let sig_proc = sig;
+        let sigUs = sigZero;
         if (applyFilter && factor > 1) {
-          const ny_new = 0.5 * fs_ds;
-          const cutoff = 0.9 * ny_new;
-          const h = lowpassFIR(cutoff, fs, 121);
-          sig_proc = filtfiltApprox(sig, h);
+          const { h, half } = makeInterpolationFIR(factor, 8);
+          sigUs = centeredConvolve(sigZero, h, half);
         }
 
-        const dsLen = Math.ceil(sig_proc.length / factor);
-        const sig_ds = new Float64Array(dsLen);
-        for (let i = 0, j = 0; i < sig_proc.length; i += factor, j++) {
-          sig_ds[j] = sig_proc[i];
-        }
+        const tUs = new Float64Array(sigUs.length);
+        for (let i = 0; i < sigUs.length; i++) tUs[i] = i / fsUs;
 
-        const t_ds = new Float64Array(sig_ds.length);
-        for (let i = 0; i < sig_ds.length; i++) t_ds[i] = i / fs_ds;
+        const showTime = 0.02;
+        const showOriginal = Math.min(N, Math.round(showTime * fs));
+        const showUs = Math.min(sigUs.length, Math.round(showTime * fsUs));
 
-        const show_time = Math.min(N, Math.round(0.02 * fs));
-        const show_ds = Math.min(sig_ds.length, Math.round(show_time * fs_ds / fs));
-
-        Plotly.react("timePlot", [
+        const timeTraces = [
           {
-            x: Array.from(t.slice(0, show_time)),
-            y: Array.from(sig.slice(0, show_time)),
+            x: Array.from(t.slice(0, showOriginal)),
+            y: Array.from(sig.slice(0, showOriginal)),
             type: "scatter",
             mode: "lines+markers",
             marker: { size: 4 },
             line: { width: 2 },
             name: "Original",
             opacity: 0.9
-          },
-          ...(applyFilter && factor > 1 ? [{
-            x: Array.from(t.slice(0, show_time)),
-            y: Array.from(sig_proc.slice(0, show_time)),
+          }
+        ];
+
+        if (factor > 1 && applyFilter) {
+          timeTraces.push({
+            x: Array.from(tUs.slice(0, showUs)),
+            y: Array.from(sigZero.slice(0, showUs)),
+            type: "scatter",
+            mode: "lines+markers",
+            marker: { size: 4, color: "orange" },
+            line: { width: 1.5, color: "orange" },
+            name: `Upsampled ×${factor}`,
+            opacity: 0.5
+          });
+          timeTraces.push({
+            x: Array.from(tUs.slice(0, showUs)),
+            y: Array.from(sigUs.slice(0, showUs)),
             type: "scatter",
             mode: "lines",
             line: { width: 2, color: "green" },
-            name: "Filtered (pre-downsample)",
+            name: "Filtered (post-upsampling)",
             opacity: 0.9
-          }] : []),
-          ...(factor > 1 ? [{
-            x: Array.from(t_ds.slice(0, show_ds)),
-            y: Array.from(sig_ds.slice(0, show_ds)),
+          });
+        } else if (factor > 1) {
+          timeTraces.push({
+            x: Array.from(tUs.slice(0, showUs)),
+            y: Array.from(sigUs.slice(0, showUs)),
             type: "scatter",
             mode: "lines+markers",
-            marker: { size: 5, color: "orange" },
-            line: { width: 2, color: "orange" },
-            name: `Downsampled ×${factor}`,
-            opacity: 0.9
-          }] : [])
-        ], {
+            marker: { size: 4, color: "orange" },
+            line: { width: 1.5, color: "orange" },
+            name: `Upsampled ×${factor}`,
+            opacity: 0.8
+          });
+        }
+
+        Plotly.react("timePlot", timeTraces, {
           ...commonPlotLayout("Time Domain"),
           legend: {
             x: 0.02,
@@ -652,22 +669,23 @@
           yaxis: {
             title: { text: "Amplitude", font: { size: 11 } },
             tickfont: { size: 10 },
+            range: [-1.35, 1.35],
             showline: false,
             zeroline: false
           }
         }, { responsive: true });
 
-        const NfftOriginal = Math.min(2048, sig.length);
-        const NfftDs = Math.min(2048, sig_ds.length);
+        const NwinOriginal = Math.min(2048, sig.length);
+        const NwinUs = Math.min(NwinOriginal * factor, sigUs.length);
+        const specOriginal = rfftMag(sig.slice(0, NwinOriginal), fs);
+        const specZero = rfftMag(sigZero.slice(0, NwinUs), fsUs, factor);
+        const specUsScale = (!applyFilter && factor > 1) ? factor : 1;
+        const specUs = rfftMag(sigUs.slice(0, NwinUs), fsUs, specUsScale);
 
-        const specO = rfftMag(sig.slice(0, NfftOriginal), fs);
-        const specF = rfftMag(sig_proc.slice(0, NfftOriginal), fs);
-        const specD = rfftMag(sig_ds.slice(0, NfftDs), fs_ds);
-
-        const freqMax = 8000;
+        const freqMax = 64000;
         const originalColor = "#636EFA";
+        const upsampledColor = "orange";
         const filteredColor = "green";
-        const downsampledColor = "orange";
 
         const freqTraces = [];
 
@@ -701,30 +719,36 @@
         // Every discrete-time spectrum is periodic. Keep the principal
         // 0-to-Nyquist interval opaque, then show its replicas more faintly.
         addSpectrumWithPeriodicImages(
-          specO,
+          specOriginal,
           fs,
           "Original (dB)",
           originalColor,
           0.9
         );
 
-        if (applyFilter && factor > 1) {
+        if (factor > 1 && applyFilter) {
           addSpectrumWithPeriodicImages(
-            specF,
-            fs,
-            "Filtered (pre-downsample) (dB)",
+            specZero,
+            fsUs,
+            `Upsampled ×${factor} (images)`,
+            upsampledColor,
+            0.75
+          );
+
+          addSpectrumWithPeriodicImages(
+            specUs,
+            fsUs,
+            `Filtered ×${factor} (dB)`,
             filteredColor,
             0.9
           );
-        }
-
-        if (factor > 1) {
+        } else if (factor > 1) {
           addSpectrumWithPeriodicImages(
-            specD,
-            fs_ds,
-            `Downsampled ×${factor} (dB)`,
-            downsampledColor,
-            0.9
+            specUs,
+            fsUs,
+            `Upsampled ×${factor} (images)`,
+            upsampledColor,
+            0.75
           );
         }
 
@@ -749,61 +773,53 @@
           yaxis: {
             title: { text: "Magnitude [dB]", font: { size: 11 } },
             tickfont: { size: 10 },
-            range: [-80, 0],
+            range: [-80, 5],
             showline: false,
             zeroline: false,
             gridcolor: "rgba(49, 51, 63, 0.10)"
           }
         }, { responsive: true });
 
-        const sigPlay = new Float32Array(sig.length);
-        for (let i = 0; i < sig.length; i++) sigPlay[i] = 0.9 * sig[i];
-
-        const sigDsPlay = new Float32Array(sig_ds.length);
-        for (let i = 0; i < sig_ds.length; i++) sigDsPlay[i] = 0.9 * sig_ds[i];
-
         if (prevOriginalUrl) URL.revokeObjectURL(prevOriginalUrl);
-        if (prevDownsampledUrl) URL.revokeObjectURL(prevDownsampledUrl);
-
-        prevOriginalUrl = makeWavBlobUrl(sigPlay, fs);
-        prevDownsampledUrl = makeWavBlobUrl(sigDsPlay, fs_ds);
+        if (prevUpsampledUrl) URL.revokeObjectURL(prevUpsampledUrl);
+        prevOriginalUrl = makeWavBlobUrl(sig, fs);
+        prevUpsampledUrl = makeWavBlobUrl(sigUs, fsUs);
 
         els.audioOriginal.src = prevOriginalUrl;
-        els.audioDownsampled.src = prevDownsampledUrl;
+        els.audioUpsampled.src = prevUpsampledUrl;
 
-        if (playDownsampled) {
-          els.audioDownsampled.pause();
-          els.audioDownsampled.currentTime = 0;
-          els.audioDownsampled.play().catch(() => {});
+        if (playUpsampled) {
+          els.audioUpsampled.pause();
+          els.audioUpsampled.currentTime = 0;
+          els.audioUpsampled.play().catch(() => {});
         }
 
-        const ny_orig = fs / 2;
-        const ny_new = fs_ds / 2;
+        const nyOriginal = fs / 2;
+        const nyNew = fsUs / 2;
+        const inserted = Math.max(factor - 1, 0);
 
         els.notes.innerHTML = `
           <p><strong>Sampling</strong></p>
           <ul>
-            <li>Original fs: <strong>${fs} Hz</strong> (Nyquist: <strong>${ny_orig.toFixed(0)} Hz</strong>)</li>
-            <li>Downsampled fs: <strong>${fs_ds} Hz</strong> (Nyquist: <strong>${ny_new.toFixed(0)} Hz</strong>)</li>
+            <li>Original fs: <strong>${fs} Hz</strong> (Nyquist: <strong>${nyOriginal.toFixed(0)} Hz</strong>)</li>
+            <li>Upsampled fs: <strong>${fsUs} Hz</strong> (Nyquist: <strong>${nyNew.toFixed(0)} Hz</strong>)</li>
           </ul>
-
           <p><strong>What to observe</strong></p>
           <ul>
-            <li>A rectangular wave contains <strong>many harmonics</strong>.</li>
+            <li>Upsampling by <strong>${factor}</strong> inserts <strong>${inserted}</strong> zero(s) between consecutive original samples.</li>
+            <li>Zero insertion does <strong>not</strong> create new information. It produces repeated <strong>spectral images</strong> across the wider frequency axis.</li>
             <li>The faded curves beyond each signal's Nyquist frequency are the <strong>periodic replicas of that digital signal's spectrum</strong>.</li>
-            <li>With the filter <strong>OFF</strong>, harmonics above the new Nyquist (<strong>${ny_new.toFixed(0)} Hz</strong>) will <strong>alias</strong> into lower frequencies.</li>
-            <li>With the filter <strong>ON</strong>, those high harmonics are attenuated before decimation, reducing aliasing in the downsampled spectrum.</li>
+            <li>With the <strong>anti-imaging filter OFF</strong>, those images remain above the original Nyquist frequency (<strong>${nyOriginal.toFixed(0)} Hz</strong>), and the intermediate samples are zero.</li>
+            <li>With the <strong>anti-imaging filter ON</strong>, the low-pass filter keeps the original baseband and suppresses the images while reconstructing intermediate sample values.</li>
+            <li>Every <strong>${factor}th</strong> output sample coincides with an original sample, except near the finite-filter boundaries.</li>
           </ul>
-
           <p>
-            Notice that the downsampled signal in the "OFF" approach may seem closer to the initial rectangular signal in time.
-            In practice though, it sounds much worse than with the "ON" approach, and shows aliased frequency components below the new Nyquist frequency.
+            Unlike downsampling, upsampling does not create aliasing by itself. Its characteristic artifact is <strong>imaging</strong>; the anti-imaging filter removes those images.
           </p>
           <p>
-            In digital signal processing, the resulting anti-aliasing+downsampling processing block is called <strong>decimation</strong>.
+            In digital signal processing, the resulting upsampling+anti-imaging processing block is called <strong>interpolation</strong>.
           </p>
         `;
-
       } catch (err) {
         showError("Error: " + err.message);
       }
@@ -815,7 +831,9 @@
         els.factor.addEventListener("input", function () {
           updateApp(true);
         });
-        els.applyFilter.addEventListener("change", updateApp);
+        els.applyFilter.addEventListener("change", function () {
+          updateApp(true);
+        });
         updateApp();
       } catch (err) {
         showError("Error: " + err.message);
