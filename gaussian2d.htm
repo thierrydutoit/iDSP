@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>2D Gaussian</title>
+
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]]
+      },
+      options: { skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"] }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --text: rgb(49, 51, 63);
+      --muted: rgb(90, 93, 108);
+      --accent: rgb(255, 75, 75);
+      --track: rgba(49, 51, 63, 0.18);
+      --code-bg: rgba(49, 51, 63, 0.06);
+      --border: rgba(49, 51, 63, 0.18);
+      --thumb-size: 1rem;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: "Source Sans 3", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem 1rem;
+      line-height: 1.5;
+      font-size: 1rem;
+      background: white;
+    }
+
+    h1 {
+      margin: 0 0 0.75rem 0;
+      font-weight: 700;
+      font-size: 2.2rem;
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+    }
+
+    h2 {
+      margin: 1.25rem 0 0.6rem 0;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0 0 1rem 0;
+      font-size: 1.05rem;
+    }
+
+    code, .matrix {
+      font-family: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .control-grid {
+      display: grid;
+      gap: 0.45rem 1rem;
+      margin: 0.45rem 0 0.2rem 0;
+    }
+
+    .mean-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cov-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 0.2rem;
+    }
+
+    .control { min-width: 0; }
+
+    .equation {
+      margin: 0.2rem 0 0.75rem 0;
+      overflow-x: auto;
+      text-align: center;
+      font-size: 1.02rem;
+    }
+
+    .labelrow {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.05rem;
+    }
+
+    .labelrow label {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .value {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .slider-wrap {
+      position: relative;
+      padding: 0.22rem 0 0.48rem 0;
+    }
+
+    .slider-limits {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.03rem;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 0.72rem;
+      pointer-events: none;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 0;
+      background: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      --pct: 50%;
+    }
+
+    input[type="range"]:focus { outline: none; }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: linear-gradient(to right,
+        var(--accent) 0%,
+        var(--accent) var(--pct),
+        var(--track) var(--pct),
+        var(--track) 100%);
+    }
+
+    input[type="range"]::-moz-range-track {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--track);
+    }
+
+    input[type="range"]::-moz-range-progress {
+      height: 0.34rem;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      margin-top: -5px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: var(--thumb-size);
+      height: var(--thumb-size);
+      border-radius: 50%;
+      background: white;
+      border: 2px solid var(--accent);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      cursor: pointer;
+    }
+
+    .parameter-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1.4rem;
+      flex-wrap: wrap;
+      margin: 0.7rem 0 1.1rem 0;
+      padding: 0.65rem 0.8rem;
+      background: var(--code-bg);
+      border-radius: 0.55rem;
+      font-size: 0.95rem;
+    }
+
+    .parameter-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+
+    .matrix {
+      display: inline-grid;
+      grid-template-columns: auto auto;
+      gap: 0.15rem 1rem;
+      vertical-align: middle;
+      margin-left: 0.4rem;
+      padding: 0 0.55rem;
+      border-left: 1.5px solid var(--text);
+      border-right: 1.5px solid var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .plot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+      align-items: start;
+    }
+
+    .plot {
+      width: 100%;
+      height: 360px;
+    }
+
+    details {
+      margin-top: 1.2rem;
+      padding: 0;
+      border: none;
+      background: transparent;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    ul {
+      margin-top: 0.3rem;
+      padding-left: 1.25rem;
+    }
+
+    .errorbox {
+      display: none;
+      margin: 1rem 0;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      background: rgba(255, 75, 75, 0.08);
+      color: rgb(120, 20, 20);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 760px) {
+      .plot-grid { grid-template-columns: 1fr; }
+      .plot { height: 330px; }
+    }
+
+    @media (max-width: 560px) {
+      .mean-grid,
+      .cov-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>🔔 2D Gaussian</h1>
+  <p>
+    How do the mean vector and covariance matrix control the position, spread, and orientation of a two-dimensional Gaussian?
+    Try changing the parameters below.
+  </p>
+
+  <div class="equation">
+    \[
+      p(\mathbf{x})=
+      \frac{1}{2\pi\sqrt{\det(\Sigma)}}
+      \exp\!\left[
+        -\frac{1}{2}(\mathbf{x}-\boldsymbol{\mu})^{T}
+        \Sigma^{-1}
+        (\mathbf{x}-\boldsymbol{\mu})
+      \right]
+    \]
+  </div>
+
+  <div id="errorbox" class="errorbox"></div>
+
+  <div class="control-grid mean-grid">
+    <div class="control">
+      <div class="labelrow">
+        <label for="muX">Mean μx</label>
+        <span class="value" id="muXVal">0.00</span>
+      </div>
+      <div class="slider-wrap">
+        <input id="muX" type="range" min="-2.5" max="2.5" step="0.1" value="0" />
+        <div class="slider-limits"><span>-2.5</span><span>2.5</span></div>
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="labelrow">
+        <label for="muY">Mean μy</label>
+        <span class="value" id="muYVal">0.00</span>
+      </div>
+      <div class="slider-wrap">
+        <input id="muY" type="range" min="-2.5" max="2.5" step="0.1" value="0" />
+        <div class="slider-limits"><span>-2.5</span><span>2.5</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-grid cov-grid">
+    <div class="control">
+      <div class="labelrow">
+        <label for="varX">Variance σx²</label>
+        <span class="value" id="varXVal">1.50</span>
+      </div>
+      <div class="slider-wrap">
+        <input id="varX" type="range" min="0.2" max="4" step="0.05" value="1.5" />
+        <div class="slider-limits"><span>0.2</span><span>4.0</span></div>
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="labelrow">
+        <label for="varY">Variance σy²</label>
+        <span class="value" id="varYVal">0.60</span>
+      </div>
+      <div class="slider-wrap">
+        <input id="varY" type="range" min="0.2" max="4" step="0.05" value="0.6" />
+        <div class="slider-limits"><span>0.2</span><span>4.0</span></div>
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="labelrow">
+        <label for="covXY">Covariance σxy</label>
+        <span class="value" id="covXYVal">0.45</span>
+      </div>
+      <div class="slider-wrap">
+        <input id="covXY" type="range" min="-0.9" max="0.9" step="0.01" value="0.45" />
+        <div class="slider-limits"><span id="covMin">-0.90</span><span id="covMax">0.90</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="parameter-wrap">
+    <div class="parameter-item">
+      <strong>μ =</strong>
+      <span class="matrix" aria-label="Mean vector" style="grid-template-columns:auto;">
+        <span id="mean1">0.00</span>
+        <span id="mean2">0.00</span>
+      </span>
+    </div>
+
+    <div class="parameter-item">
+      <strong>Σ =</strong>
+      <span class="matrix" aria-label="Covariance matrix">
+        <span id="m11">1.50</span><span id="m12">0.45</span>
+        <span id="m21">0.45</span><span id="m22">0.60</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="plot-grid">
+    <div id="surfacePlot" class="plot"></div>
+    <div id="contourPlot" class="plot"></div>
+  </div>
+
+  <details>
+    <summary>Open for comments</summary>
+    <div id="notes"></div>
+  </details>
+
+  <script>
+    const els = {
+      muX: document.getElementById("muX"),
+      muY: document.getElementById("muY"),
+      varX: document.getElementById("varX"),
+      varY: document.getElementById("varY"),
+      covXY: document.getElementById("covXY"),
+      muXVal: document.getElementById("muXVal"),
+      muYVal: document.getElementById("muYVal"),
+      varXVal: document.getElementById("varXVal"),
+      varYVal: document.getElementById("varYVal"),
+      covXYVal: document.getElementById("covXYVal"),
+      covMin: document.getElementById("covMin"),
+      covMax: document.getElementById("covMax"),
+      mean1: document.getElementById("mean1"),
+      mean2: document.getElementById("mean2"),
+      m11: document.getElementById("m11"),
+      m12: document.getElementById("m12"),
+      m21: document.getElementById("m21"),
+      m22: document.getElementById("m22"),
+      notes: document.getElementById("notes"),
+      errorbox: document.getElementById("errorbox")
+    };
+
+    function showError(msg) {
+      els.errorbox.style.display = "block";
+      els.errorbox.textContent = msg;
+    }
+
+    function clearError() {
+      els.errorbox.style.display = "none";
+      els.errorbox.textContent = "";
+    }
+
+    function setSliderFill(el) {
+      const min = Number(el.min);
+      const max = Number(el.max);
+      const val = Number(el.value);
+      const pct = 100 * (val - min) / Math.max(max - min, 1e-12);
+      el.style.setProperty("--pct", `${pct}%`);
+    }
+
+    function updateCovarianceBounds() {
+      const varX = Number(els.varX.value);
+      const varY = Number(els.varY.value);
+      const limit = 0.95 * Math.sqrt(varX * varY);
+      els.covXY.min = (-limit).toFixed(4);
+      els.covXY.max = limit.toFixed(4);
+      if (Number(els.covXY.value) > limit) els.covXY.value = limit.toFixed(4);
+      if (Number(els.covXY.value) < -limit) els.covXY.value = (-limit).toFixed(4);
+      els.covMin.textContent = (-limit).toFixed(2);
+      els.covMax.textContent = limit.toFixed(2);
+      setSliderFill(els.covXY);
+    }
+
+    function eigen2x2(a, b, d) {
+      const tr = a + d;
+      const disc = Math.sqrt((a - d) * (a - d) + 4 * b * b);
+      const l1 = 0.5 * (tr + disc);
+      const l2 = 0.5 * (tr - disc);
+
+      let v1x, v1y;
+      if (Math.abs(b) > 1e-12) {
+        v1x = b;
+        v1y = l1 - a;
+      } else if (a >= d) {
+        v1x = 1;
+        v1y = 0;
+      } else {
+        v1x = 0;
+        v1y = 1;
+      }
+
+      const norm = Math.hypot(v1x, v1y) || 1;
+      v1x /= norm;
+      v1y /= norm;
+      const v2x = -v1y;
+      const v2y = v1x;
+
+      return { l1, l2, v1x, v1y, v2x, v2y };
+    }
+
+    function ellipsePoints(muX, muY, eig, radius, n = 181) {
+      const x = new Array(n);
+      const y = new Array(n);
+      const a = radius * Math.sqrt(eig.l1);
+      const b = radius * Math.sqrt(eig.l2);
+
+      for (let i = 0; i < n; i++) {
+        const th = 2 * Math.PI * i / (n - 1);
+        const c = Math.cos(th);
+        const s = Math.sin(th);
+        x[i] = muX + a * c * eig.v1x + b * s * eig.v2x;
+        y[i] = muY + a * c * eig.v1y + b * s * eig.v2y;
+      }
+      return { x, y };
+    }
+
+    function gaussianGrid(muX, muY, varX, varY, covXY) {
+      const xmin = -5;
+      const xmax = 5;
+      const ymin = -5;
+      const ymax = 5;
+      const n = 61;
+      const xs = new Array(n);
+      const ys = new Array(n);
+      const z = new Array(n);
+
+      const det = varX * varY - covXY * covXY;
+      const inv00 = varY / det;
+      const inv01 = -covXY / det;
+      const inv11 = varX / det;
+      const norm = 1 / (2 * Math.PI * Math.sqrt(det));
+
+      for (let i = 0; i < n; i++) {
+        xs[i] = xmin + (xmax - xmin) * i / (n - 1);
+        ys[i] = ymin + (ymax - ymin) * i / (n - 1);
+      }
+
+      for (let j = 0; j < n; j++) {
+        z[j] = new Array(n);
+        const dy = ys[j] - muY;
+        for (let i = 0; i < n; i++) {
+          const dx = xs[i] - muX;
+          const q = inv00 * dx * dx + 2 * inv01 * dx * dy + inv11 * dy * dy;
+          z[j][i] = norm * Math.exp(-0.5 * q);
+        }
+      }
+
+      return { xs, ys, z, det, peak: norm };
+    }
+
+    function baseFont() {
+      return {
+        family: '"Source Sans 3","Source Sans Pro",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+        size: 13,
+        color: "rgb(49,51,63)"
+      };
+    }
+
+
+    function gaussianTransparentColorscale() {
+      return [
+        [0.00, "rgba(67, 97, 238, 0.10)"],
+        [0.18, "rgba(67, 97, 238, 0.18)"],
+        [0.40, "rgba(58, 134, 255, 0.25)"],
+        [0.62, "rgba(0, 180, 216, 0.48)"],
+        [0.82, "rgba(114, 9, 183, 0.76)"],
+        [1.00, "rgba(199, 0, 57, 1.00)"]
+      ];
+    }
+
+    function updateApp() {
+      try {
+        clearError();
+        updateCovarianceBounds();
+
+        const muX = Number(els.muX.value);
+        const muY = Number(els.muY.value);
+        const varX = Number(els.varX.value);
+        const varY = Number(els.varY.value);
+        const covXY = Number(els.covXY.value);
+
+        [els.muX, els.muY, els.varX, els.varY, els.covXY].forEach(setSliderFill);
+
+        const grid = gaussianGrid(muX, muY, varX, varY, covXY);
+        const eig = eigen2x2(varX, covXY, varY);
+        const densityColorscale = gaussianTransparentColorscale();
+        const e1 = ellipsePoints(muX, muY, eig, 1);
+        const e2 = ellipsePoints(muX, muY, eig, 2);
+
+        els.muXVal.textContent = muX.toFixed(2);
+        els.muYVal.textContent = muY.toFixed(2);
+        els.varXVal.textContent = varX.toFixed(2);
+        els.varYVal.textContent = varY.toFixed(2);
+        els.covXYVal.textContent = covXY.toFixed(2);
+        els.mean1.textContent = muX.toFixed(2);
+        els.mean2.textContent = muY.toFixed(2);
+        els.m11.textContent = varX.toFixed(2);
+        els.m12.textContent = covXY.toFixed(2);
+        els.m21.textContent = covXY.toFixed(2);
+        els.m22.textContent = varY.toFixed(2);
+
+        const z1 = grid.peak * Math.exp(-0.5);
+        const z2 = grid.peak * Math.exp(-2.0);
+
+        Plotly.react("surfacePlot", [
+          {
+            x: grid.xs,
+            y: grid.ys,
+            z: grid.z,
+            type: "surface",
+            colorscale: densityColorscale,
+            showscale: false,
+            hovertemplate: "x=%{x:.2f}<br>y=%{y:.2f}<br>p=%{z:.4f}<extra></extra>"
+          },
+          {
+            x: e2.x,
+            y: e2.y,
+            z: new Array(e2.x.length).fill(z2 * 1.01),
+            type: "scatter3d",
+            mode: "lines",
+            line: { color: "white", width: 4, dash: "dot" },
+            name: "2σ ellipse",
+            showlegend: false,
+            hoverinfo: "skip"
+          },
+          {
+            x: e1.x,
+            y: e1.y,
+            z: new Array(e1.x.length).fill(z1 * 1.01),
+            type: "scatter3d",
+            mode: "lines",
+            line: { color: "white", width: 6 },
+            name: "1σ ellipse",
+            showlegend: false,
+            hoverinfo: "skip"
+          }
+        ], {
+          title: "3D density",
+          font: baseFont(),
+          margin: { t: 42, l: 0, r: 0, b: 0 },
+          paper_bgcolor: "white",
+          scene: {
+            xaxis: { title: "x", range: [-5, 5], gridcolor: "rgba(49,51,63,0.12)" },
+            yaxis: { title: "y", range: [-5, 5], gridcolor: "rgba(49,51,63,0.12)" },
+            zaxis: { title: "p(x,y)", rangemode: "tozero", gridcolor: "rgba(49,51,63,0.12)" },
+            camera: { eye: { x: 1.45, y: 1.45, z: 1.05 } },
+            aspectmode: "manual",
+            aspectratio: { x: 1, y: 1, z: 0.65 }
+          }
+        }, { responsive: true, displaylogo: false });
+
+        const axis1Len = Math.sqrt(eig.l1);
+        const axis2Len = Math.sqrt(eig.l2);
+        const a1x = [muX - axis1Len * eig.v1x, muX + axis1Len * eig.v1x];
+        const a1y = [muY - axis1Len * eig.v1y, muY + axis1Len * eig.v1y];
+        const a2x = [muX - axis2Len * eig.v2x, muX + axis2Len * eig.v2x];
+        const a2y = [muY - axis2Len * eig.v2y, muY + axis2Len * eig.v2y];
+
+        Plotly.react("contourPlot", [
+          {
+            x: grid.xs,
+            y: grid.ys,
+            z: grid.z,
+            type: "contour",
+            colorscale: densityColorscale,
+            contours: { coloring: "heatmap", showlines: true },
+            line: { width: 0.7 },
+            showscale: false,
+            hovertemplate: "x=%{x:.2f}<br>y=%{y:.2f}<br>p=%{z:.4f}<extra></extra>",
+            name: "Density"
+          },
+          {
+            x: e2.x,
+            y: e2.y,
+            type: "scatter",
+            mode: "lines",
+            line: { color: "white", width: 1.5, dash: "dot" },
+            name: "2σ ellipse",
+            hoverinfo: "skip"
+          },
+          {
+            x: e1.x,
+            y: e1.y,
+            type: "scatter",
+            mode: "lines",
+            line: { color: "white", width: 2.5 },
+            name: "1σ ellipse",
+            hoverinfo: "skip"
+          },
+          {
+            x: a1x,
+            y: a1y,
+            type: "scatter",
+            mode: "lines",
+            line: { color: "rgb(255,75,75)", width: 3 },
+            name: "Principal axis 1",
+            hoverinfo: "skip"
+          },
+          {
+            x: a2x,
+            y: a2y,
+            type: "scatter",
+            mode: "lines",
+            line: { color: "rgb(255,165,0)", width: 3 },
+            name: "Principal axis 2",
+            hoverinfo: "skip"
+          },
+          {
+            x: [muX],
+            y: [muY],
+            type: "scatter",
+            mode: "markers",
+            marker: { size: 9, color: "black", symbol: "x" },
+            name: "Mean μ",
+            hovertemplate: "μ=(%{x:.2f}, %{y:.2f})<extra></extra>"
+          }
+        ], {
+          title: "Top view",
+          font: baseFont(),
+          margin: { t: 42, l: 48, r: 12, b: 44 },
+          paper_bgcolor: "white",
+          plot_bgcolor: "white",
+          legend: {
+            x: 0.02,
+            y: 0.98,
+            xanchor: "left",
+            yanchor: "top",
+            bgcolor: "rgba(255,255,255,0.72)",
+            font: { size: 10 }
+          },
+          xaxis: {
+            title: "x",
+            range: [-5, 5],
+            constrain: "domain",
+            gridcolor: "rgba(49,51,63,0.10)",
+            zerolinecolor: "rgba(49,51,63,0.20)"
+          },
+          yaxis: {
+            title: "y",
+            range: [-5, 5],
+            scaleanchor: "x",
+            scaleratio: 1,
+            gridcolor: "rgba(49,51,63,0.10)",
+            zerolinecolor: "rgba(49,51,63,0.20)"
+          }
+        }, { responsive: true, displaylogo: false });
+
+        const angleDeg = Math.atan2(eig.v1y, eig.v1x) * 180 / Math.PI;
+        els.notes.innerHTML = `
+          <p><strong>What to observe</strong></p>
+          <ul>
+            <li>The mean vector <strong>μ = (${muX.toFixed(2)}, ${muY.toFixed(2)})</strong> translates the Gaussian without changing its shape.</li>
+            <li><strong>σx²</strong> controls spread along x and <strong>σy²</strong> controls spread along y when the covariance is zero.</li>
+            <li><strong>σxy</strong> couples x and y. A non-zero value rotates the elliptical contours. Its sign determines the direction of the tilt.</li>
+          </ul>
+        `;
+      } catch (err) {
+        showError("Error: " + err.message);
+      }
+    }
+
+    function init() {
+      updateCovarianceBounds();
+      [els.muX, els.muY, els.varX, els.varY, els.covXY].forEach(el => {
+        setSliderFill(el);
+        el.addEventListener("input", updateApp);
+      });
+      els.varX.addEventListener("input", updateCovarianceBounds);
+      els.varY.addEventListener("input", updateCovarianceBounds);
+      updateApp();
+    }
+
+    window.addEventListener("DOMContentLoaded", init);
+  </script>
+</body>
+</html>
