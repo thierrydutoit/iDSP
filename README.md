@@ -44,6 +44,7 @@ If you want to create an iDSP app using the python StreamLit Library, or using A
 | <a href="./generalized_shannon_theorem.htm"><img src="./generalized_shannon_theorem_300.jpg" /></a>  | [Generalized Shannon Theorem](./generalized_shannon_theorem.htm) / [Git](https://github.com/thierrydutoit/generalized-shannon-theorem)  |
 | <a href="./gaussian2d.htm"><img src="./gaussian2d_300.jpg" /></a>  | [2D Gaussian](./gaussian2d.htm)   |
 | <a href="./ber_to_text.htm"><img src="./ber_to_text_300.jpg" /></a>  | [Binary Transmission Error Simulator](./ber_to_text.htm) / [Git](https://github.com/thierrydutoit/bit_error_rate_on_text)  |
+| <a href="./FemtoGPT.htm"><img src="./FemtoGPT_300.jpg" /></a>  | [GPT-style Language Modeling](./FemtoGPT.htm) |
 | <a href="https://dood.al/pinktrombone/"><img src="./pink_trombone_300.jpg" /> | [Phonetic acoustics](https://dood.al/pinktrombone/) / [Video](https://www.youtube.com/watch?v=7LGnozlwU1o	) / [Git](https://github.com/IMAGINARY/pink-trombone/blob/master/index.html)   |
 
 
