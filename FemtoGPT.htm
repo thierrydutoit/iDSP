@@ -1,0 +1,5321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Tiny Transformer Explorer</title>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<style>
+:root {
+  --bg: #ffffff;
+  --text: #262730;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --accent: #ff4b4b;
+  --green: #2ca02c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+.container {
+  width: calc(100% - 2rem);
+  max-width: 862px;
+  margin: 0 auto;
+  padding: 1.5rem 0 2.5rem;
+}
+
+h1 {
+  margin: 0 0 0.6rem;
+  font-size: 2.15rem;
+}
+
+.lead {
+  margin-bottom: 0.8rem;
+  line-height: 1.55;
+}
+
+.intro-question {
+  margin: 0.4rem 0 0.85rem;
+  font-size: 1.08rem;
+  line-height: 1.6;
+}
+
+.fixed-sequence {
+  margin: 1.25rem 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.mono {
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+}
+
+.controls {
+  margin: 1.3rem 0;
+}
+
+label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin-top: 0.6rem;
+  accent-color: var(--accent);
+}
+
+.step-caption {
+  margin: 0.3rem 0 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.visual-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.plot-column,
+.info-column {
+  min-width: 0;
+}
+
+.section-title {
+  margin-bottom: 0.65rem;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+#vectorSpace {
+  width: 100%;
+  height: 455px;
+}
+
+/*
+  Fine positioning of the rendered 3-D scene inside the unchanged
+  Plotly area. The horizontal position is handled by camera.center;
+  this transform only lifts the WebGL scene toward the title.
+*/
+#vectorSpace .gl-container {
+  transform: translateY(-62px);
+}
+
+#attentionSpace {
+  width: 100%;
+  height: 320px;
+}
+
+.step-explanation {
+  margin-bottom: 1.15rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.attention-note {
+  margin: 0 0 0.55rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.prediction-description {
+  color: var(--muted);
+  font-size: 0.86rem;
+  margin-bottom: 0.8rem;
+  line-height: 1.45;
+}
+
+.prediction-word {
+  margin-bottom: 1rem;
+  font-size: 1.05rem;
+}
+
+.bars {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 62px minmax(80px, 1fr) 48px;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.bar-track {
+  height: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eeeeee;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--green);
+}
+
+.winner {
+  font-weight: 700;
+}
+
+.region-key {
+  margin-top: -0.8rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.region-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+
+.region-swatch.are {
+  background: rgba(70, 120, 220, 0.35);
+}
+
+.region-swatch.here {
+  background: rgba(255, 75, 75, 0.35);
+}
+
+details {
+  margin-top: 1.5rem;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.comments {
+  margin-top: 0.8rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.comments h3 {
+  margin: 1.5rem 0 0.5rem;
+  color: var(--text);
+  font-size: 1.04rem;
+}
+
+.comments p {
+  margin: 0.45rem 0 0.75rem;
+}
+
+.parameter-label {
+  margin-top: 0.65rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.formula {
+  margin: 0.4rem 0 0.7rem;
+  color: var(--text);
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+}
+
+.calculation {
+  margin-bottom: 0.45rem;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.matrix {
+  display: inline-block;
+  margin: 0.25rem 0 0.8rem;
+  white-space: pre;
+  color: var(--text);
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    monospace;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin-bottom: 0.8rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+th,
+td {
+  padding: 0.45rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+th:first-child,
+td:first-child {
+  text-align: left;
+}
+
+@media (max-width: 820px) {
+  .visual-row {
+    grid-template-columns: 1fr;
+  }
+
+  #vectorSpace {
+    height: 440px;
+  }
+}
+
+@media (max-width: 550px) {
+  .container {
+    width: calc(100% - 1rem);
+  }
+
+  .bar-row {
+    grid-template-columns: 60px 1fr 48px;
+  }
+
+  #vectorSpace {
+    height: 400px;
+  }
+
+  #attentionSpace {
+    height: 300px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>FemtoGPT, a tiny GPT-style language model</h1>
+
+<div class="intro-question">
+    How can the self-attention mechanism of a transformer account for contextual language contraints?
+    <BR>Try it by yourself.
+</div>
+
+<div class="lead">
+  Imagine a tiny toy language containing only the words
+  <span class="mono">"we", "you", "are", "hear", "here", "why"</span>.
+  We have designed a simple generative pretrained transformer able to predict that 
+  the next word of a sequence like <span class="mono"><strong>"why are you"</strong></span>, 
+  is <span class="mono"><strong>"here"</strong></span>, while <span class="mono">"you"</span> alone would 
+  probably most often be followed by <span class="mono"><strong>"are"</strong></span>.
+  <BR>Follow the modification of the word embedding of <span class="mono">"you"</span> 
+  through a simplified self-attention mechanism and see how context changes the next-word
+  prediction from <span class="mono">"are"</span> to <span class="mono">"here"</span>.
+</div>
+
+<div class="controls">
+  <label>
+    Processing step:
+    <strong id="stepLabel"></strong>
+
+    <input
+      id="stepSlider"
+      type="range"
+      min="0"
+      max="7"
+      value="0"
+      step="1"
+    >
+  </label>
+</div>
+
+<div
+  id="stepCaption"
+  class="step-caption">
+</div>
+
+
+<div class="visual-row">
+
+<section class="plot-column">
+
+  <div class="section-title">
+    3-D Word embedding space
+  </div>
+
+  <div id="vectorSpace"></div>
+
+  <div class="region-key">
+    <span class="region-swatch are"></span>
+    shaded side: decoder favors <strong>are</strong>
+    &nbsp;&nbsp;
+    <span class="region-swatch here"></span>
+    shaded side: decoder favors <strong>here</strong>.
+  </div>
+
+</section>
+
+
+<section class="info-column">
+
+  <div class="section-title">
+    What this step does
+  </div>
+
+  <div
+    id="stepExplanation"
+    class="step-explanation">
+  </div>
+
+
+  <div id="predictionPanel">
+
+    <div class="section-title">
+      Prediction at this stage
+    </div>
+
+    <div
+      id="predictionDescription"
+      class="prediction-description">
+    </div>
+
+    <div
+      id="predictedWord"
+      class="prediction-word">
+    </div>
+
+    <div id="prediction"></div>
+
+  </div>
+
+
+  <div id="attentionPanel" style="display:none;">
+
+    <div class="section-title">
+      2-D attention space
+    </div>
+
+    <div
+      id="attentionNote"
+      class="attention-note">
+    </div>
+
+    <div id="attentionSpace"></div>
+
+  </div>
+
+</section>
+
+</div>
+
+
+
+<details>
+
+<summary>
+Comments
+</summary>
+
+<div class="comments">
+
+<p>
+  This demonstration uses a deliberately tiny vocabulary:
+  <span class="mono">"we", "you", "are", "hear", "here", "why"</span>.
+  <BR>It follows the sequence <span class="mono">"why are you"</span>
+  and asks how context can change the model's prediction of the next word.
+</p>
+
+<p>
+  The model uses two distinct vector spaces. Word embeddings and all
+  context-dependent word representations live in a 3-D Word embedding
+  space, whereas attention-related features (Queries, Keys and Values) have dimension 2. The matrices
+  <span class="mono">W<sub>Q</sub></span>,
+  <span class="mono">W<sub>K</sub></span> and
+  <span class="mono">W<sub>V</sub></span>
+  map from the 3-D Word embedding space into the 2-D attention space, while 
+  <span class="mono">W<sub>O</sub></span>
+  maps back from the 2-D attention space to the 3-D Word embedding space.
+</p>
+
+<p>
+  The representation of <span class="mono">"you"</span> initially lies in a
+  region of the 3-D Word embedding space where the decoder favors
+  <span class="mono">"are"</span>. Attention gathers information from the
+  previous words and moves the representation across the fixed decoder
+  boundary into the region favoring <span class="mono">"here"</span>.
+</p>
+
+
+<h3>
+Decoder regions in the 3-D Word embedding space
+</h3>
+
+<p>
+  For any point in the 3-D embedding space 
+  <span class="mono">r=[x,y,z]</span>, the output decoder assigns one
+  score to each possible next word <span class="mono">w</span> in  (<span class="mono">"we", "you", "are", "hear", "here", "why"</span>)
+</p>
+
+<div class="formula">
+score(w) =
+W<sub>out</sub>(w) · r
++
+b<sub>out</sub>(w)
+</div>
+
+<p>
+  In this deliberately simplified example, all vocabulary items except
+  <span class="mono">"are"</span> and
+  <span class="mono">"here"</span> have very low scores, so the 3-D Word
+  embedding space is effectively partitioned into an
+  <span class="mono">"are"</span> region (in blue) and a
+  <span class="mono">"here"</span> region (in red).
+</p>
+
+<p>
+  Since this simplified decoder is linear - while real transformers use DNN-based non-linear classifiers - , the areas favoring "are" and "here" are separated by a plane where the two scores are equal:
+</p>
+
+<div class="formula">
+score(w=are) = score(w=here)
+</div>
+
+<div id="commentBoundary"></div>
+
+<p>
+  The boundary does not move while the processing step changes.
+  The decoder is fixed; it is the word representation that moves through
+  the 3-D Word embedding space.
+</p>
+
+
+<h3>
+Step 0 — 3-D word embeddings
+</h3>
+
+<p>
+  Each word begins as a fixed vector in the 3-D Word embedding space:
+</p>
+
+<div class="formula">
+eᵢ ∈ ℝ³
+</div>
+
+<p>
+  No position or context is present yet.
+</p>
+
+<div class="parameter-label">
+Embedding table used by this example
+</div>
+
+<div id="commentEmbeddings"></div>
+
+
+<h3>
+Step 1 — Add 3-D positional information
+</h3>
+
+<p>
+  A positional vector is added to every word embedding:
+</p>
+
+<div class="formula">
+xᵢ = eᵢ + pᵢ
+</div>
+
+<p>
+  The result is still a 3-D vector in the same Word embedding space.
+  The coordinates are still described by the same three embedding
+  dimensions.
+</p>
+
+<div class="parameter-label">
+Positional vectors
+</div>
+
+<div id="commentPositions"></div>
+
+<div class="parameter-label">
+Actual positioned representations
+</div>
+
+<div id="commentX"></div>
+
+
+<h3>
+Step 2 — Project from 3-D into 2-D Query, Key and Value spaces
+</h3>
+
+<p>
+  Three rectangular matrices map each 3-D word representation into
+  a 2-D attention vector:
+</p>
+
+<div class="formula">
+qᵢ = W<sub>Q</sub> xᵢ
+&nbsp;&nbsp;&nbsp;
+W<sub>Q</sub> ∈ ℝ²ˣ³
+<br>
+
+kᵢ = W<sub>K</sub> xᵢ
+&nbsp;&nbsp;&nbsp;
+W<sub>K</sub> ∈ ℝ²ˣ³
+<br>
+
+vᵢ = W<sub>V</sub> xᵢ
+&nbsp;&nbsp;&nbsp;
+W<sub>V</sub> ∈ ℝ²ˣ³
+</div>
+
+<p>
+  The Query represents <em>what the current word is looking for</em>;
+  a Key represents <em>what a word advertises as potentially relevant</em>;
+  and a Value represents <em>what information that word can contribute
+  if it receives attention</em>.
+  <BR>For intance, to make it simple for tutorial purposes, the Key for <span class="mono">"are"</span> 
+  could mean somthing like <em>"I am a verb"</em> and the key for <span class="mono">"why"</span> could mean <em>"this is a question"</em>. 
+  None of these Keys alone impose the next word to be <span class="mono">"here"</span>, as 
+  a sequence like <span class="mono">"hear why you"</span> would provide similar Keys while forbidding <span class="mono">"here"</span> as the next word. 
+  It is the combination of these Keys which constrain the choice to <span class="mono">"here"</span>.
+</p>
+
+<div class="parameter-label">
+W<sub>Q</sub> — 2 × 3
+</div>
+
+<div id="commentWQ"></div>
+
+<div class="parameter-label">
+W<sub>K</sub> — 2 × 3
+</div>
+
+<div id="commentWK"></div>
+
+<div class="parameter-label">
+W<sub>V</sub> — 2 × 3
+</div>
+
+<div id="commentWV"></div>
+
+<div class="parameter-label">
+Actual 2-D Q, K and V vectors
+</div>
+
+<div
+  id="commentQKV"
+  class="table-scroll">
+</div>
+
+
+<h3>
+Step 3 — Compare the final Query with the Keys
+</h3>
+
+<p>
+  The Query of the final word
+  <span class="mono">you</span> is compared with the Key of each current and previous words, 
+  via the computation of a 2-D scalar product:
+</p>
+
+<div class="formula">
+attention_score(you,j) =
+q<sub>you</sub> · kⱼ / √2
+</div>
+
+<p>
+  The semantic interpretation is:
+  <strong>what is “you” looking for?</strong> is compared with
+  <strong>what can each available word provide or match on?</strong>
+</p>
+
+<div class="parameter-label">
+Actual attention scores
+</div>
+
+<div
+  id="commentScores"
+  class="table-scroll">
+</div>
+
+
+<h3>
+Step 4 — Softmax determines how much to listen to each word
+</h3>
+
+<div class="formula">
+αⱼ = softmax(score(you,j))
+</div>
+
+<p>
+  These weights answer:
+  <strong>how much should “you” listen to each available word?</strong>
+</p>
+
+<div class="parameter-label">
+Actual attention weights
+</div>
+
+<div
+  id="commentAttention"
+  class="table-scroll">
+</div>
+
+
+<h3>
+Step 5 — Mix the 2-D Value vectors
+</h3>
+
+<p>
+  Keys decide relevance; Values contain the contextual information that is actually
+  transferred:
+</p>
+
+<div class="formula">
+a(you) = Σⱼ αⱼ vⱼ
+</div>
+
+<p>
+  Each word contributes its Value in proportion to its attention weight.
+</p>
+
+<div class="parameter-label">
+Actual weighted Value calculation for the final word
+</div>
+
+<div id="commentWeightedValues"></div>
+
+
+<h3>
+Step 6 — Translate the gathered information back into the 3-D Word embedding space
+</h3>
+
+<div class="formula">
+c(you) = W<sub>O</sub> a(you)
+&nbsp;&nbsp;&nbsp;
+W<sub>O</sub> ∈ ℝ³ˣ²
+</div>
+
+<p>
+  <span class="mono">W<sub>O</sub></span> translates the information
+  gathered by attention into a displacement in the 3-D Word embedding
+  space. The pink vector is therefore drawn from the end of the positioned
+  <span class="mono">"you"</span> vector rather than from the origin.
+</p>
+
+<div class="parameter-label">
+W<sub>O</sub> — 3 × 2
+</div>
+
+<div id="commentWO"></div>
+
+<div class="parameter-label">
+Actual 2-D attention output and 3-D correction
+</div>
+
+<div id="commentProjection"></div>
+
+
+<h3>
+Step 7 — Add the context correction
+</h3>
+
+<div class="formula">
+h(you) = x(you) + c(you)
+</div>
+
+<p>
+  The final contextual representation is obtained by adding the context
+  correction to the positioned representation.
+</p>
+
+<p>
+  The embedding, positioned and contextual versions of
+  <span class="mono">"you"</span> keep the same color because they are three
+  successive versions of the same word representation. Dotted vectors show
+  the earlier embedding and positioned states, while the solid vector shows
+  the contextual representation. The pink
+  <span class="mono">"+ context"</span> displacement shows exactly how
+  attention moves the positioned representation to its contextual position.
+</p>
+
+<div class="parameter-label">
+Actual final representations
+</div>
+
+<div id="commentContextual"></div>
+
+
+<h3>
+Output decoder
+</h3>
+
+<div class="formula">
+score(w) =
+W<sub>out</sub>(w) · h
++
+b<sub>out</sub>(w)
+</div>
+
+<p>
+  The final contextual representation <span class="mono">h(you)</span> is sent to the
+  fixed output decoder. The decoder first produces one raw score for each candidate
+  next word. These raw scores are not probabilities yet.
+</p>
+
+<div class="parameter-label">
+Output weights and biases
+</div>
+
+<div
+  id="commentWout"
+  class="table-scroll">
+</div>
+
+<div class="parameter-label">
+Final decoder scores before softmax
+</div>
+
+<div
+  id="commentFinalScores"
+  class="table-scroll">
+</div>
+
+<div class="parameter-label">
+Final probabilities after softmax
+</div>
+
+<div
+  id="commentFinalProbabilities"
+  class="table-scroll">
+</div>
+
+<h3>
+Summarizing
+</h3>
+
+<div class="parameter-label">
+Prediction at the three representation checkpoints
+</div>
+
+<div
+  id="commentPredictions"
+  class="table-scroll">
+</div>
+
+<h3>
+About the two graphs
+</h3>
+
+<p>
+  The graph on the left always represents the 3-D Word embedding space.
+  Its three axes are the three embedding dimensions. Its camera, axis
+  ranges and decoder boundary stay fixed.
+</p>
+
+<p>
+  The lightly shaded volumes indicate which of
+  <span class="mono">are</span> and
+  <span class="mono">here</span> receives the larger decoder score.
+</p>
+
+<p>
+  The graph on the right shows the separate 2-D attention space during
+  the internal attention steps. Its ranges are calculated once from the
+  complete forward pass.
+</p>
+
+</div>
+
+</details>
+
+</div>
+
+
+
+<script>
+(function () {
+
+"use strict";
+
+
+/* ============================================================
+   TOY LANGUAGE AND FIXED SEQUENCE
+   ============================================================ */
+
+var seq = [
+  "why",
+  "are",
+  "you"
+];
+
+
+var vocab = [
+  "we",
+  "you",
+  "are",
+  "hear",
+  "here",
+  "why"
+];
+
+
+/*
+  Fixed colors for the words.
+
+  "you" is explicitly kept red throughout all stages.
+  In the original Plotly ordering it was the fourth trace,
+  which also made it red.
+*/
+
+var WORD_COLORS = {
+  "why": "#ff7f0e",
+  "are": "#2ca02c",
+  "you": "#d62728"
+};
+
+
+var YOU_COLOR =
+  WORD_COLORS.you;
+
+
+/*
+  The context correction is deliberately pink so that
+  it is visually distinct from the successive versions
+  of the word "you".
+*/
+
+var CONTEXT_COLOR =
+  "#e377c2";
+
+
+/*
+  All text drawn inside the Plotly 3-D figure uses this
+  single fixed size, regardless of which processing step
+  is shown first.
+*/
+var PLOT3D_TEXT_SIZE =
+  15;
+
+
+
+/* ============================================================
+   3-D WORD EMBEDDINGS
+   ============================================================ */
+
+var E = {
+
+we:
+    [0.85, 0.15, 0.75],
+
+  you:
+    [0.72, 0.28, 0.55],
+
+  are:
+    [0.20, 0.82, 0.10],
+
+  hear:
+    [0.48, 0.62, 0.85],
+
+  here:
+    [0.58, 0.78, 0.15],
+
+  why:
+    [0.18, 0.54, 0.90]
+
+};
+
+
+
+/* ============================================================
+   POSITIONAL VECTORS
+   ============================================================ */
+
+var P = [
+
+  [ 0.35, -0.20,  0.15],
+
+  [-0.25,  0.30,  0.20],
+
+  [ 0.20,  0.25, -0.30]
+
+];
+
+
+
+/* ============================================================
+   3-D WORD EMBEDDING SPACE -> 2-D ATTENTION SPACE
+   ============================================================ */
+
+var WQ = [
+
+  [1.20, 0.20, 1.60],
+
+  [0.20, 1.80, 0.40]
+
+];
+
+
+var WK = [
+
+  [ 0.350394, -0.165143,  1.816731],
+
+  [-0.307811,  1.811850, -0.023868]
+
+];
+
+
+var WV = [
+
+  [-0.010282, -0.279920,  1.047017],
+
+  [-0.391373,  0.898077, -0.091170]
+
+];
+
+
+
+/* ============================================================
+   2-D ATTENTION SPACE -> 3-D WORD EMBEDDING SPACE
+   ============================================================ */
+
+var WO = [
+
+  [-0.40,  0.15],
+
+  [ 0.10,  0.40],
+
+  [ 0.30, -0.20]
+
+];
+
+
+
+/* ============================================================
+   OUTPUT DECODER
+   ============================================================ */
+
+var Wout = {
+
+we:
+    [0, 0, 0],
+
+  hear:
+    [0, 0, 0],
+
+  why:
+    [0, 0, 0],
+
+  you:
+    [0, 0, 0],
+
+  are:
+    [0, 0, 0],
+
+  here:
+    [
+      -12.924986,
+       19.495193,
+        5.962670
+    ]
+
+};
+
+
+var bout = {
+
+we:
+    -8,
+
+  hear:
+    -8,
+
+  why:
+    -8,
+
+  you:
+    -8,
+
+  are:
+     3,
+
+  here:
+     0.567868
+
+};
+
+
+
+/* ============================================================
+   DOM
+   ============================================================ */
+
+var stepSlider =
+  document.getElementById("stepSlider");
+
+var stepLabel =
+  document.getElementById("stepLabel");
+
+var stepCaption =
+  document.getElementById("stepCaption");
+
+var stepExplanation =
+  document.getElementById("stepExplanation");
+
+var predictionPanel =
+  document.getElementById("predictionPanel");
+
+var attentionPanel =
+  document.getElementById("attentionPanel");
+
+var attentionNote =
+  document.getElementById("attentionNote");
+
+var vectorSpace =
+  document.getElementById("vectorSpace");
+
+var attentionSpace =
+  document.getElementById("attentionSpace");
+
+var prediction =
+  document.getElementById("prediction");
+
+var predictedWord =
+  document.getElementById("predictedWord");
+
+var predictionDescription =
+  document.getElementById(
+    "predictionDescription"
+  );
+
+
+
+/* ============================================================
+   MATH
+   ============================================================ */
+
+function esc(value) {
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+function matvec(
+  matrix,
+  vector
+) {
+
+  return matrix.map(
+
+    function (row) {
+
+      var result =
+        0;
+
+
+      var i;
+
+
+      for (
+        i = 0;
+        i < row.length;
+        i += 1
+      ) {
+
+        result +=
+          row[i] *
+          vector[i];
+
+      }
+
+
+      return result;
+
+    }
+
+  );
+
+}
+
+
+function add(
+  a,
+  b
+) {
+
+  return a.map(
+
+    function (
+      value,
+      i
+    ) {
+
+      return (
+        value +
+        b[i]
+      );
+
+    }
+
+  );
+
+}
+
+
+function scaleVector(
+  scalar,
+  vector
+) {
+
+  return vector.map(
+
+    function (value) {
+
+      return (
+        scalar *
+        value
+      );
+
+    }
+
+  );
+
+}
+
+
+function dot(
+  a,
+  b
+) {
+
+  var total =
+    0;
+
+
+  var i;
+
+
+  for (
+    i = 0;
+    i < a.length;
+    i += 1
+  ) {
+
+    total +=
+      a[i] *
+      b[i];
+
+  }
+
+
+  return total;
+
+}
+
+
+function softmax(values) {
+
+  var maximum =
+    Math.max.apply(
+      null,
+      values
+    );
+
+
+  var exponentials =
+    values.map(
+
+      function (value) {
+
+        return Math.exp(
+          value - maximum
+        );
+
+      }
+
+    );
+
+
+  var total =
+    exponentials.reduce(
+
+      function (
+        sum,
+        value
+      ) {
+
+        return (
+          sum +
+          value
+        );
+
+      },
+
+      0
+
+    );
+
+
+  return exponentials.map(
+
+    function (value) {
+
+      return (
+        value /
+        total
+      );
+
+    }
+
+  );
+
+}
+
+
+function fmt2(vector) {
+
+  return (
+    "["
+    +
+    vector[0].toFixed(3)
+    +
+    ", "
+    +
+    vector[1].toFixed(3)
+    +
+    "]"
+  );
+
+}
+
+
+function fmt3(vector) {
+
+  return (
+    "["
+    +
+    vector[0].toFixed(3)
+    +
+    ", "
+    +
+    vector[1].toFixed(3)
+    +
+    ", "
+    +
+    vector[2].toFixed(3)
+    +
+    "]"
+  );
+
+}
+
+
+function matrixHTML(matrix) {
+
+  var html =
+    '<div class="matrix">';
+
+
+  matrix.forEach(
+
+    function (row) {
+
+      html +=
+        "[ "
+        +
+        row.map(
+
+          function (value) {
+
+            return value
+              .toFixed(3)
+              .padStart(8, " ");
+
+          }
+
+        ).join(" ")
+        +
+        " ]\n";
+
+    }
+
+  );
+
+
+  html +=
+    "</div>";
+
+
+  return html;
+
+}
+
+
+
+/* ============================================================
+   DECODER
+   ============================================================ */
+
+function decodeVector(vector) {
+
+  var scores =
+    vocab.map(
+
+      function (token) {
+
+        return (
+          dot(
+            Wout[token],
+            vector
+          )
+          +
+          bout[token]
+        );
+
+      }
+
+    );
+
+
+  return {
+
+    scores:
+      scores,
+
+    probabilities:
+      softmax(scores)
+
+  };
+
+}
+
+
+function decoderMargin(vector) {
+
+  var here =
+    dot(
+      Wout.here,
+      vector
+    )
+    +
+    bout.here;
+
+
+  var are =
+    dot(
+      Wout.are,
+      vector
+    )
+    +
+    bout.are;
+
+
+  return (
+    here -
+    are
+  );
+
+}
+
+
+
+/* ============================================================
+   FORWARD PASS
+   ============================================================ */
+
+function compute() {
+
+  var x =
+    seq.map(
+
+      function (
+        token,
+        position
+      ) {
+
+        return add(
+          E[token],
+          P[position]
+        );
+
+      }
+
+    );
+
+
+  var q =
+    x.map(
+
+      function (vector) {
+
+        return matvec(
+          WQ,
+          vector
+        );
+
+      }
+
+    );
+
+
+  var k =
+    x.map(
+
+      function (vector) {
+
+        return matvec(
+          WK,
+          vector
+        );
+
+      }
+
+    );
+
+
+  var values =
+    x.map(
+
+      function (vector) {
+
+        return matvec(
+          WV,
+          vector
+        );
+
+      }
+
+    );
+
+
+  var scores =
+    x.map(
+
+      function (_, i) {
+
+        return x.map(
+
+          function (__, j) {
+
+            if (
+              j > i
+            ) {
+
+              return -1000000000;
+
+            }
+
+
+            return (
+              dot(
+                q[i],
+                k[j]
+              )
+              /
+              Math.sqrt(2)
+            );
+
+          }
+
+        );
+
+      }
+
+    );
+
+
+  var attention =
+    scores.map(
+
+      function (
+        row,
+        i
+      ) {
+
+        var visible =
+          softmax(
+            row.slice(
+              0,
+              i + 1
+            )
+          );
+
+
+        while (
+          visible.length <
+          seq.length
+        ) {
+
+          visible.push(0);
+
+        }
+
+
+        return visible;
+
+      }
+
+    );
+
+
+  var attentionOutput =
+    attention.map(
+
+      function (weights) {
+
+        var result =
+          [0, 0];
+
+
+        weights.forEach(
+
+          function (
+            weight,
+            j
+          ) {
+
+            result =
+              add(
+
+                result,
+
+                scaleVector(
+                  weight,
+                  values[j]
+                )
+
+              );
+
+          }
+
+        );
+
+
+        return result;
+
+      }
+
+    );
+
+
+  var contextCorrection =
+    attentionOutput.map(
+
+      function (vector) {
+
+        return matvec(
+          WO,
+          vector
+        );
+
+      }
+
+    );
+
+
+  var h =
+    x.map(
+
+      function (
+        vector,
+        i
+      ) {
+
+        return add(
+          vector,
+          contextCorrection[i]
+        );
+
+      }
+
+    );
+
+
+  return {
+
+    x:
+      x,
+
+    q:
+      q,
+
+    k:
+      k,
+
+    values:
+      values,
+
+    scores:
+      scores,
+
+    attention:
+      attention,
+
+    attentionOutput:
+      attentionOutput,
+
+    contextCorrection:
+      contextCorrection,
+
+    h:
+      h
+
+  };
+
+}
+
+
+var c =
+  compute();
+
+
+var lastIndex =
+  seq.length - 1;
+
+
+
+/* ============================================================
+   FIXED 3-D WORD EMBEDDING SPACE
+   ============================================================ */
+
+function calculate3DScene() {
+
+  var vectors =
+    [];
+
+
+  seq.forEach(
+
+    function (token) {
+
+      vectors.push(
+        E[token]
+      );
+
+    }
+
+  );
+
+
+  [
+    c.x,
+    c.contextCorrection,
+    c.h
+
+  ].forEach(
+
+    function (collection) {
+
+      collection.forEach(
+
+        function (vector) {
+
+          vectors.push(
+            vector
+          );
+
+        }
+
+      );
+
+    }
+
+  );
+
+
+  var mins = [
+    Infinity,
+    Infinity,
+    Infinity
+  ];
+
+
+  var maxs = [
+    -Infinity,
+    -Infinity,
+    -Infinity
+  ];
+
+
+  vectors.forEach(
+
+    function (vector) {
+
+      var d;
+
+
+      for (
+        d = 0;
+        d < 3;
+        d += 1
+      ) {
+
+        mins[d] =
+          Math.min(
+            mins[d],
+            vector[d]
+          );
+
+
+        maxs[d] =
+          Math.max(
+            maxs[d],
+            vector[d]
+          );
+
+      }
+
+    }
+
+  );
+
+
+  var ranges =
+    [];
+
+
+  var d;
+
+
+  for (
+    d = 0;
+    d < 3;
+    d += 1
+  ) {
+
+    var low =
+      Math.min(
+        mins[d],
+        0
+      );
+
+
+    var high =
+      Math.max(
+        maxs[d],
+        0
+      );
+
+
+    var span =
+      high -
+      low;
+
+
+    if (
+      span < 0.20
+    ) {
+
+      span =
+        0.20;
+
+    }
+
+
+    var padding =
+      0.06 *
+      span;
+
+
+    low -=
+      padding;
+
+
+    high +=
+      padding;
+
+
+    ranges[d] =
+      [
+        low,
+        high
+      ];
+
+  }
+
+
+  var xSpan =
+    ranges[0][1] -
+    ranges[0][0];
+
+
+  var ySpan =
+    ranges[1][1] -
+    ranges[1][0];
+
+
+  var zSpan =
+    ranges[2][1] -
+    ranges[2][0];
+
+
+  var largest =
+    Math.max(
+      xSpan,
+      ySpan,
+      zSpan
+    );
+
+
+  return {
+
+    xRange:
+      ranges[0],
+
+    yRange:
+      ranges[1],
+
+    zRange:
+      ranges[2],
+
+    aspectratio: {
+
+      x:
+        xSpan / largest,
+
+      y:
+        ySpan / largest,
+
+      z:
+        zSpan / largest
+
+    },
+
+    camera: {
+
+      eye: {
+        x: 1.35,
+        y: 1.35,
+        z: 1.05
+      },
+
+      center: {
+        x: 0.02,
+        y: -0.02,
+        z: 0
+      },
+
+      up: {
+        x: 0,
+        y: 0,
+        z: 1
+      }
+
+    }
+
+  };
+
+}
+
+
+var fixedScene =
+  calculate3DScene();
+
+
+
+/* ============================================================
+   DECODER REGION VOLUME DATA
+   ============================================================ */
+
+function createDecoderVolumeGrid() {
+
+  var resolution =
+    7;
+
+
+  var xs =
+    [];
+
+
+  var ys =
+    [];
+
+
+  var zs =
+    [];
+
+
+  var values =
+    [];
+
+
+  var minMargin =
+    Infinity;
+
+
+  var maxMargin =
+    -Infinity;
+
+
+  var ix;
+  var iy;
+  var iz;
+
+
+  for (
+    ix = 0;
+    ix < resolution;
+    ix += 1
+  ) {
+
+    var x =
+      fixedScene.xRange[0]
+      +
+      (
+        fixedScene.xRange[1]
+        -
+        fixedScene.xRange[0]
+      )
+      *
+      ix
+      /
+      (
+        resolution - 1
+      );
+
+
+    for (
+      iy = 0;
+      iy < resolution;
+      iy += 1
+    ) {
+
+      var y =
+        fixedScene.yRange[0]
+        +
+        (
+          fixedScene.yRange[1]
+          -
+          fixedScene.yRange[0]
+        )
+        *
+        iy
+        /
+        (
+          resolution - 1
+        );
+
+
+      for (
+        iz = 0;
+        iz < resolution;
+        iz += 1
+      ) {
+
+        var z =
+          fixedScene.zRange[0]
+          +
+          (
+            fixedScene.zRange[1]
+            -
+            fixedScene.zRange[0]
+          )
+          *
+          iz
+          /
+          (
+            resolution - 1
+          );
+
+
+        var margin =
+          decoderMargin(
+            [x, y, z]
+          );
+
+
+        xs.push(x);
+        ys.push(y);
+        zs.push(z);
+        values.push(margin);
+
+
+        minMargin =
+          Math.min(
+            minMargin,
+            margin
+          );
+
+
+        maxMargin =
+          Math.max(
+            maxMargin,
+            margin
+          );
+
+      }
+
+    }
+
+  }
+
+
+  return {
+
+    x:
+      xs,
+
+    y:
+      ys,
+
+    z:
+      zs,
+
+    values:
+      values,
+
+    minMargin:
+      minMargin,
+
+    maxMargin:
+      maxMargin
+
+  };
+
+}
+
+
+var decoderVolumeGrid =
+  createDecoderVolumeGrid();
+
+
+
+/* ============================================================
+   ARE / HERE DECISION PLANE
+   ============================================================ */
+
+function makeDecisionPlaneTrace() {
+
+  var A =
+    Wout.here[0]
+    -
+    Wout.are[0];
+
+
+  var B =
+    Wout.here[1]
+    -
+    Wout.are[1];
+
+
+  var C =
+    Wout.here[2]
+    -
+    Wout.are[2];
+
+
+  var D =
+    bout.here
+    -
+    bout.are;
+
+
+  var x0 =
+    fixedScene.xRange[0];
+
+
+  var x1 =
+    fixedScene.xRange[1];
+
+
+  var y0 =
+    fixedScene.yRange[0];
+
+
+  var y1 =
+    fixedScene.yRange[1];
+
+
+  function solveZ(
+    x,
+    y
+  ) {
+
+    return (
+      -(
+        A * x
+        +
+        B * y
+        +
+        D
+      )
+      /
+      C
+    );
+
+  }
+
+
+  return {
+
+    type:
+      "surface",
+
+    x: [
+      [x0, x1],
+      [x0, x1]
+    ],
+
+    y: [
+      [y0, y0],
+      [y1, y1]
+    ],
+
+    z: [
+      [
+        solveZ(x0, y0),
+        solveZ(x1, y0)
+      ],
+      [
+        solveZ(x0, y1),
+        solveZ(x1, y1)
+      ]
+    ],
+
+    surfacecolor: [
+      [0, 0],
+      [0, 0]
+    ],
+
+    colorscale: [
+      [0, "#777777"],
+      [1, "#777777"]
+    ],
+
+    opacity:
+      0.20,
+
+    showscale:
+      false,
+
+    showlegend:
+      false,
+
+    hovertemplate:
+      "are / here decision boundary"
+      +
+      "<extra></extra>"
+
+  };
+
+}
+
+
+
+/* ============================================================
+   SHADED DECODER REGIONS
+   ============================================================ */
+
+function makeDecoderRegionTraces() {
+
+  var traces =
+    [];
+
+
+  if (
+    decoderVolumeGrid.minMargin < 0
+  ) {
+
+    traces.push({
+
+      type:
+        "volume",
+
+      x:
+        decoderVolumeGrid.x,
+
+      y:
+        decoderVolumeGrid.y,
+
+      z:
+        decoderVolumeGrid.z,
+
+      value:
+        decoderVolumeGrid.values,
+
+      isomin:
+        decoderVolumeGrid.minMargin,
+
+      isomax:
+        -0.0001,
+
+      opacity:
+        0.035,
+
+      surface: {
+        count: 5
+      },
+
+      caps: {
+        x: {
+          show: false
+        },
+
+        y: {
+          show: false
+        },
+
+        z: {
+          show: false
+        }
+      },
+
+      colorscale: [
+        [0, "#4678dc"],
+        [1, "#4678dc"]
+      ],
+
+      showscale:
+        false,
+
+      showlegend:
+        false,
+
+      hoverinfo:
+        "skip"
+
+    });
+
+  }
+
+
+  if (
+    decoderVolumeGrid.maxMargin > 0
+  ) {
+
+    traces.push({
+
+      type:
+        "volume",
+
+      x:
+        decoderVolumeGrid.x,
+
+      y:
+        decoderVolumeGrid.y,
+
+      z:
+        decoderVolumeGrid.z,
+
+      value:
+        decoderVolumeGrid.values,
+
+      isomin:
+        0.0001,
+
+      isomax:
+        decoderVolumeGrid.maxMargin,
+
+      opacity:
+        0.035,
+
+      surface: {
+        count: 5
+      },
+
+      caps: {
+        x: {
+          show: false
+        },
+
+        y: {
+          show: false
+        },
+
+        z: {
+          show: false
+        }
+      },
+
+      colorscale: [
+        [0, "#ff4b4b"],
+        [1, "#ff4b4b"]
+      ],
+
+      showscale:
+        false,
+
+      showlegend:
+        false,
+
+      hoverinfo:
+        "skip"
+
+    });
+
+  }
+
+
+  return traces;
+
+}
+
+
+
+/* ============================================================
+   REGION LABELS
+
+   IMPORTANT:
+   These are scene annotations rather than scatter3d text.
+   Plotly's WebGL scatter3d text can be re-rasterized at
+   slightly different apparent sizes depending on which trace
+   configuration initializes the scene first. Scene annotations
+   are SVG/HTML overlay text and keep a stable pixel size.
+   ============================================================ */
+
+function makeRegionAnnotations() {
+
+  var candidates =
+    [];
+
+
+  var xs = [
+    fixedScene.xRange[0]
+    +
+    0.22
+    *
+    (
+      fixedScene.xRange[1]
+      -
+      fixedScene.xRange[0]
+    ),
+
+    fixedScene.xRange[0]
+    +
+    0.78
+    *
+    (
+      fixedScene.xRange[1]
+      -
+      fixedScene.xRange[0]
+    )
+  ];
+
+
+  var ys = [
+    fixedScene.yRange[0]
+    +
+    0.22
+    *
+    (
+      fixedScene.yRange[1]
+      -
+      fixedScene.yRange[0]
+    ),
+
+    fixedScene.yRange[0]
+    +
+    0.78
+    *
+    (
+      fixedScene.yRange[1]
+      -
+      fixedScene.yRange[0]
+    )
+  ];
+
+
+  var zs = [
+    fixedScene.zRange[0]
+    +
+    0.25
+    *
+    (
+      fixedScene.zRange[1]
+      -
+      fixedScene.zRange[0]
+    ),
+
+    fixedScene.zRange[0]
+    +
+    0.75
+    *
+    (
+      fixedScene.zRange[1]
+      -
+      fixedScene.zRange[0]
+    )
+  ];
+
+
+  xs.forEach(
+
+    function (x) {
+
+      ys.forEach(
+
+        function (y) {
+
+          zs.forEach(
+
+            function (z) {
+
+              candidates.push({
+
+                vector:
+                  [x, y, z],
+
+                margin:
+                  decoderMargin(
+                    [x, y, z]
+                  )
+
+              });
+
+            }
+
+          );
+
+        }
+
+      );
+
+    }
+
+  );
+
+
+  candidates.sort(
+
+    function (
+      a,
+      b
+    ) {
+
+      return (
+        a.margin -
+        b.margin
+      );
+
+    }
+
+  );
+
+
+  var arePoint =
+    candidates[0].vector;
+
+
+  var herePoint =
+    candidates[
+      candidates.length - 1
+    ].vector;
+
+
+  return [
+
+    {
+      x: arePoint[0],
+      y: arePoint[1],
+      z: arePoint[2],
+      text: "ARE region",
+      showarrow: false,
+      font: {
+        size: PLOT3D_TEXT_SIZE,
+        color: "#315da8"
+      },
+      xanchor: "center",
+      yanchor: "middle"
+    },
+
+    {
+      x: herePoint[0],
+      y: herePoint[1],
+      z: herePoint[2],
+      text: "HERE region",
+      showarrow: false,
+      font: {
+        size: PLOT3D_TEXT_SIZE,
+        color: "#cc3535"
+      },
+      xanchor: "center",
+      yanchor: "middle"
+    }
+
+  ];
+
+}
+
+
+
+/* ============================================================
+   FIXED 2-D ATTENTION RANGE
+   ============================================================ */
+
+function calculateAttentionRange() {
+
+  var vectors =
+    [];
+
+
+  [
+    c.q,
+    c.k,
+    c.values,
+    c.attentionOutput
+
+  ].forEach(
+
+    function (collection) {
+
+      collection.forEach(
+
+        function (vector) {
+
+          vectors.push(
+            vector
+          );
+
+        }
+
+      );
+
+    }
+
+  );
+
+
+  var minX =
+    0;
+
+  var maxX =
+    0;
+
+  var minY =
+    0;
+
+  var maxY =
+    0;
+
+
+  vectors.forEach(
+
+    function (vector) {
+
+      minX =
+        Math.min(
+          minX,
+          vector[0]
+        );
+
+
+      maxX =
+        Math.max(
+          maxX,
+          vector[0]
+        );
+
+
+      minY =
+        Math.min(
+          minY,
+          vector[1]
+        );
+
+
+      maxY =
+        Math.max(
+          maxY,
+          vector[1]
+        );
+
+    }
+
+  );
+
+
+  var xSpan =
+    Math.max(
+      maxX - minX,
+      0.25
+    );
+
+
+  var ySpan =
+    Math.max(
+      maxY - minY,
+      0.25
+    );
+
+
+  return {
+
+    x: [
+      minX - 0.12 * xSpan,
+      maxX + 0.12 * xSpan
+    ],
+
+    y: [
+      minY - 0.12 * ySpan,
+      maxY + 0.12 * ySpan
+    ]
+
+  };
+
+}
+
+
+var attentionRange =
+  calculateAttentionRange();
+
+
+
+/* ============================================================
+   3-D VECTOR TRACE
+
+   A vector can start from the origin or from any other
+   point. This lets the context correction be shown as an
+   actual displacement beginning at positioned "you".
+   ============================================================ */
+
+function vector3DTrace(options) {
+
+  var start =
+    options.start ||
+    [0, 0, 0];
+
+
+  var end =
+    options.end;
+
+
+  var color =
+    options.color ||
+    "#1f77b4";
+
+
+  var dash =
+    options.dash ||
+    "solid";
+
+
+  var width =
+    options.width ||
+    7;
+
+
+  var markerEnd =
+    (
+      options.markerEnd === false
+      ?
+      0
+      :
+      9
+    );
+
+
+  var delta = [
+
+    end[0] - start[0],
+
+    end[1] - start[1],
+
+    end[2] - start[2]
+
+  ];
+
+
+  return {
+
+    type:
+      "scatter3d",
+
+    mode:
+      "lines+markers",
+
+    x: [
+      start[0],
+      end[0]
+    ],
+
+    y: [
+      start[1],
+      end[1]
+    ],
+
+    z: [
+      start[2],
+      end[2]
+    ],
+
+    name:
+      options.label,
+
+    showlegend:
+      false,
+
+    line: {
+      width:
+        width,
+
+      dash:
+        dash,
+
+      color:
+        color
+    },
+
+    marker: {
+      size: [
+        3,
+        markerEnd
+      ],
+
+      color:
+        color
+    },
+
+    hovertemplate:
+      options.label
+      +
+      "<br>end dim 1: %{x:.3f}"
+      +
+      "<br>end dim 2: %{y:.3f}"
+      +
+      "<br>end dim 3: %{z:.3f}"
+      +
+      "<br>Δ = ["
+      +
+      delta[0].toFixed(3)
+      +
+      ", "
+      +
+      delta[1].toFixed(3)
+      +
+      ", "
+      +
+      delta[2].toFixed(3)
+      +
+      "]"
+      +
+      "<extra></extra>"
+
+  };
+
+}
+
+
+
+/* ============================================================
+   3-D WORD EMBEDDING SPACE PLOT
+   ============================================================ */
+
+function plot3D(items) {
+
+  var traces =
+    makeDecoderRegionTraces();
+
+
+  traces.push(
+    makeDecisionPlaneTrace()
+  );
+
+
+  /*
+    Keep every visible 3-D label out of WebGL scatter3d text.
+    Scene annotations have a fixed CSS-pixel font size and
+    therefore do not change depending on the first displayed step.
+  */
+  var sceneAnnotations =
+    makeRegionAnnotations();
+
+
+  items.forEach(
+
+    function (item) {
+
+      traces.push(
+        vector3DTrace(item)
+      );
+
+
+      if (
+        item.label
+      ) {
+
+        sceneAnnotations.push({
+
+          x:
+            item.end[0],
+
+          y:
+            item.end[1],
+
+          z:
+            item.end[2],
+
+          text:
+            item.label,
+
+          showarrow:
+            false,
+
+          font: {
+            size:
+              PLOT3D_TEXT_SIZE,
+
+            color:
+              item.textColor ||
+              item.color ||
+              "#262730"
+          },
+
+          xanchor:
+            "center",
+
+          yanchor:
+            "bottom"
+
+        });
+
+      }
+
+    }
+
+  );
+
+
+  Plotly.react(
+
+    vectorSpace,
+
+    traces,
+
+    {
+
+      height:
+        455,
+
+      autosize:
+        true,
+
+      margin: {
+        l: 5,
+        r: 5,
+        b: 5,
+        t: 18
+      },
+
+      paper_bgcolor:
+        "rgba(0,0,0,0)",
+
+      font: {
+        size: PLOT3D_TEXT_SIZE
+      },
+
+      hoverlabel: {
+        font: {
+          size: PLOT3D_TEXT_SIZE
+        }
+      },
+
+      legend: {
+
+        orientation:
+          "h",
+
+        x:
+          0,
+
+        y:
+          1.00,
+
+        yanchor:
+          "top",
+
+        font: {
+          size: PLOT3D_TEXT_SIZE
+        }
+
+      },
+
+      uirevision:
+        "tiny-transformer-3d-fixed",
+
+      scene: {
+
+        xaxis: {
+
+          title: {
+            text: "embedding dimension 1",
+            font: {
+              size: PLOT3D_TEXT_SIZE
+            }
+          },
+
+          tickfont: {
+            size: PLOT3D_TEXT_SIZE
+          },
+
+          range:
+            fixedScene.xRange,
+
+          autorange:
+            false,
+
+          showbackground:
+            false
+        },
+
+
+        yaxis: {
+
+          title: {
+            text: "embedding dimension 2",
+            font: {
+              size: PLOT3D_TEXT_SIZE
+            }
+          },
+
+          tickfont: {
+            size: PLOT3D_TEXT_SIZE
+          },
+
+          range:
+            fixedScene.yRange,
+
+          autorange:
+            false,
+
+          showbackground:
+            false
+        },
+
+
+        zaxis: {
+
+          title: {
+            text: "embedding dimension 3",
+            font: {
+              size: PLOT3D_TEXT_SIZE
+            }
+          },
+
+          tickfont: {
+            size: PLOT3D_TEXT_SIZE
+          },
+
+          range:
+            fixedScene.zRange,
+
+          autorange:
+            false,
+
+          showbackground:
+            false
+        },
+
+
+        aspectmode:
+          "manual",
+
+        aspectratio:
+          fixedScene.aspectratio,
+
+        camera:
+          fixedScene.camera,
+
+        annotations:
+          sceneAnnotations,
+
+        domain: {
+          x: [0, 1],
+          y: [0, 1]
+        }
+
+      }
+
+    },
+
+    {
+      responsive: true,
+      displaylogo: false,
+      scrollZoom: true
+    }
+
+  );
+
+}
+
+
+
+/* ============================================================
+   2-D ATTENTION PLOT
+   ============================================================ */
+
+function vector2DTrace(
+  vector,
+  label,
+  extra
+) {
+
+  return {
+
+    type:
+      "scatter",
+
+    mode:
+      "lines+markers+text",
+
+    x: [
+      0,
+      vector[0]
+    ],
+
+    y: [
+      0,
+      vector[1]
+    ],
+
+    text: [
+      "",
+      label
+    ],
+
+    textposition:
+      "top center",
+
+    textfont: {
+      size: 13
+    },
+
+    name:
+      label,
+
+    line: {
+      width: 3
+    },
+
+    marker: {
+      size: [
+        4,
+        9
+      ]
+    },
+
+    hovertemplate:
+      label
+      +
+      "<br>attention dim 1: %{x:.3f}"
+      +
+      "<br>attention dim 2: %{y:.3f}"
+      +
+      (
+        extra
+        ?
+        "<br>" + extra
+        :
+        ""
+      )
+      +
+      "<extra></extra>"
+
+  };
+
+}
+
+
+function plotAttention2D(
+  traces
+) {
+
+  Plotly.react(
+
+    attentionSpace,
+
+    traces,
+
+    {
+
+      height:
+        320,
+
+      margin: {
+        l: 45,
+        r: 12,
+        b: 45,
+        t: 18
+      },
+
+      paper_bgcolor:
+        "rgba(0,0,0,0)",
+
+      plot_bgcolor:
+        "rgba(0,0,0,0)",
+
+      showlegend:
+        false,
+
+      xaxis: {
+
+        title: {
+          text: "attention dimension 1",
+          font: {
+            size: 12
+          }
+        },
+
+        tickfont: {
+          size: 11
+        },
+
+        range:
+          attentionRange.x,
+
+        autorange:
+          false,
+
+        zeroline:
+          true
+
+      },
+
+      yaxis: {
+
+        title: {
+          text: "attention dimension 2",
+          font: {
+            size: 12
+          }
+        },
+
+        tickfont: {
+          size: 11
+        },
+
+        range:
+          attentionRange.y,
+
+        autorange:
+          false,
+
+        zeroline:
+          true
+
+      }
+
+    },
+
+    {
+      responsive:
+        true,
+
+      displaylogo:
+        false
+    }
+
+  );
+
+}
+
+
+
+/* ============================================================
+   PREDICTIONS
+   ============================================================ */
+
+function outputBars(
+  vector,
+  finalPrediction
+) {
+
+  var probe =
+    decodeVector(
+      vector
+    );
+
+
+  var results =
+    vocab.map(
+
+      function (
+        token,
+        i
+      ) {
+
+        return {
+
+          token:
+            token,
+
+          probability:
+            probe.probabilities[i]
+
+        };
+
+      }
+
+    );
+
+
+  results.sort(
+
+    function (
+      a,
+      b
+    ) {
+
+      return (
+        b.probability -
+        a.probability
+      );
+
+    }
+
+  );
+
+
+  predictedWord.innerHTML =
+
+    (
+      finalPrediction
+      ?
+      "Final prediction: "
+      :
+      "Predicted word: "
+    )
+
+    +
+
+    "<strong>"
+
+    +
+
+    esc(
+      results[0].token
+    )
+
+    +
+
+    "</strong>";
+
+
+  prediction.innerHTML =
+
+    '<div class="bars">'
+
+    +
+
+    results.map(
+
+      function (
+        result,
+        i
+      ) {
+
+        var percentage =
+          (
+            result.probability *
+            100
+          ).toFixed(1);
+
+
+        return (
+
+          '<div class="bar-row">'
+
+          +
+
+          '<div class="'
+          +
+          (
+            i === 0
+            ?
+            'winner'
+            :
+            ''
+          )
+          +
+          '">'
+
+          +
+
+          esc(
+            result.token
+          )
+
+          +
+
+          '</div>'
+
+          +
+
+          '<div class="bar-track">'
+
+          +
+
+          '<div class="bar-fill" style="width:'
+          +
+          percentage
+          +
+          '%"></div>'
+
+          +
+
+          '</div>'
+
+          +
+
+          '<div class="mono">'
+
+          +
+
+          percentage
+
+          +
+
+          '%</div>'
+
+          +
+
+          '</div>'
+
+        );
+
+      }
+
+    ).join("")
+
+    +
+
+    '</div>';
+
+}
+
+
+
+/* ============================================================
+   COMMENTS
+   ============================================================ */
+
+function updateComments() {
+
+  var boundaryA =
+    Wout.here[0]
+    -
+    Wout.are[0];
+
+
+  var boundaryB =
+    Wout.here[1]
+    -
+    Wout.are[1];
+
+
+  var boundaryC =
+    Wout.here[2]
+    -
+    Wout.are[2];
+
+
+  var boundaryConstant =
+    bout.are
+    -
+    bout.here;
+
+
+  document.getElementById(
+    "commentBoundary"
+  ).innerHTML =
+
+    '<div class="calculation mono">'
+
+    +
+
+    boundaryA.toFixed(6)
+    +
+    ' x '
+
+    +
+
+    (
+      boundaryB >= 0
+      ?
+      '+ '
+      :
+      '- '
+    )
+
+    +
+
+    Math.abs(
+      boundaryB
+    ).toFixed(6)
+
+    +
+
+    ' y '
+
+    +
+
+    (
+      boundaryC >= 0
+      ?
+      '+ '
+      :
+      '- '
+    )
+
+    +
+
+    Math.abs(
+      boundaryC
+    ).toFixed(6)
+
+    +
+
+    ' z = '
+
+    +
+
+    boundaryConstant.toFixed(6)
+
+    +
+
+    '</div>';
+
+
+
+  document.getElementById(
+    "commentEmbeddings"
+  ).innerHTML =
+
+    seq.map(
+
+      function (token) {
+
+        return (
+
+          '<div class="calculation mono">'
+
+          +
+
+          esc(token)
+
+          +
+
+          ' = '
+
+          +
+
+          fmt3(
+            E[token]
+          )
+
+          +
+
+          '</div>'
+
+        );
+
+      }
+
+    ).join("");
+
+
+
+  document.getElementById(
+    "commentPositions"
+  ).innerHTML =
+
+    P.map(
+
+      function (
+        vector,
+        i
+      ) {
+
+        return (
+
+          '<div class="calculation mono">'
+
+          +
+
+          'p'
+
+          +
+
+          i
+
+          +
+
+          ' = '
+
+          +
+
+          fmt3(vector)
+
+          +
+
+          '</div>'
+
+        );
+
+      }
+
+    ).join("");
+
+
+
+  document.getElementById(
+    "commentX"
+  ).innerHTML =
+
+    seq.map(
+
+      function (
+        token,
+        i
+      ) {
+
+        return (
+
+          '<div class="calculation mono">'
+
+          +
+
+          esc(token)
+
+          +
+
+          ': '
+
+          +
+
+          fmt3(
+            E[token]
+          )
+
+          +
+
+          ' + '
+
+          +
+
+          fmt3(
+            P[i]
+          )
+
+          +
+
+          ' = '
+
+          +
+
+          '<strong>'
+
+          +
+
+          fmt3(
+            c.x[i]
+          )
+
+          +
+
+          '</strong>'
+
+          +
+
+          '</div>'
+
+        );
+
+      }
+
+    ).join("");
+
+
+
+  document.getElementById(
+    "commentWQ"
+  ).innerHTML =
+    matrixHTML(WQ);
+
+
+  document.getElementById(
+    "commentWK"
+  ).innerHTML =
+    matrixHTML(WK);
+
+
+  document.getElementById(
+    "commentWV"
+  ).innerHTML =
+    matrixHTML(WV);
+
+
+
+  var qkvHTML =
+    '<table>'
+    +
+    '<thead>'
+    +
+    '<tr>'
+    +
+    '<th>word</th>'
+    +
+    '<th>Q ∈ R²</th>'
+    +
+    '<th>K ∈ R²</th>'
+    +
+    '<th>V ∈ R²</th>'
+    +
+    '</tr>'
+    +
+    '</thead>'
+    +
+    '<tbody>';
+
+
+  seq.forEach(
+
+    function (
+      token,
+      i
+    ) {
+
+      qkvHTML +=
+
+        '<tr>'
+
+        +
+
+        '<td>'
+        +
+        esc(token)
+        +
+        '</td>'
+
+        +
+
+        '<td class="mono">'
+        +
+        fmt2(
+          c.q[i]
+        )
+        +
+        '</td>'
+
+        +
+
+        '<td class="mono">'
+        +
+        fmt2(
+          c.k[i]
+        )
+        +
+        '</td>'
+
+        +
+
+        '<td class="mono">'
+        +
+        fmt2(
+          c.values[i]
+        )
+        +
+        '</td>'
+
+        +
+
+        '</tr>';
+
+    }
+
+  );
+
+
+  qkvHTML +=
+    '</tbody></table>';
+
+
+  document.getElementById(
+    "commentQKV"
+  ).innerHTML =
+    qkvHTML;
+
+
+
+  var scoreHTML =
+    '<table>'
+    +
+    '<thead>'
+    +
+    '<tr>'
+    +
+    '<th>Key word</th>'
+    +
+    '<th>score with Q(you)</th>'
+    +
+    '</tr>'
+    +
+    '</thead>'
+    +
+    '<tbody>';
+
+
+  seq.forEach(
+
+    function (
+      token,
+      j
+    ) {
+
+      scoreHTML +=
+
+        '<tr>'
+
+        +
+
+        '<td>'
+        +
+        esc(token)
+        +
+        '</td>'
+
+        +
+
+        '<td>'
+        +
+        c.scores[lastIndex][j]
+          .toFixed(3)
+        +
+        '</td>'
+
+        +
+
+        '</tr>';
+
+    }
+
+  );
+
+
+  scoreHTML +=
+    '</tbody></table>';
+
+
+  document.getElementById(
+    "commentScores"
+  ).innerHTML =
+    scoreHTML;
+
+
+
+  var attentionHTML =
+    '<table>'
+    +
+    '<thead>'
+    +
+    '<tr>'
+    +
+    '<th>word</th>'
+    +
+    '<th>attention from you</th>'
+    +
+    '</tr>'
+    +
+    '</thead>'
+    +
+    '<tbody>';
+
+
+  seq.forEach(
+
+    function (
+      token,
+      j
+    ) {
+
+      attentionHTML +=
+
+        '<tr>'
+
+        +
+
+        '<td>'
+        +
+        esc(token)
+        +
+        '</td>'
+
+        +
+
+        '<td>'
+        +
+        (
+          100 *
+          c.attention[lastIndex][j]
+        ).toFixed(1)
+        +
+        '%</td>'
+
+        +
+
+        '</tr>';
+
+    }
+
+  );
+
+
+  attentionHTML +=
+    '</tbody></table>';
+
+
+  document.getElementById(
+    "commentAttention"
+  ).innerHTML =
+    attentionHTML;
+
+
+
+  var weightedHTML =
+    "";
+
+
+  seq.forEach(
+
+    function (
+      token,
+      j
+    ) {
+
+      weightedHTML +=
+
+        '<div class="calculation mono">'
+
+        +
+
+        c.attention[lastIndex][j]
+          .toFixed(3)
+
+        +
+
+        ' × V('
+
+        +
+
+        esc(token)
+
+        +
+
+        ') '
+
+        +
+
+        fmt2(
+          c.values[j]
+        )
+
+        +
+
+        ' = '
+
+        +
+
+        fmt2(
+
+          scaleVector(
+
+            c.attention[lastIndex][j],
+
+            c.values[j]
+
+          )
+
+        )
+
+        +
+
+        '</div>';
+
+    }
+
+  );
+
+
+  weightedHTML +=
+
+    '<div class="calculation mono">'
+
+    +
+
+    '<strong>a(you) = '
+
+    +
+
+    fmt2(
+      c.attentionOutput[lastIndex]
+    )
+
+    +
+
+    '</strong>'
+
+    +
+
+    '</div>';
+
+
+  document.getElementById(
+    "commentWeightedValues"
+  ).innerHTML =
+    weightedHTML;
+
+
+
+  document.getElementById(
+    "commentWO"
+  ).innerHTML =
+    matrixHTML(WO);
+
+
+
+  document.getElementById(
+    "commentProjection"
+  ).innerHTML =
+
+    '<div class="calculation mono">'
+
+    +
+
+    'a(you) = '
+
+    +
+
+    fmt2(
+      c.attentionOutput[lastIndex]
+    )
+
+    +
+
+    '</div>'
+
+    +
+
+    '<div class="calculation mono">'
+
+    +
+
+    'W<sub>O</sub> × a = '
+
+    +
+
+    '<strong>'
+
+    +
+
+    fmt3(
+      c.contextCorrection[lastIndex]
+    )
+
+    +
+
+    '</strong>'
+
+    +
+
+    '</div>';
+
+
+
+  document.getElementById(
+    "commentContextual"
+  ).innerHTML =
+
+    seq.map(
+
+      function (
+        token,
+        i
+      ) {
+
+        return (
+
+          '<div class="calculation mono">'
+
+          +
+
+          esc(token)
+
+          +
+
+          ': '
+
+          +
+
+          fmt3(
+            c.x[i]
+          )
+
+          +
+
+          ' + '
+
+          +
+
+          fmt3(
+            c.contextCorrection[i]
+          )
+
+          +
+
+          ' = '
+
+          +
+
+          '<strong>'
+
+          +
+
+          fmt3(
+            c.h[i]
+          )
+
+          +
+
+          '</strong>'
+
+          +
+
+          '</div>'
+
+        );
+
+      }
+
+    ).join("");
+
+
+
+  var outputHTML =
+    '<table>'
+    +
+    '<thead>'
+    +
+    '<tr>'
+    +
+    '<th>word</th>'
+    +
+    '<th>Wout</th>'
+    +
+    '<th>bias</th>'
+    +
+    '</tr>'
+    +
+    '</thead>'
+    +
+    '<tbody>';
+
+
+  vocab.forEach(
+
+    function (token) {
+
+      outputHTML +=
+
+        '<tr>'
+
+        +
+
+        '<td>'
+        +
+        esc(token)
+        +
+        '</td>'
+
+        +
+
+        '<td class="mono">'
+        +
+        fmt3(
+          Wout[token]
+        )
+        +
+        '</td>'
+
+        +
+
+        '<td>'
+        +
+        bout[token]
+          .toFixed(3)
+        +
+        '</td>'
+
+        +
+
+        '</tr>';
+
+    }
+
+  );
+
+
+  outputHTML +=
+    '</tbody></table>';
+
+
+  document.getElementById(
+    "commentWout"
+  ).innerHTML =
+    outputHTML;
+
+
+
+  var checkpoints = [
+
+    {
+      name:
+        "embedding only",
+
+      vector:
+        E.you
+    },
+
+    {
+      name:
+        "+ position",
+
+      vector:
+        c.x[lastIndex]
+    },
+
+    {
+      name:
+        "+ context",
+
+      vector:
+        c.h[lastIndex]
+    }
+
+  ];
+
+
+  var predictionsHTML =
+    '<table>'
+    +
+    '<thead>'
+    +
+    '<tr>'
+    +
+    '<th>representation</th>'
+    +
+    '<th>vector</th>'
+    +
+    '<th>margin here−are</th>'
+    +
+    '<th>are</th>'
+    +
+    '<th>here</th>'
+    +
+    '<th>winner</th>'
+    +
+    '</tr>'
+    +
+    '</thead>'
+    +
+    '<tbody>';
+
+
+  checkpoints.forEach(
+
+    function (checkpoint) {
+
+      var decoded =
+        decodeVector(
+          checkpoint.vector
+        );
+
+
+      var areIndex =
+        vocab.indexOf(
+          "are"
+        );
+
+
+      var hereIndex =
+        vocab.indexOf(
+          "here"
+        );
+
+
+      var maxIndex =
+        0;
+
+
+      decoded.probabilities.forEach(
+
+        function (
+          value,
+          i
+        ) {
+
+          if (
+            value >
+            decoded.probabilities[maxIndex]
+          ) {
+
+            maxIndex =
+              i;
+
+          }
+
+        }
+
+      );
+
+
+      predictionsHTML +=
+
+        '<tr>'
+
+        +
+
+        '<td>'
+        +
+        checkpoint.name
+        +
+        '</td>'
+
+        +
+
+        '<td class="mono">'
+        +
+        fmt3(
+          checkpoint.vector
+        )
+        +
+        '</td>'
+
+        +
+
+        '<td class="mono">'
+        +
+        decoderMargin(
+          checkpoint.vector
+        ).toFixed(3)
+        +
+        '</td>'
+
+        +
+
+        '<td>'
+        +
+        (
+          100 *
+          decoded.probabilities[areIndex]
+        ).toFixed(1)
+        +
+        '%</td>'
+
+        +
+
+        '<td>'
+        +
+        (
+          100 *
+          decoded.probabilities[hereIndex]
+        ).toFixed(1)
+        +
+        '%</td>'
+
+        +
+
+        '<td><strong>'
+        +
+        vocab[maxIndex]
+        +
+        '</strong></td>'
+
+        +
+
+        '</tr>';
+
+    }
+
+  );
+
+
+  predictionsHTML +=
+    '</tbody></table>';
+
+
+  document.getElementById(
+    "commentPredictions"
+  ).innerHTML =
+    predictionsHTML;
+
+
+
+  var finalDecoded =
+    decodeVector(
+      c.h[lastIndex]
+    );
+
+
+  var finalScoresHTML =
+    '<table>'
+    +
+    '<thead>'
+    +
+    '<tr>'
+    +
+    '<th>candidate word</th>'
+    +
+    '<th>raw score</th>'
+    +
+    '</tr>'
+    +
+    '</thead>'
+    +
+    '<tbody>';
+
+
+  vocab.forEach(
+
+    function (token, i) {
+
+      finalScoresHTML +=
+
+        '<tr>'
+        +
+        '<td>'
+        +
+        esc(token)
+        +
+        '</td>'
+        +
+        '<td class="mono">'
+        +
+        finalDecoded.scores[i].toFixed(3)
+        +
+        '</td>'
+        +
+        '</tr>';
+
+    }
+
+  );
+
+
+  finalScoresHTML +=
+    '</tbody></table>';
+
+
+  document.getElementById(
+    "commentFinalScores"
+  ).innerHTML =
+    finalScoresHTML;
+
+
+  var finalProbabilitiesHTML =
+    '<table>'
+    +
+    '<thead>'
+    +
+    '<tr>'
+    +
+    '<th>candidate word</th>'
+    +
+    '<th>probability</th>'
+    +
+    '</tr>'
+    +
+    '</thead>'
+    +
+    '<tbody>';
+
+
+  var finalWinnerIndex =
+    0;
+
+
+  finalDecoded.probabilities.forEach(
+
+    function (value, i) {
+
+      if (
+        value >
+        finalDecoded.probabilities[finalWinnerIndex]
+      ) {
+
+        finalWinnerIndex =
+          i;
+
+      }
+
+    }
+
+  );
+
+
+  vocab.forEach(
+
+    function (token, i) {
+
+      finalProbabilitiesHTML +=
+
+        '<tr>'
+        +
+        '<td'
+        +
+        (
+          i === finalWinnerIndex
+          ?
+          ' class="winner"'
+          :
+          ''
+        )
+        +
+        '>'
+        +
+        esc(token)
+        +
+        '</td>'
+        +
+        '<td class="mono">'
+        +
+        (100 * finalDecoded.probabilities[i]).toFixed(1)
+        +
+        '%</td>'
+        +
+        '</tr>';
+
+    }
+
+  );
+
+
+  finalProbabilitiesHTML +=
+    '</tbody></table>';
+
+
+  document.getElementById(
+    "commentFinalProbabilities"
+  ).innerHTML =
+    finalProbabilitiesHTML;
+
+
+}
+
+
+
+/* ============================================================
+   STEP TEXT
+   ============================================================ */
+
+var stepNames = [
+
+  "Word embedding",
+
+  "Add positional embedding",
+
+  "Create 2-D Q, K and V",
+
+  "Query–Key comparison",
+
+  "Softmax attention",
+
+  "Weighted Value sum",
+
+  "Return to 3-D Word embedding space",
+
+  "Contextual representation"
+
+];
+
+
+var stepExplanations = [
+
+  '<p>The final word <strong>you</strong> begins as a fixed vector in the 3-D Word embedding space. The shaded background shows how the fixed output decoder divides this space: one side favors <strong>are</strong>, the other favors <strong>here</strong>.</p>',
+
+  '<p>A 3-D positional vector is added. The word remains in the same Word embedding space, expressed with the same three embedding dimensions. Its position changes, but no contextual information from the other words has yet been incorporated.</p><div class="formula">xᵢ = eᵢ + pᵢ</div>',
+
+  '<p>The 3-D word representation is projected into a separate 2-D attention space. <strong>The Query represents what the current word is looking for</strong>; each <strong>Key represents what another word advertises as potentially relevant</strong>; and each <strong>Value represents what information that word can actually contribute</strong>.</p><div class="formula">qᵢ = W<sub>Q</sub>xᵢ<br>kᵢ = W<sub>K</sub>xᵢ<br>vᵢ = W<sub>V</sub>xᵢ</div>',
+
+  '<p>The final Query Q(you) is compared with the Keys of all available words. Think of this as comparing <strong>what “you” is looking for</strong> with <strong>what each word says it can match on</strong>.</p><div class="formula">score(you,j) = Q(you) · K(j) / √2</div>',
+
+  '<p>Softmax converts the Query–Key matches into attention weights. These weights answer: <strong>how much should “you” listen to each available word?</strong></p>',
+
+  '<p>The model now uses the <strong>Values</strong>. Each word contributes its Value in proportion to its attention weight. Their weighted sum is the contextual information collected in the 2-D attention space.</p><div class="formula">a(you) = Σⱼ αⱼ V(j)</div>',
+
+  '<p><strong>W<sub>O</sub></strong> maps that 2-D contextual information back into the 3-D Word embedding space. The pink vector is shown as a <strong>displacement starting from positioned “you”</strong>, rather than as a separate vector starting from the origin.</p><div class="formula">c = W<sub>O</sub>a</div>',
+
+  '<p>The context correction is added to positioned “you”. The earlier embedded and positioned versions are shown as dotted red vectors, the contextual representation is shown as a solid red vector, and the pink <strong>+ context</strong> segment shows the displacement caused by attention.</p><div class="formula">h = x + c</div>'
+
+];
+
+
+
+/* ============================================================
+   HELPER FOR STANDARD WORD VECTORS
+   ============================================================ */
+
+function standardWordItems(
+  labels,
+  vectors,
+  tokens
+) {
+
+  return vectors.map(
+
+    function (
+      vector,
+      i
+    ) {
+
+      var token =
+        tokens[i];
+
+
+      return {
+
+        label:
+          labels[i],
+
+        end:
+          vector,
+
+        color:
+          WORD_COLORS[token] ||
+          "#1f77b4",
+
+        dash:
+          "solid"
+
+
+      };
+
+    }
+
+  );
+
+}
+
+
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+
+function render() {
+
+  var step =
+    Number(
+      stepSlider.value
+    );
+
+
+  stepLabel.textContent =
+    stepNames[step];
+
+
+  stepExplanation.innerHTML =
+    stepExplanations[step];
+
+
+  var showPrediction =
+    (
+      step === 0
+      ||
+      step === 1
+      ||
+      step === 7
+    );
+
+
+  var showAttention =
+    (
+      step >= 3
+      &&
+      step <= 6
+    );
+
+
+  predictionPanel.style.display =
+    showPrediction
+    ?
+    "block"
+    :
+    "none";
+
+
+  attentionPanel.style.display =
+    showAttention
+    ?
+    "block"
+    :
+    "none";
+
+
+
+  /* ==========================================================
+     STEP 0
+     ========================================================== */
+
+  if (
+    step === 0
+  ) {
+
+    stepCaption.textContent =
+      "Raw word embeddings are shown against the fixed decoder regions.";
+
+
+    plot3D(
+
+      standardWordItems(
+
+        seq,
+
+        seq.map(
+
+          function (token) {
+
+            return E[token];
+
+          }
+
+        ),
+
+        seq
+
+      )
+
+    );
+
+
+    predictionDescription.textContent =
+      "Prediction using only the embedding of “you”.";
+
+
+    outputBars(
+      E.you,
+      false
+    );
+
+  }
+
+
+
+  /* ==========================================================
+     STEP 1
+     ========================================================== */
+
+  else if (
+    step === 1
+  ) {
+
+    stepCaption.textContent =
+      "Position moves the word representations within the same 3-D Word embedding space.";
+
+
+    plot3D(
+
+      standardWordItems(
+        seq,
+        c.x,
+        seq
+      )
+
+    );
+
+
+    predictionDescription.textContent =
+      "Prediction after adding position, before attention has supplied context.";
+
+
+    outputBars(
+      c.x[lastIndex],
+      false
+    );
+
+  }
+
+
+
+  /* ==========================================================
+     STEP 2
+     ========================================================== */
+
+  else if (
+    step === 2
+  ) {
+
+    stepCaption.textContent =
+      "The positioned 3-D word representations are the inputs to the 2-D attention projections.";
+
+
+    plot3D(
+
+      standardWordItems(
+
+        seq.map(
+
+          function (token) {
+
+            return (
+              "x: "
+              +
+              token
+            );
+
+          }
+
+        ),
+
+        c.x,
+
+        seq
+
+      )
+
+    );
+
+  }
+
+
+
+  /* ==========================================================
+     STEP 3
+     QUERY–KEY COMPARISON
+
+     Positioned "you" explicitly keeps the same red color
+     used for "you" in the preceding stages.
+     ========================================================== */
+
+  else if (
+    step === 3
+  ) {
+
+    stepCaption.textContent =
+      "Q(you) is compared geometrically with the available 2-D Keys.";
+
+
+    plot3D(
+
+      [
+
+        {
+          label:
+            "positioned you",
+
+          end:
+            c.x[lastIndex],
+
+          color:
+            YOU_COLOR,
+
+          dash:
+            "solid"
+
+        }
+
+      ]
+
+    );
+
+
+    attentionNote.textContent =
+      "Q(you) expresses what “you” is looking for. Each Key expresses what that word can be matched on.";
+
+
+    var traces =
+      [];
+
+
+    traces.push(
+
+      vector2DTrace(
+
+        c.q[lastIndex],
+
+        "Q: you",
+
+        ""
+
+      )
+
+    );
+
+
+    seq.forEach(
+
+      function (
+        token,
+        i
+      ) {
+
+        traces.push(
+
+          vector2DTrace(
+
+            c.k[i],
+
+            "K: " + token,
+
+            "score = "
+            +
+            c.scores[lastIndex][i]
+              .toFixed(3)
+
+          )
+
+        );
+
+      }
+
+    );
+
+
+    plotAttention2D(
+      traces
+    );
+
+  }
+
+
+
+  /* ==========================================================
+     STEP 4
+     ========================================================== */
+
+  else if (
+    step === 4
+  ) {
+
+    stepCaption.textContent =
+      "Softmax turns Query–Key matches into attention weights.";
+
+
+    plot3D(
+
+      [
+
+        {
+          label:
+            "positioned you",
+
+          end:
+            c.x[lastIndex],
+
+          color:
+            YOU_COLOR,
+
+          dash:
+            "solid"
+        }
+
+      ]
+
+    );
+
+
+    attentionNote.textContent =
+      "The weights tell us how much “you” listens to each available word before collecting its Value.";
+
+
+    var softmaxTraces =
+      [];
+
+
+    seq.forEach(
+
+      function (
+        token,
+        i
+      ) {
+
+        softmaxTraces.push(
+
+          vector2DTrace(
+
+            c.values[i],
+
+            (
+              100 *
+              c.attention[lastIndex][i]
+            ).toFixed(1)
+            +
+            "%  V:"
+            +
+            token,
+
+            ""
+
+          )
+
+        );
+
+      }
+
+    );
+
+
+    plotAttention2D(
+      softmaxTraces
+    );
+
+  }
+
+
+
+  /* ==========================================================
+     STEP 5
+     ========================================================== */
+
+  else if (
+    step === 5
+  ) {
+
+    stepCaption.textContent =
+      "The weighted Values combine into one 2-D context vector.";
+
+
+    plot3D(
+
+      [
+
+        {
+          label:
+            "positioned you",
+
+          end:
+            c.x[lastIndex],
+
+          color:
+            YOU_COLOR,
+
+          dash:
+            "solid"
+        }
+
+      ]
+
+    );
+
+
+    attentionNote.textContent =
+      "Keys decided relevance; Values provide the information. Their weighted sum is what attention actually gathers.";
+
+
+    var valueTraces =
+      [];
+
+
+    seq.forEach(
+
+      function (
+        token,
+        i
+      ) {
+
+        valueTraces.push(
+
+          vector2DTrace(
+
+            c.values[i],
+
+            "V: " + token,
+
+            (
+              100 *
+              c.attention[lastIndex][i]
+            ).toFixed(1)
+            +
+            "% weight"
+
+          )
+
+        );
+
+      }
+
+    );
+
+
+    valueTraces.push(
+
+      vector2DTrace(
+
+        c.attentionOutput[lastIndex],
+
+        "a(you)",
+
+        "weighted Value sum"
+
+      )
+
+    );
+
+
+    plotAttention2D(
+      valueTraces
+    );
+
+  }
+
+
+
+  /* ==========================================================
+     STEP 6
+     RETURN TO 3-D WORD EMBEDDING SPACE
+
+     The pink context correction starts at positioned "you"
+     and ends at contextual "you", making it a displacement.
+     ========================================================== */
+
+  else if (
+    step === 6
+  ) {
+
+    stepCaption.textContent =
+      "W_O converts the 2-D attention result into a 3-D displacement of the word representation.";
+
+
+    plot3D(
+
+      [
+
+        {
+          label:
+            "positioned you",
+
+          end:
+            c.x[lastIndex],
+
+          color:
+            YOU_COLOR,
+
+          dash:
+            "solid"
+        },
+
+
+        {
+          label:
+            "context correction",
+
+          start:
+            c.x[lastIndex],
+
+          end:
+            c.h[lastIndex],
+
+          color:
+            CONTEXT_COLOR,
+
+          dash:
+            "solid",
+
+          width:
+            8
+        }
+
+      ]
+
+    );
+
+
+    attentionNote.innerHTML =
+      'The 2-D vector a(you) contains what attention gathered. W<sub>O</sub> converts it into the pink 3-D displacement shown on the left, starting at positioned “you”.';
+
+
+    plotAttention2D(
+
+      [
+
+        vector2DTrace(
+
+          c.attentionOutput[lastIndex],
+
+          "a(you)",
+
+          "input to W_O"
+
+        )
+
+      ]
+
+    );
+
+  }
+
+
+
+/* ==========================================================
+   STEP 7
+   CONTEXTUAL REPRESENTATION
+   ========================================================== */
+
+else {
+
+  stepCaption.textContent =
+    "The pink + context displacement moves positioned “you” across the decoder boundary.";
+
+
+  plot3D(
+
+    [
+
+      {
+        label:
+          "embedding you",
+
+        end:
+          E.you,
+
+        color:
+          YOU_COLOR,
+
+        dash:
+          "dot",
+
+        width:
+          8,
+
+        showlegend:
+          false
+      },
+
+
+      {
+        label:
+          "+ position",
+
+        end:
+          c.x[lastIndex],
+
+        color:
+          YOU_COLOR,
+
+        dash:
+          "dot",
+
+        width:
+          8,
+
+        showlegend:
+          false
+      },
+
+
+      {
+        label:
+          "+ context",
+
+        end:
+          c.h[lastIndex],
+
+        color:
+          YOU_COLOR,
+
+        dash:
+          "solid",
+
+        width:
+          8,
+
+        showlegend:
+          false
+
+      },
+
+
+    ]
+
+  );
+
+
+  predictionDescription.textContent =
+    "After attention moves the representation across the decoder boundary.";
+
+
+  outputBars(
+    c.h[lastIndex],
+    true
+  );
+
+}
+
+}
+
+
+
+/* ============================================================
+   INITIALIZATION
+   ============================================================ */
+
+updateComments();
+
+
+stepSlider.addEventListener(
+
+  "input",
+
+  render
+
+);
+
+
+render();
+
+})();
+</script>
+
+</body>
+</html>
